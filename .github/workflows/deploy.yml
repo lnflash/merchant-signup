@@ -74,26 +74,51 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         
+        # Check if the gh-pages branch exists remotely
+        if git ls-remote --heads origin gh-pages | grep -q 'gh-pages'; then
+          echo "gh-pages branch exists, fetching it..."
+          git fetch origin gh-pages
+        fi
+        
         # Create a new orphan branch for GitHub Pages
         echo "Creating GitHub Pages branch with static output..."
-        git checkout --orphan gh-pages
+        git checkout --orphan gh-pages-new
         
-        # Remove all files except the output directory
-        find . -maxdepth 1 ! -name "out" ! -name ".git" -exec rm -rf {} \;
+        # Clear the working directory
+        git rm -rf .
         
-        # Move output directory contents to the root and prepare for commit
-        mv out/* .
-        rm -rf out
+        # Copy the output directory contents
+        echo "Copying static build files..."
+        cp -r out/* .
         
         # Make sure we have a .nojekyll file to prevent GitHub Pages from trying to process the site with Jekyll
         touch .nojekyll
         
+        # Add README.md to explain this branch
+        cat > README.md << 'EOF'
+# Flash Merchant Signup - Static Build
+
+This branch contains the static build of the Flash Merchant Signup application.
+It is generated automatically by GitHub Actions and is intended to be deployed to DigitalOcean App Platform.
+
+The source code is in the `main` branch.
+
+## Build Information
+- Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+- Build Commit: $GITHUB_SHA
+EOF
+        
         # Add and commit the static files
         git add .
-        git commit -m "Deploy static site to GitHub Pages"
+        git commit -m "Deploy static site to GitHub Pages ($(date -u +"%Y-%m-%d %H:%M:%S UTC"))"
         
         # Force push to the gh-pages branch
-        git push -f origin gh-pages
+        echo "Pushing to gh-pages branch..."
+        git push -f origin gh-pages-new:gh-pages
+        
+        # Go back to main branch
+        git checkout main
         
         echo "✅ Deployed to GitHub Pages!"
+        echo "The gh-pages branch now contains the latest static build"
         echo "To make this work with DigitalOcean, configure your app to deploy from the gh-pages branch"

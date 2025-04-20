@@ -2,11 +2,17 @@ name: flash-merchant-signup
 static_sites:
 - name: web
   github:
-    branch: gh-pages # Changed to gh-pages from which we deploy
+    branch: gh-pages # Use gh-pages branch containing the static build
     deploy_on_push: true
     repo: your-github-org/merchant-signup # Update this with your actual GitHub repo
-  output_dir: / # Root directory since it's already processed by GitHub Actions
+  source_dir: / # Root directory of the gh-pages branch
+  output_dir: / # Root directory since it's already processed
+  build_command: "" # No build command needed - files are already built
   routes:
   - path: /
-  # No environment variables needed here - they're embedded at build time
+  cors:
+    allow_origins:
+    - regex: ".*"
+  catchall_document: index.html # Use index.html for SPA routing
   error_document: 404.html
+  env: []  # No environment variables - they're embedded in the static build
