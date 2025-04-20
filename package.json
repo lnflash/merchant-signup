@@ -3,9 +3,11 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "build:prod": "node scripts/build.js",
+    "dev": "node scripts/check-env.js && next dev",
+    "build": "node scripts/check-env.js && next build",
+    "build:prod": "node scripts/check-env.js && node scripts/build.js",
+    "build:static": "node scripts/check-env.js && next build && next export",
+    "build:static:ci": "node scripts/build-static.js",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
@@ -14,7 +16,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "check-env": "node scripts/check-env.js",
+    "env-debug": "node -e \"console.log('Environment variables:', Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC_')).reduce((obj, key) => { obj[key] = process.env[key] ? true : false; return obj; }, {}));\"",
+    "check-build-env": "node -e \"console.log('Build-time env variables:', { NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY });\""
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",

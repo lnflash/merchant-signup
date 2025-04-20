@@ -18,6 +18,9 @@ const nextConfig = {
   env: {
     // This ensures the IS_BUILD_TIME var is explicitly false in production
     IS_BUILD_TIME: process.env.IS_BUILD_TIME === 'true' ? 'true' : 'false',
+    // Explicitly pass Supabase credentials to be baked into the client build
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
   },
   images: {
     domains: ['example.com'],
@@ -32,7 +35,7 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.ondigitalocean.app https://*.cloudflare.com; frame-src 'self' https://*.cloudflare.com; report-uri https://flash-merchant-signup-ov4yh.ondigitalocean.app/api/csp-report;",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.ondigitalocean.app https://*.cloudflare.com https://*.supabase.co https://*.supabase.in; frame-src 'self' https://*.cloudflare.com; report-uri https://flash-merchant-signup-ov4yh.ondigitalocean.app/api/csp-report;",
           },
           {
             key: 'X-Content-Type-Options',

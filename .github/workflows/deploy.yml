@@ -1,0 +1,56 @@
+name: Build and Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run environment checks
+      run: node scripts/check-env.js
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      
+    - name: Build Next.js app (static export)
+      run: |
+        npm run check-build-env
+        npm run build:static:ci
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        IS_BUILD_TIME: "true"
+        
+    - name: List built files
+      run: |
+        echo "Build output structure:"
+        ls -la .next/
+        echo "Static export structure:"
+        ls -la out/
+        
+    - name: Deploy to DigitalOcean App Platform
+      uses: digitalocean/app_action@v1.1.5
+      with:
+        app_name: merchant-signup
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        # Use the App Platform static site approach
+        type: static
+        static_site: true
+        # No need to build on DO, we've already built it
+        output_dir: "out"
