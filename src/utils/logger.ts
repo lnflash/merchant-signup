@@ -191,6 +191,38 @@ export const logger = {
         sendToRemoteLogger('error', msg, metadata);
       }
     },
+
+    // Storage operations logging
+    fileUploaded: (bucket: string, filePath: string): void => {
+      if (shouldLog('info')) {
+        const msg = `File successfully uploaded to "${bucket}/${filePath}"`;
+        const metadata = {
+          ...getMetadata(),
+          component: 'supabase',
+          action: 'storage.upload',
+          bucket,
+          filePath,
+        };
+        console.log('✅ ' + msg);
+        sendToRemoteLogger('info', msg, metadata);
+      }
+    },
+
+    fileUploadFailed: (bucket: string, filePath: string, error: any): void => {
+      if (shouldLog('error')) {
+        const msg = `Failed to upload file to "${bucket}/${filePath}"`;
+        const metadata = {
+          ...getMetadata(),
+          component: 'supabase',
+          action: 'storage.upload',
+          bucket,
+          filePath,
+          error: error.toString(),
+        };
+        console.error('❌ ' + msg, error);
+        sendToRemoteLogger('error', msg, metadata);
+      }
+    },
   },
 
   // API logging methods

@@ -30,10 +30,54 @@ const createMockClient = () => {
       },
     }),
     storage: {
+      // Storage bucket operations
+      listBuckets: () => {
+        logger.info('Mock list Supabase storage buckets', { mock: true });
+        return Promise.resolve({
+          data: [{ name: 'id_documents', public: true }],
+          error: null,
+        });
+      },
+      createBucket: (name: string, options?: any) => {
+        logger.info(`Mock create bucket: ${name}`, { mock: true, options });
+        return Promise.resolve({ data: { name }, error: null });
+      },
+      // File operations
       from: (bucket: string) => ({
-        upload: (path: string, file: any) => {
-          logger.info(`Mock file upload to ${bucket}/${path}`, { mock: true });
+        upload: (path: string, file: any, options?: any) => {
+          logger.info(`Mock file upload to ${bucket}/${path}`, { mock: true, options });
           return Promise.resolve({ data: { path }, error: null });
+        },
+        getPublicUrl: (path: string) => {
+          logger.info(`Mock get public URL for ${bucket}/${path}`, { mock: true });
+          // Return a structure matching Supabase's getPublicUrl response
+          return {
+            data: {
+              publicUrl: `https://example.com/${bucket}/${path}`,
+            },
+          };
+        },
+        // Add other storage methods as needed
+        list: (prefix?: string) => {
+          logger.info(`Mock list files in ${bucket}${prefix ? '/' + prefix : ''}`, { mock: true });
+          return Promise.resolve({
+            data: [{ name: 'example.jpg', id: 'mock-file-id' }],
+            error: null,
+          });
+        },
+        remove: (paths: string | string[]) => {
+          const pathArr = typeof paths === 'string' ? [paths] : paths;
+          logger.info(`Mock remove files from ${bucket}`, { mock: true, paths: pathArr });
+          return Promise.resolve({ data: { paths: pathArr }, error: null });
+        },
+        createSignedUrl: (path: string, expiresIn: number) => {
+          logger.info(`Mock create signed URL for ${bucket}/${path}`, { mock: true, expiresIn });
+          return Promise.resolve({
+            data: {
+              signedUrl: `https://example.com/signed/${bucket}/${path}?expires=${Date.now() + expiresIn}`,
+            },
+            error: null,
+          });
         },
       }),
     },

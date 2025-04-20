@@ -3,6 +3,7 @@ import { useFormContext } from 'react-hook-form';
 import { supabase } from '../../../lib/supabase';
 import { config } from '../../../src/config';
 import { isFileInstance } from '../../../src/utils/validation';
+import { logger } from '../../../src/utils/logger';
 
 export default function FileUpload() {
   const [uploading, setUploading] = useState(false);
@@ -99,24 +100,90 @@ export default function FileUpload() {
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // Simulate a short delay to show the upload progress in the demo
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Attempt to upload the file to Supabase Storage
+      let fileUrl;
 
-      // For demonstration - in a real app, we would upload to Supabase Storage here
-      // const { error: uploadError } = await supabase.storage
-      //  .from(config.supabase.storageBucket)
-      //  .upload(filePath, file);
+      try {
+        // Check if we have a valid Supabase connection
+        if (!supabase || !config.supabase.url || !config.supabase.anonKey) {
+          logger.warn('Using mock upload because Supabase credentials are missing', {
+            bucket: config.supabase.storageBucket,
+            hasSupabaseUrl: !!config.supabase.url,
+            hasSupabaseKey: !!config.supabase.anonKey,
+          });
 
-      // if (uploadError) {
-      //  throw uploadError;
-      // }
+          // Simulate a short delay for the mock upload
+          await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Since we can't actually upload in this demo, we'll just simulate success
-      // Use a string URL value that can be validated
-      const mockUrl = `https://example.com/id_uploads/${filePath}`;
+          // Use a mock URL if Supabase is not available
+          fileUrl = `https://example.com/id_uploads/${filePath}`;
+        } else {
+          // Real upload to Supabase storage
+          logger.info(`Uploading file to Supabase storage`, {
+            bucket: config.supabase.storageBucket,
+            filePath,
+            fileSize: file.size,
+            fileType: file.type,
+          });
+
+          // Create necessary bucket if it doesn't exist
+          try {
+            // Check if bucket exists first (not all Supabase instances allow bucket creation)
+            const { data: buckets } = await supabase.storage.listBuckets();
+            const bucketExists = buckets?.find(b => b.name === config.supabase.storageBucket);
+
+            if (!bucketExists) {
+              // Try to create the bucket (may require admin privileges)
+              logger.info(`Creating storage bucket: ${config.supabase.storageBucket}`);
+              await supabase.storage.createBucket(config.supabase.storageBucket, {
+                public: true,
+                fileSizeLimit: 5242880, // 5MB
+              });
+            }
+          } catch (bucketError) {
+            logger.warn('Unable to create bucket, will try to use existing bucket', {
+              bucket: config.supabase.storageBucket,
+              error: bucketError,
+            });
+          }
+
+          // Perform the upload
+          const { data, error: uploadError } = await supabase.storage
+            .from(config.supabase.storageBucket)
+            .upload(filePath, file, {
+              cacheControl: '3600',
+              upsert: true,
+            });
+
+          if (uploadError) {
+            logger.error('Supabase storage upload error:', uploadError);
+            throw uploadError;
+          }
+
+          // Get the public URL for the uploaded file
+          const { data: urlData } = supabase.storage
+            .from(config.supabase.storageBucket)
+            .getPublicUrl(filePath);
+
+          fileUrl = urlData.publicUrl;
+          logger.info('File uploaded successfully', { url: fileUrl });
+        }
+      } catch (error) {
+        logger.error('Error in file upload process', error);
+        setErrorMessage('Failed to upload file. Please try again.');
+
+        // Fallback to mock URL if upload fails (for development environments)
+        if (process.env.NODE_ENV !== 'production') {
+          logger.warn('Using mock URL as fallback in development mode');
+          fileUrl = `https://example.com/id_uploads/${filePath}`;
+        } else {
+          // In production, re-throw the error to prevent using mock URLs
+          throw error;
+        }
+      }
 
       // Update the form state with the URL
-      setValue('id_image_url', mockUrl, {
+      setValue('id_image_url', fileUrl, {
         shouldValidate: true,
       });
 
