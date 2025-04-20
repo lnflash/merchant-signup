@@ -49,11 +49,25 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 
 try {
-  // Skip directory manipulation entirely
-  console.log('📦 Simplifying build process for CI...');
+  // Create a temporary directory for API-free static build
+  console.log('📂 Creating temporary build environment...');
+  execSync('mkdir -p temp_build_app', { stdio: 'inherit' });
 
-  // Generate a simple index.html and form.html to ensure we have valid output
-  console.log('📦 Creating minimal static output...');
+  // Copy app directory without API routes
+  console.log('📋 Copying app directory without API routes...');
+  execSync('cp -r app temp_build_app/', { stdio: 'inherit' });
+  execSync('rm -rf temp_build_app/app/api', { stdio: 'inherit' });
+
+  // Temporarily rename the original app directory and use our modified one
+  console.log('🔄 Swapping app directories...');
+  execSync('mv app app_original', { stdio: 'inherit' });
+  execSync('mv temp_build_app/app ./', { stdio: 'inherit' });
+
+  // Run the Next.js build with static export
+  console.log('📦 Building Next.js app with static export...');
+  execSync('next build', { stdio: 'inherit' });
+
+  // Create output directory if it doesn't exist yet
   execSync('mkdir -p out', { stdio: 'inherit' });
 
   // Create basic index.html
@@ -135,7 +149,24 @@ try {
 
   fs.writeFileSync('out/env-config.js', envConfigJs);
 
-  // Skip directory restoration - nothing to restore
+  // Copy the output directory from .next to out if needed
+  console.log('📦 Ensuring static files are in the out directory...');
+  if (fs.existsSync('.next/static')) {
+    execSync('mkdir -p out/_next', { stdio: 'inherit' });
+    execSync('cp -r .next/static out/_next/', { stdio: 'inherit' });
+  }
+
+  // Create public directory and copy assets
+  if (fs.existsSync('public')) {
+    console.log('📦 Copying public assets...');
+    execSync('cp -r public/* out/ 2>/dev/null || true', { stdio: 'inherit' });
+  }
+
+  // Restore the original app directory
+  console.log('🔄 Restoring original app directory...');
+  execSync('rm -rf app', { stdio: 'inherit' });
+  execSync('mv app_original app', { stdio: 'inherit' });
+  execSync('rm -rf temp_build_app', { stdio: 'inherit' });
 
   console.log('\n✅ Static build completed successfully!');
   console.log('📂 Output directory: ./out');
