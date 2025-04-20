@@ -2,6 +2,94 @@ import { z } from 'zod';
 
 const phoneRegex = /^\+?[0-9]{10,15}$/;
 
+// Common fields that all account types share
+const commonFields = {
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  phone: z.string().regex(phoneRegex, 'Please enter a valid phone number'),
+  email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
+  terms_accepted: z.literal(true, {
+    errorMap: () => ({ message: 'You must accept the terms and conditions' }),
+  }),
+};
+
+// Create schema with different requirements for each account type
+export const signupFormSchema = z.discriminatedUnion('account_type', [
+  // Schema for personal accounts
+  z.object({
+    account_type: z.literal('personal'),
+    ...commonFields,
+    // Make all other fields optional
+    business_name: z.string().optional().or(z.literal('')),
+    business_address: z.string().optional().or(z.literal('')),
+    bank_name: z.string().optional().or(z.literal('')),
+    bank_branch: z.string().optional().or(z.literal('')),
+    bank_account_type: z.string().optional().or(z.literal('')),
+    account_currency: z.string().optional().or(z.literal('')),
+    bank_account_number: z.string().optional().or(z.literal('')),
+    id_image_url: z.union([
+      z.string().optional(),
+      z.literal(''),
+      z.custom(val => typeof window !== 'undefined' && val instanceof File).optional(),
+    ]),
+    latitude: z.number().optional().or(z.literal('')),
+    longitude: z.number().optional().or(z.literal('')),
+  }),
+
+  // Schema for business accounts
+  z.object({
+    account_type: z.literal('business'),
+    ...commonFields,
+    // Required business fields
+    business_name: z.string().min(2, 'Business name must be at least 2 characters'),
+    business_address: z.string().min(5, 'Please enter a valid address'),
+    latitude: z.number().optional().or(z.literal('')),
+    longitude: z.number().optional().or(z.literal('')),
+    // Make merchant fields optional
+    bank_name: z.string().optional().or(z.literal('')),
+    bank_branch: z.string().optional().or(z.literal('')),
+    bank_account_type: z.string().optional().or(z.literal('')),
+    account_currency: z.string().optional().or(z.literal('')),
+    bank_account_number: z.string().optional().or(z.literal('')),
+    id_image_url: z.union([
+      z.string().optional(),
+      z.literal(''),
+      z.custom(val => typeof window !== 'undefined' && val instanceof File).optional(),
+    ]),
+  }),
+
+  // Schema for merchant accounts
+  z.object({
+    account_type: z.literal('merchant'),
+    ...commonFields,
+    // Business fields optional for merchants
+    business_name: z
+      .string()
+      .min(2, 'Business name must be at least 2 characters')
+      .optional()
+      .or(z.literal('')),
+    business_address: z
+      .string()
+      .min(5, 'Please enter a valid address')
+      .optional()
+      .or(z.literal('')),
+    latitude: z.number().optional().or(z.literal('')),
+    longitude: z.number().optional().or(z.literal('')),
+    // Required merchant fields
+    bank_name: z.string().min(2, 'Bank name is required'),
+    bank_branch: z.string().min(2, 'Branch is required'),
+    bank_account_type: z.string().min(2, 'Account type is required'),
+    account_currency: z.string().min(2, 'Currency is required'),
+    bank_account_number: z.string().min(4, 'Account number is required'),
+    id_image_url: z.union([
+      z.string().min(1, 'ID image is required'),
+      z.custom(val => typeof window !== 'undefined' && val instanceof File, {
+        message: 'Valid ID image is required',
+      }),
+    ]),
+  }),
+]);
+
+// For backward compatibility - these are used elsewhere in the codebase
 export const personInfoSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   phone: z.string().regex(phoneRegex, 'Please enter a valid phone number'),
@@ -23,106 +111,3 @@ export const merchantInfoSchema = z.object({
   bank_branch: z.string().min(2, 'Branch is required'),
   id_image_url: z.string().optional(),
 });
-
-// Helper to create conditional schemas that work with TypeScript
-const createConditionalSchema = (accountTypes: ('personal' | 'business' | 'merchant')[]) => {
-  return z
-    .preprocess(val => val, z.any())
-    .superRefine((val, ctx) => {
-      // Skip validation if not validating this field specifically
-      if (!ctx.path.length) return;
-
-      // Get the account type from the validation context data
-      // Extract the data from the validation context
-      const data = ctx.parent as { account_type?: 'personal' | 'business' | 'merchant' };
-      const accountType = data.account_type;
-
-      // Skip validation if the field is not required for the current account type
-      if (!accountType || !accountTypes.includes(accountType)) {
-        return;
-      }
-
-      // Validation for strings - only add issue if value is empty
-      if (!val || (typeof val === 'string' && val.trim() === '')) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `This field is required for ${accountTypes.join('/')} accounts`,
-        });
-      }
-    });
-};
-
-export const signupFormSchema = z.object({
-  // Personal info is always required
-  ...personInfoSchema.shape,
-
-  // Account type is always required
-  account_type: z.enum(['personal', 'business', 'merchant']),
-
-  // Business fields - conditionally required (only for Professional accounts)
-  business_name: z
-    .string()
-    .min(2, 'Professional name must be at least 2 characters')
-    .optional()
-    .and(createConditionalSchema(['business'])), // Required only for Professional accounts
-
-  business_address: z
-    .string()
-    .min(5, 'Please enter a valid address')
-    .optional()
-    .and(createConditionalSchema(['business'])), // Required only for Professional accounts
-
-  latitude: z.number().optional().or(z.literal('')), // Allow empty string that will be converted to undefined
-  longitude: z.number().optional().or(z.literal('')),
-
-  // Merchant fields - conditionally required
-  bank_name: z
-    .string()
-    .min(2, 'Bank name must be at least 2 characters')
-    .optional()
-    .and(createConditionalSchema(['merchant'])),
-
-  bank_account_type: z
-    .string()
-    .min(2, 'Account type must be at least 2 characters')
-    .optional()
-    .and(createConditionalSchema(['merchant'])),
-
-  account_currency: z
-    .string()
-    .min(2, 'Currency must be at least 2 characters')
-    .optional()
-    .and(createConditionalSchema(['merchant'])),
-
-  bank_account_number: z
-    .string()
-    .min(4, 'Account number must be at least 4 characters')
-    .optional()
-    .and(createConditionalSchema(['merchant'])),
-
-  bank_branch: z
-    .string()
-    .min(2, 'Branch must be at least 2 characters')
-    .optional()
-    .and(createConditionalSchema(['merchant'])),
-
-  id_image_url: z
-    .union([
-      z.string().min(1, 'ID image is required'),
-      z.literal(''),
-      // File is a browser-only object, so we need to handle it differently for server-side validation
-      z.custom(val => typeof window !== 'undefined' && val instanceof File, {
-        message: 'Invalid file type',
-      }),
-    ])
-    .optional()
-    .and(createConditionalSchema(['merchant'])),
-
-  // Terms acceptance is always required
-  terms_accepted: z.literal(true, {
-    errorMap: () => ({ message: 'You must accept the terms and conditions' }),
-  }),
-});
-
-// Import the type from the types directory instead
-// The actual type is now exported from src/types/index.ts
