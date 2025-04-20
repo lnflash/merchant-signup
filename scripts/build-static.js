@@ -93,6 +93,9 @@ try {
     }
     h1 { color: #1D4ED8; margin-bottom: 10px; }
   </style>
+  <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
+  <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <script src="/env-config.js"></script>
 </head>
 <body>
   <img src="/images/logos/flash.png" alt="Flash Logo" class="logo" />
@@ -138,6 +141,9 @@ try {
     }
     .btn:hover { background-color: #1E40AF; }
   </style>
+  <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
+  <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <script src="/env-config.js"></script>
 </head>
 <body>
   <p class="error-code">404</p>
@@ -173,6 +179,8 @@ try {
     }
     h1 { color: #1D4ED8; margin-bottom: 10px; }
   </style>
+  <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
+  <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
   <script src="/env-config.js"></script>
 </head>
 <body>
@@ -224,11 +232,21 @@ try {
   // Create a simple JavaScript file to embed the environment variables
   console.log('📦 Creating environment configuration...');
 
-  const envConfig = `window.ENV = {
+  const envConfig = `// Static build environment configuration
+window.ENV = {
   SUPABASE_URL: "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
   SUPABASE_KEY: "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
-  BUILD_TIME: true
-};`;
+  BUILD_TIME: true,
+  BUILD_DATE: "${new Date().toISOString()}"
+};
+
+// Log that the environment variables have been loaded from the static build
+console.log('Static build environment variables loaded:', {
+  hasUrl: !!window.ENV.SUPABASE_URL,
+  hasKey: !!window.ENV.SUPABASE_KEY,
+  buildTime: window.ENV.BUILD_TIME,
+  buildDate: window.ENV.BUILD_DATE
+});`;
 
   fs.writeFileSync('out/env-config.js', envConfig);
 
