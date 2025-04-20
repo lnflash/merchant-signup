@@ -163,7 +163,6 @@ try {
 <head>
   <meta charset="utf-8">
   <title>Flash Merchant Signup Form</title>
-  <meta http-equiv="refresh" content="0;url=/form/">
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -211,9 +210,30 @@ try {
   // Create form directory if it doesn't exist yet
   execSync('mkdir -p out/form', { stdio: 'inherit' });
 
+  // Copy app/form content if it exists
+  if (fs.existsSync('.next/server/app/form')) {
+    console.log('📦 Copying Next.js generated form page...');
+    execSync('cp -r .next/server/app/form/* out/form/ 2>/dev/null || true', { stdio: 'inherit' });
+  }
+
   // Always create a form/index.html as a fallback
   console.log('📦 Creating form/index.html fallback...');
   fs.writeFileSync('out/form/index.html', formHtml);
+
+  // Create fake API endpoint to prevent redirects to non-existent API endpoints
+  console.log('📦 Creating API fallbacks to prevent redirects...');
+  execSync('mkdir -p out/api/credentials', { stdio: 'inherit' });
+  const credentialsApi = `{
+    "supabaseUrl": "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
+    "supabaseKey": "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
+    "bucket": "id_uploads",
+    "environment": "${process.env.NODE_ENV || 'production'}",
+    "buildTime": true,
+    "platform": "StaticBuild",
+    "traceId": "static_${Date.now().toString(36)}",
+    "serverTime": "${new Date().toISOString()}"
+  }`;
+  fs.writeFileSync('out/api/credentials/index.json', credentialsApi);
 
   // Create _next directory structure
   console.log('📦 Creating static assets directory structure...');

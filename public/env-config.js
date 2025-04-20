@@ -18,6 +18,7 @@ try {
     if (supabaseUrlMeta && supabaseKeyMeta) {
       window.ENV.SUPABASE_URL = supabaseUrlMeta.getAttribute('content');
       window.ENV.SUPABASE_KEY = supabaseKeyMeta.getAttribute('content');
+      window.ENV.BUILD_TIME = true; // Set the BUILD_TIME flag to true
       console.log('Loaded Supabase credentials from meta tags');
     } else {
       console.warn('No Supabase credentials found in meta tags');
@@ -27,6 +28,7 @@ try {
     console.log('Environment configuration:', {
       hasUrl: !!window.ENV.SUPABASE_URL,
       hasKey: !!window.ENV.SUPABASE_KEY,
+      buildTime: !!window.ENV.BUILD_TIME,
       inProduction,
       hostname: window.location.hostname,
     });
