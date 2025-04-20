@@ -39,10 +39,8 @@ jobs:
         
     - name: List built files
       run: |
-        echo "Build output structure:"
-        ls -la .next/
         echo "Static export structure:"
-        ls -la out/
+        ls -la out/ || echo "No 'out' directory found"
         
     - name: Deploy to DigitalOcean App Platform
       uses: digitalocean/app_action@v1.1.5
