@@ -46,6 +46,7 @@ try {
 console.log('\n🏗️ Starting static build process...');
 
 const { execSync } = require('child_process');
+const fs = require('fs');
 
 try {
   // Skip directory manipulation entirely
@@ -56,62 +57,59 @@ try {
   execSync('mkdir -p out', { stdio: 'inherit' });
 
   // Create basic index.html
-  execSync(
-    'cat > out/index.html << EOF\n\
-<!DOCTYPE html>\n\
-<html>\n\
-<head>\n\
-  <meta charset="utf-8">\n\
-  <title>Flash Merchant Signup</title>\n\
-  <meta http-equiv="refresh" content="0;url=/form">\n\
-</head>\n\
-<body>\n\
-  <p>Redirecting to <a href="/form">form</a>...</p>\n\
-</body>\n\
-</html>\n\
-EOF',
-    { stdio: 'inherit' }
-  );
+  const indexHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Flash Merchant Signup</title>
+  <meta http-equiv="refresh" content="0;url=/form">
+</head>
+<body>
+  <p>Redirecting to <a href="/form">form</a>...</p>
+</body>
+</html>`;
+
+  fs.writeFileSync('out/index.html', indexHtml);
 
   // Create basic form.html with script tag to load env variables
-  execSync(
-    'cat > out/form.html << EOF\n\
-<!DOCTYPE html>\n\
-<html>\n\
-<head>\n\
-  <meta charset="utf-8">\n\
-  <title>Flash Merchant Signup Form</title>\n\
-  <style>body{font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px}</style>\n\
-  <script src="/env-config.js"></script>\n\
-</head>\n\
-<body>\n\
-  <h1>Flash Merchant Signup</h1>\n\
-  <p>Please access this form from the production URL.</p>\n\
-  <p>Environment variables are correctly loaded:</p>\n\
-  <ul>\n\
-    <li>NEXT_PUBLIC_SUPABASE_URL: ✅</li>\n\
-    <li>NEXT_PUBLIC_SUPABASE_ANON_KEY: ✅</li>\n\
-  </ul>\n\
-  <div id="env-status"></div>\n\
-  <script>\n\
-    // Display environment variables status (without showing actual values)\n\
-    document.addEventListener("DOMContentLoaded", function() {\n\
-      const status = document.getElementById("env-status");\n\
-      const env = window.ENV || {};\n\
-      status.innerHTML = `\n\
-        <h2>Runtime Environment Check</h2>\n\
-        <ul>\n\
-          <li>Supabase URL: ${env.SUPABASE_URL ? "✅ Available" : "❌ Missing"}</li>\n\
-          <li>Supabase Key: ${env.SUPABASE_KEY ? "✅ Available" : "❌ Missing"}</li>\n\
-          <li>Built with embedded variables: ${env.BUILD_TIME ? "✅ Yes" : "❌ No"}</li>\n\
-        </ul>`;\n\
-    });\n\
-  </script>\n\
-</body>\n\
-</html>\n\
-EOF',
-    { stdio: 'inherit' }
-  );
+  console.log('📦 Creating form.html...');
+
+  // Create a simple HTML file without template literals that would cause shell issues
+  const formHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Flash Merchant Signup Form</title>
+  <style>body{font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px}</style>
+  <script src="/env-config.js"></script>
+</head>
+<body>
+  <h1>Flash Merchant Signup</h1>
+  <p>Please access this form from the production URL.</p>
+  <p>Environment variables are correctly loaded:</p>
+  <ul>
+    <li>NEXT_PUBLIC_SUPABASE_URL: ✅</li>
+    <li>NEXT_PUBLIC_SUPABASE_ANON_KEY: ✅</li>
+  </ul>
+  <div id="env-status"></div>
+  <script>
+    // Display environment variables status (without showing actual values)
+    document.addEventListener("DOMContentLoaded", function() {
+      const status = document.getElementById("env-status");
+      const env = window.ENV || {};
+      status.innerHTML = 
+        "<h2>Runtime Environment Check</h2>" +
+        "<ul>" +
+        "<li>Supabase URL: " + (env.SUPABASE_URL ? "✅ Available" : "❌ Missing") + "</li>" +
+        "<li>Supabase Key: " + (env.SUPABASE_KEY ? "✅ Available" : "❌ Missing") + "</li>" +
+        "<li>Built with embedded variables: " + (env.BUILD_TIME ? "✅ Yes" : "❌ No") + "</li>" +
+        "</ul>";
+    });
+  </script>
+</body>
+</html>`;
+
+  fs.writeFileSync('out/form.html', formHtml);
 
   // Create _next directory structure
   console.log('📦 Creating static assets directory structure...');
@@ -128,16 +126,14 @@ EOF',
 
   // Create a simple JavaScript file to embed the environment variables
   console.log('📦 Creating environment configuration...');
-  execSync(
-    `cat > out/env-config.js << EOF
-window.ENV = {
+
+  const envConfigJs = `window.ENV = {
   SUPABASE_URL: "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
   SUPABASE_KEY: "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
   BUILD_TIME: true
-};
-EOF`,
-    { stdio: 'inherit' }
-  );
+};`;
+
+  fs.writeFileSync('out/env-config.js', envConfigJs);
 
   // Skip directory restoration - nothing to restore
 
