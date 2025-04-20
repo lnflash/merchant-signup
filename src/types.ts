@@ -1,11 +1,11 @@
 /**
  * API response structure
  */
-export interface ApiResponse {
+export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
   error?: string | string[] | Record<string, string[]>;
-  data?: Record<string, any>;
+  data?: T;
 }
 
 /**
