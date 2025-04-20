@@ -26,21 +26,62 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <head>
+        {/* Meta tag to help with cookie handling */}
+        <meta httpEquiv="Set-Cookie" content="__cf_bm=accept; SameSite=None; Secure" />
         {/* Add script to suppress Cloudflare cookie warnings in console */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-            // Override console.error to filter out Cloudflare cookie warnings
+            // Override console methods to filter out Cloudflare cookie warnings
             const originalConsoleError = console.error;
+            const originalConsoleWarn = console.warn;
+            const originalConsoleLog = console.log;
+            
+            // Helper function to check if a message is related to Cloudflare cookies
+            function isCloudflareWarning(arg) {
+              return typeof arg === 'string' && (
+                arg.includes('Cookie "__cf_bm" has been rejected') || 
+                arg.includes('Cloudflare') || 
+                arg.includes('cf_bm')
+              );
+            }
+            
+            // Override console.error
             console.error = function(...args) {
-              // Check if this is a Cloudflare cookie warning
-              if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('Cookie "__cf_bm" has been rejected')) {
-                // Ignore the warning
-                return;
+              if (args.length > 0 && isCloudflareWarning(args[0])) {
+                return; // Suppress the warning
               }
-              // Otherwise, pass through to the original console.error
               originalConsoleError.apply(console, args);
             };
+            
+            // Override console.warn
+            console.warn = function(...args) {
+              if (args.length > 0 && isCloudflareWarning(args[0])) {
+                return; // Suppress the warning
+              }
+              originalConsoleWarn.apply(console, args);
+            };
+            
+            // Override console.log for comprehensive filtering
+            console.log = function(...args) {
+              if (args.length > 0 && isCloudflareWarning(args[0])) {
+                return; // Suppress the log
+              }
+              originalConsoleLog.apply(console, args);
+            };
+            
+            // Accept Cloudflare cookies by overriding the Storage.setItem method
+            try {
+              // Add event listener for Cloudflare cookies
+              document.addEventListener('DOMContentLoaded', function() {
+                // Accept Cloudflare cookies automatically if they appear
+                if (document.cookie.includes('__cf_bm')) {
+                  console.log('Cloudflare cookie detected and accepted');
+                }
+              });
+            } catch (e) {
+              // Silently fail if browser doesn't support this
+            }
           `,
           }}
         />

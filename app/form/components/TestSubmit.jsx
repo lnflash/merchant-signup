@@ -42,8 +42,13 @@ export default function TestSubmit() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Add a custom header to help with Cloudflare bot detection
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(testData),
+        // Add credentials to include cookies in the request
+        credentials: 'include',
       });
       
       console.log('Response status:', response.status);
