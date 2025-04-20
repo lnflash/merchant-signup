@@ -38,10 +38,11 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Set to production environment
-ENV NODE_ENV production
-ENV IS_BUILD_TIME false
-ENV NEXT_TELEMETRY_DISABLED 1
+# Set to production environment with explicit env vars
+ENV NODE_ENV=production
+ENV IS_BUILD_TIME=false
+ENV NEXT_TELEMETRY_DISABLED=1
+# Note: Supabase credentials should be injected at runtime through DigitalOcean App Platform
 
 # Add user for security
 RUN addgroup --system --gid 1001 nodejs

@@ -2,12 +2,17 @@ import { createClient } from '@supabase/supabase-js';
 import { config } from '../src/config';
 import { logger } from '../src/utils/logger';
 
-// Create mock client for build time or server without environment variables
+// Create mock client for server without environment variables
 const createMockClient = () => {
-  const isBuildTime = process.env.IS_BUILD_TIME === 'true';
-  const reason = isBuildTime ? 'build time' : 'missing credentials';
+  // Log the current environment variables to help debug (safely)
+  const envContext = {
+    hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    nodeEnv: process.env.NODE_ENV,
+    isBuildTime: process.env.IS_BUILD_TIME,
+  };
 
-  logger.warn(`Using mock Supabase client (${reason})`);
+  logger.warn(`Using mock Supabase client (missing credentials)`, envContext);
 
   // Extended mock client with more realistic response handling
   return {

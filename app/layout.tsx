@@ -25,6 +25,26 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        {/* Add script to suppress Cloudflare cookie warnings in console */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+            // Override console.error to filter out Cloudflare cookie warnings
+            const originalConsoleError = console.error;
+            console.error = function(...args) {
+              // Check if this is a Cloudflare cookie warning
+              if (args.length > 0 && typeof args[0] === 'string' && args[0].includes('Cookie "__cf_bm" has been rejected')) {
+                // Ignore the warning
+                return;
+              }
+              // Otherwise, pass through to the original console.error
+              originalConsoleError.apply(console, args);
+            };
+          `,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-4xl mx-auto p-4">
           <header className="mb-8 pt-8">

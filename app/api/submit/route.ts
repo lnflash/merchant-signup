@@ -11,17 +11,29 @@ import { logger } from '../../../src/utils/logger';
 export async function POST(request: Request) {
   console.log('📥 API Route: Received submission request');
   try {
-    // Check if we're in build time (should never happen in production)
-    if (process.env.IS_BUILD_TIME === 'true') {
-      console.log('⚠️ API Route: In build time mode, returning placeholder');
+    // Check for actual Supabase credentials instead of relying on IS_BUILD_TIME
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const hasSupabaseCredentials =
+      supabaseUrl && supabaseAnonKey && supabaseUrl !== '' && supabaseAnonKey !== '';
+
+    // Log environment variables for debugging (omitting sensitive parts)
+    console.log('Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasSupabaseKey: !!supabaseAnonKey,
+      nodeEnv: process.env.NODE_ENV,
+      isBuildTime: process.env.IS_BUILD_TIME,
+    });
+
+    // If no Supabase credentials are available, return a more informative message
+    if (!hasSupabaseCredentials) {
+      console.log('⚠️ API Route: No Supabase credentials available, returning placeholder');
       return NextResponse.json({
         success: true,
-        message: 'Build-time placeholder response',
+        message:
+          'API is running but database connection is unavailable. Please set Supabase environment variables.',
       });
     }
-
-    // Log current environment to help debug
-    console.log('Environment check: IS_BUILD_TIME =', process.env.IS_BUILD_TIME);
 
     console.log('🔄 API Route: Parsing request body...');
     // Get form data from request
@@ -121,8 +133,7 @@ export async function POST(request: Request) {
       const headers = new Headers();
       headers.set('Cache-Control', 'no-store');
 
-      // Handle Cloudflare cookie issues
-      headers.set('Set-Cookie', '__cf_bm=; Path=/; Max-Age=0; SameSite=None; Secure; HttpOnly');
+      // No need to handle Cloudflare cookies server-side
 
       return NextResponse.json(
         {

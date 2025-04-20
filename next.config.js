@@ -23,22 +23,28 @@ const nextConfig = {
     domains: ['example.com'],
     formats: ['image/avif', 'image/webp'],
   },
-  // Fix Cloudflare cookie warnings by setting appropriate headers
+  // Basic security headers
   async headers() {
     return [
       {
         source: '/(.*)',
         headers: [
           {
-            key: 'Set-Cookie',
-            // This ensures cookies are only set with the SameSite attribute
-            value:
-              '__cf_bm=; Path=/; Domain=flash-merchant-signup-ov4yh.ondigitalocean.app; SameSite=None; Secure; HttpOnly; Max-Age=0',
-          },
-          {
             key: 'Content-Security-Policy',
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.ondigitalocean.app; frame-src 'self';",
+              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.ondigitalocean.app https://*.cloudflare.com; frame-src 'self' https://*.cloudflare.com;",
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
           },
         ],
       },
