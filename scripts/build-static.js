@@ -49,12 +49,9 @@ const { execSync } = require('child_process');
 
 try {
   // Run the build with the current environment variables
-  console.log('📦 Building Next.js app...');
+  // With 'output: export' in next.config.js, this will automatically build and export
+  console.log('📦 Building Next.js app (with automatic export)...');
   execSync('next build', { stdio: 'inherit' });
-
-  // Export to static HTML
-  console.log('📤 Exporting to static HTML...');
-  execSync('next export', { stdio: 'inherit' });
 
   console.log('\n✅ Static build completed successfully!');
   console.log('📂 Output directory: ./out');

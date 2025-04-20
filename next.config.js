@@ -3,7 +3,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  output: 'standalone',
+  output: 'export',
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
