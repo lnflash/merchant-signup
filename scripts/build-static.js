@@ -48,6 +48,14 @@ console.log('\n🏗️ Starting static build process...');
 const { execSync } = require('child_process');
 
 try {
+  // Force-remove any api route directories that might cause issues with static export
+  console.log('🗑️ Cleaning up API routes to avoid static export issues...');
+  try {
+    execSync('rm -rf app/api', { stdio: 'inherit' });
+  } catch (e) {
+    console.warn('Warning: Could not remove API routes directory (might not exist)');
+  }
+
   // Run the build with the current environment variables
   // With 'output: export' in next.config.js, this will automatically build and export
   console.log('📦 Building Next.js app (with automatic export)...');

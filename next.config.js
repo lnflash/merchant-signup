@@ -6,6 +6,14 @@ const nextConfig = {
   output: 'export',
   // When exporting, we need to exclude API routes since they require server-side runtime
   distDir: process.env.IS_BUILD_TIME === 'true' ? '.next-static' : '.next',
+  // Explicitly indicate which routes are static
+  experimental: {
+    // This is needed to prevent Next.js from trying to build API routes in static export
+    appDir: true,
+    outputFileTracingExcludes: {
+      '*': ['./app/api/**/*'],
+    },
+  },
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.

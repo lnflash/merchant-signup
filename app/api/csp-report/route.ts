@@ -5,6 +5,10 @@ import { logger } from '../../../src/utils/logger';
  * CSP Report endpoint
  * Receives and logs CSP violations to help debug content security policy issues
  */
+
+// Add a special config to mark this route as dynamic-only (not for static export)
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
 export async function POST(request: Request) {
   try {
     // Get CSP report data from request

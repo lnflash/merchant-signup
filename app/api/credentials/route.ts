@@ -6,6 +6,10 @@ import { logger } from '../../../src/utils/logger';
  * Secure API endpoint to provide Supabase credentials to client components
  * This ensures credentials are consistent across server and client environments
  */
+
+// Add a special config to mark this route as dynamic-only (not for static export)
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
 export async function GET(request: Request) {
   // Generate a trace ID for this request
   const traceId = `cred_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 5)}`;
