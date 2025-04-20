@@ -95,18 +95,16 @@ jobs:
         touch .nojekyll
         
         # Add README.md to explain this branch
-        cat > README.md << 'EOF'
-# Flash Merchant Signup - Static Build
-
-This branch contains the static build of the Flash Merchant Signup application.
-It is generated automatically by GitHub Actions and is intended to be deployed to DigitalOcean App Platform.
-
-The source code is in the `main` branch.
-
-## Build Information
-- Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-- Build Commit: $GITHUB_SHA
-EOF
+        echo "# Flash Merchant Signup - Static Build" > README.md
+        echo "" >> README.md
+        echo "This branch contains the static build of the Flash Merchant Signup application." >> README.md
+        echo "It is generated automatically by GitHub Actions and is intended to be deployed to DigitalOcean App Platform." >> README.md
+        echo "" >> README.md
+        echo "The source code is in the \`main\` branch." >> README.md
+        echo "" >> README.md
+        echo "## Build Information" >> README.md
+        echo "- Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> README.md
+        echo "- Build Commit: $GITHUB_SHA" >> README.md
         
         # Add and commit the static files
         git add .
