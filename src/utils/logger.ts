@@ -36,7 +36,7 @@ const shouldLog = (level: LogLevel): boolean => {
 };
 
 // Format the log message
-const formatMessage = (level: LogLevel, message: string): string => {
+const formatMessage = (level: LogLevel, message: string, _context?: object): string => {
   let prefix = '';
 
   switch (level) {
