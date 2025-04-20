@@ -462,7 +462,18 @@ export default function FileUpload() {
         setUploading(false);
       }
     },
-    [componentId, credentialsLoading, credentialsError, credentials, hookId, setValue, clearErrors]
+    [
+      componentId,
+      credentialsLoading,
+      credentialsError,
+      credentials,
+      hookId,
+      setValue,
+      clearErrors,
+      ALLOWED_FILE_TYPES,
+      MAX_FILE_SIZE,
+      uploadStatus,
+    ]
   );
 
   // Add React hooks for initialization and cleanup
