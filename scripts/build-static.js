@@ -70,25 +70,6 @@ try {
   // Create output directory if it doesn't exist yet
   execSync('mkdir -p out', { stdio: 'inherit' });
 
-  // We'll let Next.js handle the index.html generation now
-  // Just ensure the env-config.js file is in place
-
-  // Create a simple JavaScript file to embed the environment variables
-  console.log('📦 Creating environment configuration...');
-
-  const envConfigJs = `window.ENV = {
-  SUPABASE_URL: "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
-  SUPABASE_KEY: "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
-  BUILD_TIME: true
-};`;
-
-  // Make sure the out directory exists
-  if (!fs.existsSync('out')) {
-    fs.mkdirSync('out', { recursive: true });
-  }
-
-  fs.writeFileSync('out/env-config.js', envConfigJs);
-
   // Create a custom 404 page
   console.log('📦 Creating 404 error page...');
   const notFoundHtml = `<!DOCTYPE html>
@@ -148,13 +129,13 @@ try {
   // Create a simple JavaScript file to embed the environment variables
   console.log('📦 Creating environment configuration...');
 
-  const envConfigJs = `window.ENV = {
+  const envConfig = `window.ENV = {
   SUPABASE_URL: "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
   SUPABASE_KEY: "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
   BUILD_TIME: true
 };`;
 
-  fs.writeFileSync('out/env-config.js', envConfigJs);
+  fs.writeFileSync('out/env-config.js', envConfig);
 
   // Copy the output directory from .next to out if needed
   console.log('📦 Ensuring static files are in the out directory...');
