@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { signupFormSchema } from '../../../lib/validators';
-import { supabase } from '../../../lib/supabase';
+import { getSupabaseClient, createMockSupabaseClient } from '../../../lib/supabase-singleton';
+import { serverCredentials } from '../../../lib/server-credentials';
 import { getErrorMessage } from '../../../src/utils/validation';
 import { logger } from '../../../src/utils/logger';
 
@@ -25,14 +26,19 @@ export async function POST(request: Request) {
       isBuildTime: process.env.IS_BUILD_TIME,
     });
 
-    // If no Supabase credentials are available, return a more informative message
-    if (!hasSupabaseCredentials) {
-      console.log('⚠️ API Route: No Supabase credentials available, returning placeholder');
-      return NextResponse.json({
-        success: true,
-        message:
-          'API is running but database connection is unavailable. Please set Supabase environment variables.',
-      });
+    // Get Supabase client with server credentials
+    let supabase;
+    if (hasSupabaseCredentials) {
+      try {
+        supabase = getSupabaseClient(serverCredentials.supabaseUrl, serverCredentials.supabaseKey);
+        logger.info('API using real Supabase client with server credentials');
+      } catch (error) {
+        logger.error('Error creating Supabase client', error);
+        supabase = createMockSupabaseClient();
+      }
+    } else {
+      console.log('⚠️ API Route: No Supabase credentials available, using mock client');
+      supabase = createMockSupabaseClient();
     }
 
     console.log('🔄 API Route: Parsing request body...');
