@@ -86,11 +86,28 @@ export function useSupabase() {
     }
   };
 
+  // Debug method to verify connection status
+  const debugConnectionStatus = () => {
+    console.log('Current Supabase connection status:', {
+      isConnected,
+      error,
+      supabaseInstance: supabase ? 'exists' : 'missing',
+    });
+    // Force a new connection check
+    checkConnection();
+  };
+
+  // Log connection status on first render
+  useEffect(() => {
+    console.log('useSupabase hook initial state:', { isConnected, error });
+  }, []);
+
   return {
     supabase,
     isConnected,
     error,
     checkConnection,
     insertData,
+    debugConnectionStatus,
   };
 }

@@ -4,46 +4,48 @@ import { useState, useEffect } from 'react';
 import { useSupabase } from '../hooks/useSupabase';
 
 export const DatabaseStatus = () => {
-  const { isConnected, error, checkConnection } = useSupabase();
-  const [showStatus, setShowStatus] = useState(false);
+  const { isConnected, error, checkConnection, debugConnectionStatus } = useSupabase();
+  const [showStatus, setShowStatus] = useState(true); // Always show initially
+
+  // Debug log
+  console.log('DatabaseStatus rendering:', { isConnected, error, showStatus });
 
   useEffect(() => {
-    // Show the status briefly on first load or error
-    if (isConnected !== null || error) {
-      setShowStatus(true);
+    // Always show on first load, error, or when connection status changes
+    setShowStatus(true);
 
-      if (isConnected && !error) {
-        // If connected successfully, hide after 5 seconds
-        const timer = setTimeout(() => {
-          setShowStatus(false);
-        }, 5000);
+    // If connected successfully and no error, hide after 5 seconds
+    if (isConnected === true && !error) {
+      console.log('Connection successful, will hide status in 5 seconds');
+      const timer = setTimeout(() => {
+        setShowStatus(false);
+      }, 5000);
 
-        return () => clearTimeout(timer);
-      }
+      return () => clearTimeout(timer);
     }
   }, [isConnected, error]);
 
-  // Keep the status visible longer if there's an error
-  if (!showStatus && !error) return null;
-
+  // Always render the component, even if it might be invisible,
+  // to make sure it stays in the DOM
   return (
     <div
-      className={`fixed bottom-4 right-4 p-3 rounded-lg shadow-lg transition-opacity duration-500 ${
-        showStatus ? 'opacity-90' : 'opacity-0'
+      className={`fixed bottom-4 right-4 p-3 rounded-lg shadow-lg transition-all duration-500 z-50 ${
+        showStatus ? 'opacity-90 visible' : 'opacity-0 invisible'
       } ${
         error
           ? 'bg-red-50 border border-red-200 text-red-700'
-          : isConnected
+          : isConnected === true
             ? 'bg-green-50 border border-green-200 text-green-700'
             : 'bg-yellow-50 border border-yellow-200 text-yellow-700'
       }`}
+      style={{ zIndex: 9999 }} // Ensure it's above everything
     >
       <div className="flex items-center gap-2">
         <div
           className={`w-3 h-3 rounded-full ${
             error
               ? 'bg-red-500 animate-pulse'
-              : isConnected
+              : isConnected === true
                 ? 'bg-green-500'
                 : 'bg-yellow-500 animate-pulse'
           }`}
@@ -52,10 +54,18 @@ export const DatabaseStatus = () => {
         <div className="text-sm font-medium">
           {error
             ? 'Database connection error'
-            : isConnected
+            : isConnected === true
               ? 'Connected to database'
               : 'Connecting to database...'}
         </div>
+
+        <button
+          onClick={() => debugConnectionStatus()}
+          className="ml-3 text-xs bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded transition-colors"
+          aria-label="Check connection"
+        >
+          Check
+        </button>
 
         {error && (
           <button
@@ -66,6 +76,15 @@ export const DatabaseStatus = () => {
             Retry
           </button>
         )}
+
+        {/* Always visible toggle button */}
+        <button
+          onClick={() => setShowStatus(prev => !prev)}
+          className="ml-3 text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
+          aria-label="Toggle visibility"
+        >
+          {showStatus ? 'Hide' : 'Show'}
+        </button>
       </div>
 
       {error && (

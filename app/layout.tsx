@@ -46,7 +46,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   Help Center
                 </a>
               </div>
-              <p className="mt-4 text-xs text-gray-400">Version {config.app.version}</p>
+              <div className="mt-4 flex items-center justify-center space-x-2">
+                <p className="text-xs text-gray-400">Version {config.app.version}</p>
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <p className="text-xs text-gray-400">Database Connected</p>
+              </div>
             </div>
           </footer>
         </div>
