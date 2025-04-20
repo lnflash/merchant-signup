@@ -54,6 +54,23 @@ export function useCredentials() {
       return;
     }
 
+    // Check if we're in a static build with embedded credentials
+    if (process.env.IS_BUILD_TIME === 'true') {
+      console.info(`[🔑] [${hookId.current}] Using embedded static credentials (static build)`);
+      setCredentials({
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        bucket: 'id_uploads',
+        environment: process.env.NODE_ENV,
+        buildTime: true,
+        platform: 'StaticBuild',
+        traceId: `static_${Date.now().toString(36)}`,
+        serverTime: new Date().toISOString(),
+      });
+      setLoading(false);
+      return;
+    }
+
     async function fetchCredentials() {
       try {
         // Reset any previous error

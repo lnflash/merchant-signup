@@ -4,6 +4,8 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   output: 'export',
+  // When exporting, we need to exclude API routes since they require server-side runtime
+  distDir: process.env.IS_BUILD_TIME === 'true' ? '.next-static' : '.next',
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
@@ -26,33 +28,37 @@ const nextConfig = {
     domains: ['example.com'],
     formats: ['image/avif', 'image/webp'],
   },
-  // Basic security headers
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Content-Security-Policy',
-            value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.ondigitalocean.app https://*.cloudflare.com https://*.supabase.co https://*.supabase.in; frame-src 'self' https://*.cloudflare.com; report-uri https://flash-merchant-signup-ov4yh.ondigitalocean.app/api/csp-report;",
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-        ],
-      },
-    ];
-  },
+  // Headers not used with static export, but keep the config for non-static builds
+  ...(process.env.IS_BUILD_TIME === 'true'
+    ? {}
+    : {
+        async headers() {
+          return [
+            {
+              source: '/(.*)',
+              headers: [
+                {
+                  key: 'Content-Security-Policy',
+                  value:
+                    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.ondigitalocean.app https://*.cloudflare.com https://*.supabase.co https://*.supabase.in; frame-src 'self' https://*.cloudflare.com; report-uri https://flash-merchant-signup-ov4yh.ondigitalocean.app/api/csp-report;",
+                },
+                {
+                  key: 'X-Content-Type-Options',
+                  value: 'nosniff',
+                },
+                {
+                  key: 'X-Frame-Options',
+                  value: 'DENY',
+                },
+                {
+                  key: 'X-XSS-Protection',
+                  value: '1; mode=block',
+                },
+              ],
+            },
+          ];
+        },
+      }),
 };
 
 module.exports = nextConfig;
