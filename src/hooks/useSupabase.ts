@@ -46,22 +46,31 @@ export function useSupabase() {
 
   /**
    * Insert data into a table with error handling
+   * @param table The table name to insert data into
+   * @param data The data to insert
+   * @returns Promise with error or data response
    */
-  const insertData = async <T>(
+  const insertData = async <T = any>(
     table: string,
     data: T
   ): Promise<{ error: string | null; data: any | null }> => {
     try {
       // Safely log data without exposing sensitive fields
-      const loggableData = { ...data };
-      // Remove potentially sensitive fields for logging
-      if (typeof loggableData === 'object' && loggableData !== null) {
+      let loggableData: object | undefined;
+
+      // Only create loggableData if data is an object
+      if (typeof data === 'object' && data !== null) {
+        loggableData = { ...data };
+        // Remove potentially sensitive fields for logging
         const sensitiveFields = ['password', 'card', 'ssn', 'secret', 'key'];
         for (const key in loggableData) {
           if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
             (loggableData as any)[key] = '[REDACTED]';
           }
         }
+      } else {
+        // If data is not an object, create a simple object with type information
+        loggableData = { type: typeof data, isArray: Array.isArray(data) };
       }
 
       logger.info(`Inserting data into "${table}" table`, loggableData);

@@ -16,8 +16,21 @@ console.log('Starting production build process...');
 try {
   console.log('Running TypeScript type check...');
   execSync('npm run typecheck', { stdio: 'inherit' });
+  console.log('TypeScript check passed ✓');
 } catch (error) {
   console.error('TypeScript errors detected. Aborting build.');
+  console.error('Error details:', error.message);
+
+  // Check if this is a generic type error
+  if (
+    error.message.includes('Type error') &&
+    error.message.includes('not assignable to parameter')
+  ) {
+    console.error(
+      'HINT: This may be a generic type constraint issue. Check type definitions and function parameter types.'
+    );
+  }
+
   process.exit(1);
 }
 
