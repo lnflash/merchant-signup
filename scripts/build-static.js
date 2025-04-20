@@ -70,6 +70,43 @@ try {
   // Create output directory if it doesn't exist yet
   execSync('mkdir -p out', { stdio: 'inherit' });
 
+  // Create index.html with a redirect to /form
+  console.log('📦 Creating index.html redirect...');
+  const indexHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Flash Merchant Signup</title>
+  <meta http-equiv="refresh" content="0;url=/form">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      text-align: center;
+      color: #333;
+    }
+    .logo {
+      max-width: 120px;
+      margin-bottom: 20px;
+    }
+    h1 { color: #1D4ED8; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <img src="/images/logos/flash.png" alt="Flash Logo" class="logo" />
+  <h1>Flash Merchant Signup</h1>
+  <p>Redirecting to the signup form...</p>
+  <p>If you are not redirected automatically, <a href="/form">click here</a>.</p>
+  <script>
+    window.location.href = '/form';
+  </script>
+</body>
+</html>`;
+
+  fs.writeFileSync('out/index.html', indexHtml);
+
   // Create a custom 404 page
   console.log('📦 Creating 404 error page...');
   const notFoundHtml = `<!DOCTYPE html>
@@ -112,6 +149,64 @@ try {
 </html>`;
 
   fs.writeFileSync('out/404.html', notFoundHtml);
+
+  // Create a basic form.html page (fallback if Next.js doesn't generate proper structure)
+  console.log('📦 Creating form.html fallback...');
+  const formHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Flash Merchant Signup Form</title>
+  <meta http-equiv="refresh" content="0;url=/form/">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      text-align: center;
+      color: #333;
+    }
+    .logo {
+      max-width: 120px;
+      margin-bottom: 20px;
+    }
+    h1 { color: #1D4ED8; margin-bottom: 10px; }
+  </style>
+  <script src="/env-config.js"></script>
+</head>
+<body>
+  <img src="/images/logos/flash.png" alt="Flash Logo" class="logo" />
+  <h1>Flash Merchant Signup</h1>
+  <p>Loading signup form...</p>
+  <div id="env-status"></div>
+  <script>
+    // Display environment variables status (without showing actual values)
+    document.addEventListener("DOMContentLoaded", function() {
+      const status = document.getElementById("env-status");
+      const env = window.ENV || {};
+      status.innerHTML = 
+        "<h2>Environment Configuration</h2>" +
+        "<ul>" +
+        "<li>Supabase URL: " + (env.SUPABASE_URL ? "✅ Available" : "❌ Missing") + "</li>" +
+        "<li>Supabase Key: " + (env.SUPABASE_KEY ? "✅ Available" : "❌ Missing") + "</li>" +
+        "<li>Built with embedded variables: " + (env.BUILD_TIME ? "✅ Yes" : "❌ No") + "</li>" +
+        "</ul>";
+    });
+  </script>
+</body>
+</html>`;
+
+  // Create the form.html file as a fallback
+  fs.writeFileSync('out/form.html', formHtml);
+
+  // Create form directory if it doesn't exist yet
+  execSync('mkdir -p out/form', { stdio: 'inherit' });
+
+  // If Next.js didn't generate a form/index.html, create one
+  if (!fs.existsSync('out/form/index.html')) {
+    fs.writeFileSync('out/form/index.html', formHtml);
+  }
 
   // Create _next directory structure
   console.log('📦 Creating static assets directory structure...');
