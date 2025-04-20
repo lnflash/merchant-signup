@@ -3,6 +3,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  // For static export
   output: 'export',
   // When exporting, we need to exclude API routes since they require server-side runtime
   distDir: process.env.IS_BUILD_TIME === 'true' ? '.next-static' : '.next',
