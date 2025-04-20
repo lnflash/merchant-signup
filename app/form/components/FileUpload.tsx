@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { supabase } from '../../../lib/supabase';
+import { createSupabaseClient } from '../../../lib/clientSupabase';
 import { config } from '../../../src/config';
 import { isFileInstance } from '../../../src/utils/validation';
 import { logger } from '../../../src/utils/logger';
@@ -100,53 +100,71 @@ export default function FileUpload() {
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      // Attempt to upload the file to Supabase Storage
+      // Attempt to upload the file to Supabase Storage using a fresh client
       let fileUrl;
 
       try {
-        // Check if we have a valid Supabase connection
-        if (!supabase || !config.supabase.url || !config.supabase.anonKey) {
-          logger.warn('Using mock upload because Supabase credentials are missing', {
-            bucket: config.supabase.storageBucket,
-            hasSupabaseUrl: !!config.supabase.url,
-            hasSupabaseKey: !!config.supabase.anonKey,
+        // Create a fresh Supabase client instance for this upload
+        // This ensures we get the latest environment variables from the browser
+        const supabaseClient = createSupabaseClient();
+
+        // Log detailed environment information
+        logger.info(`File upload initiated`, {
+          environment: process.env.NODE_ENV,
+          isBuildTime: process.env.IS_BUILD_TIME,
+          bucket: config.supabase.storageBucket,
+          hasPublicUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          hasPublicKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          fileType: file.type,
+          fileSize: file.size,
+        });
+
+        // Using existing 'id_uploads' bucket
+        logger.info(`Using storage bucket: ${config.supabase.storageBucket}`);
+
+        // Perform the upload
+        logger.info(`Starting file upload to Supabase...`);
+        const { data, error: uploadError } = await supabaseClient.storage
+          .from(config.supabase.storageBucket)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true,
           });
 
-          // Simulate a short delay for the mock upload
-          await new Promise(resolve => setTimeout(resolve, 1000));
+        if (uploadError) {
+          logger.error('Supabase storage upload error:', uploadError);
+          throw uploadError;
+        }
 
-          // Use a mock URL if Supabase is not available
-          fileUrl = `https://example.com/${config.supabase.storageBucket}/${filePath}`;
-        } else {
-          // Real upload to Supabase storage
-          logger.info(`Uploading file to Supabase storage`, {
-            bucket: config.supabase.storageBucket,
-            filePath,
-            fileSize: file.size,
-            fileType: file.type,
+        // Get the public URL for the uploaded file
+        const { data: urlData } = supabaseClient.storage
+          .from(config.supabase.storageBucket)
+          .getPublicUrl(filePath);
+
+        // If we got a URL that contains "example.com", it means we're using a mock client
+        if (urlData.publicUrl.includes('example.com')) {
+          logger.warn('Still using mock Supabase client despite having credentials', {
+            url: urlData.publicUrl,
           });
-
-          // Using existing 'id_uploads' bucket
-          logger.info(`Using existing storage bucket: ${config.supabase.storageBucket}`);
-
-          // Perform the upload
-          const { data, error: uploadError } = await supabase.storage
-            .from(config.supabase.storageBucket)
-            .upload(filePath, file, {
-              cacheControl: '3600',
-              upsert: true,
-            });
-
-          if (uploadError) {
-            logger.error('Supabase storage upload error:', uploadError);
-            throw uploadError;
+          // Try one more approach for production
+          if (process.env.NODE_ENV === 'production') {
+            // Create a direct URL using known Supabase URL pattern
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            if (supabaseUrl) {
+              const projectRef = supabaseUrl.match(/https:\/\/([^.]+)/)?.[1];
+              if (projectRef) {
+                fileUrl = `https://${projectRef}.supabase.co/storage/v1/object/public/${config.supabase.storageBucket}/${filePath}`;
+                logger.info('Created direct Supabase storage URL', { url: fileUrl });
+              } else {
+                fileUrl = urlData.publicUrl;
+              }
+            } else {
+              fileUrl = urlData.publicUrl;
+            }
+          } else {
+            fileUrl = urlData.publicUrl;
           }
-
-          // Get the public URL for the uploaded file
-          const { data: urlData } = supabase.storage
-            .from(config.supabase.storageBucket)
-            .getPublicUrl(filePath);
-
+        } else {
           fileUrl = urlData.publicUrl;
           logger.info('File uploaded successfully', { url: fileUrl });
         }
