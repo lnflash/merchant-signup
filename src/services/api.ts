@@ -15,7 +15,9 @@ export const apiService = {
       const baseUrl =
         config.api.baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
 
-      console.log('Submitting form to:', `${baseUrl}/api/submit`);
+      // Construct the correct URL - avoiding double /api/ issues
+      const submitUrl = new URL('/api/submit', baseUrl).href;
+      console.log('Submitting form to:', submitUrl);
 
       // Log the actual data being sent
       console.log('Request payload:', JSON.stringify(data, null, 2));
@@ -24,7 +26,7 @@ export const apiService = {
       await new Promise(resolve => setTimeout(resolve, 500));
 
       try {
-        const response = await fetch(`${baseUrl}/api/submit`, {
+        const response = await fetch(submitUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
