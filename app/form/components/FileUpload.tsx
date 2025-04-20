@@ -237,7 +237,7 @@ export default function FileUpload() {
         console.info(`[📤] [${uploadId}] STEP 2: Initializing Supabase client`);
 
         // Use specific bucket from credentials or config
-        let bucket = credentials?.bucket || config.supabase.storageBucket;
+        const bucket = credentials?.bucket || config.supabase.storageBucket;
         let supabaseClient;
         let clientType = 'unknown';
 
