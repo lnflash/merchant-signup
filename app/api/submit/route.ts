@@ -38,9 +38,26 @@ export async function POST(request: Request) {
     }
 
     // Validate form data
-    console.log('🔄 API Route: Validating form data...');
+    console.log('🔄 API Route: Validating form data...', {
+      accountType: data.account_type,
+      name: data.name,
+      phone: data.phone,
+    });
+
     let validatedData;
     try {
+      // To help debug, log what fields are expected based on account type
+      console.log(`Account type is "${data.account_type}" - checking required fields`);
+      if (data.account_type === 'business') {
+        console.log(
+          'Required fields for business: name, phone, business_name, business_address, terms_accepted'
+        );
+      } else if (data.account_type === 'merchant') {
+        console.log('Required fields for merchant: name, phone, bank info fields, etc.');
+      } else {
+        console.log('Required fields for personal: name, phone, terms_accepted');
+      }
+
       validatedData = signupFormSchema.parse(data);
       console.log('✅ API Route: Form data validated successfully');
     } catch (validationError) {

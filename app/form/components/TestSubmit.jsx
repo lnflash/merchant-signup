@@ -12,13 +12,22 @@ export default function TestSubmit() {
     setError(null);
     setResponse(null);
     
-    // Simple test data
+    // Simple test data for personal account - only required fields
     const testData = {
       name: "Test User",
       phone: "+12345678900",
       email: "test@example.com",
       account_type: "personal",
-      terms_accepted: true
+      terms_accepted: true,
+      // Empty fields for business/merchant
+      business_name: "",
+      business_address: "",
+      bank_name: "",
+      bank_branch: "",
+      bank_account_type: "",
+      account_currency: "",
+      bank_account_number: "",
+      id_image_url: ""
     };
     
     try {

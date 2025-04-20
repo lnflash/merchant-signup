@@ -32,6 +32,16 @@ const createConditionalSchema = (accountTypes: ('personal' | 'business' | 'merch
       // Skip validation if not validating this field specifically
       if (!ctx.path.length) return;
 
+      // Get the account type from the validation context data
+      // Extract the data from the validation context
+      const data = ctx.parent as { account_type?: 'personal' | 'business' | 'merchant' };
+      const accountType = data.account_type;
+
+      // Skip validation if the field is not required for the current account type
+      if (!accountType || !accountTypes.includes(accountType)) {
+        return;
+      }
+
       // Validation for strings - only add issue if value is empty
       if (!val || (typeof val === 'string' && val.trim() === '')) {
         ctx.addIssue({
