@@ -101,40 +101,38 @@ jobs:
         touch .nojekyll
         
         # Create a .gitignore file to avoid including node_modules and other large files
-        cat > .gitignore << 'EOF'
-# Dependencies
-node_modules
-.pnp
-.pnp.js
-
-# Testing
-coverage
-
-# Next.js build artifacts
-.next
-.next-static
-
-# Vercel
-.vercel
-
-# Build directory
-build
-
-# Debug logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local environment variables
-.env*.local
-
-# Large binary files
-*.node
-*.so
-*.dll
-*.dylib
-*.exe
-EOF
+        echo "# Dependencies" > .gitignore
+        echo "node_modules" >> .gitignore
+        echo ".pnp" >> .gitignore
+        echo ".pnp.js" >> .gitignore
+        echo "" >> .gitignore
+        echo "# Testing" >> .gitignore
+        echo "coverage" >> .gitignore
+        echo "" >> .gitignore
+        echo "# Next.js build artifacts" >> .gitignore
+        echo ".next" >> .gitignore
+        echo ".next-static" >> .gitignore
+        echo "" >> .gitignore
+        echo "# Vercel" >> .gitignore
+        echo ".vercel" >> .gitignore
+        echo "" >> .gitignore
+        echo "# Build directory" >> .gitignore
+        echo "build" >> .gitignore
+        echo "" >> .gitignore
+        echo "# Debug logs" >> .gitignore
+        echo "npm-debug.log*" >> .gitignore
+        echo "yarn-debug.log*" >> .gitignore
+        echo "yarn-error.log*" >> .gitignore
+        echo "" >> .gitignore
+        echo "# Local environment variables" >> .gitignore
+        echo ".env*.local" >> .gitignore
+        echo "" >> .gitignore
+        echo "# Large binary files" >> .gitignore
+        echo "*.node" >> .gitignore
+        echo "*.so" >> .gitignore
+        echo "*.dll" >> .gitignore
+        echo "*.dylib" >> .gitignore
+        echo "*.exe" >> .gitignore
         
         # Add README.md to explain this branch
         echo "# Flash Merchant Signup - Static Build" > README.md
@@ -147,6 +145,14 @@ EOF
         echo "## Build Information" >> README.md
         echo "- Build Date: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> README.md
         echo "- Build Commit: $GITHUB_SHA" >> README.md
+        
+        # Check for any large files before committing
+        echo "Checking for large files (>50MB)..."
+        find . -type f -size +50M | while read file; do
+          echo "⚠️ WARNING: Large file detected: $file"
+          rm -f "$file"
+          echo "Removed large file to prevent push failure"
+        done
         
         # Add and commit the static files
         git add .
