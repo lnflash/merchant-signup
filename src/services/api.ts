@@ -10,7 +10,13 @@ export const apiService = {
    */
   async submitSignupForm(data: SignupFormData): Promise<ApiResponse> {
     try {
-      const response = await fetch(`${config.api.baseUrl}/api/submit`, {
+      // Get the base URL from config or use the current location
+      const baseUrl =
+        config.api.baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+
+      console.log('Submitting form to:', `${baseUrl}/api/submit`);
+
+      const response = await fetch(`${baseUrl}/api/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

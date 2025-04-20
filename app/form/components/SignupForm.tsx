@@ -150,13 +150,17 @@ export default function SignupForm() {
       };
 
       logger.info('Submitting merchant registration form', safeData);
+      console.log('Form data being submitted:', data);
 
       // Call the API service to submit the form
       const response = await apiService.submitSignupForm(data);
+      console.log('API response:', response);
 
       if (!response.success) {
         logger.error('Form submission failed', response.error);
-        throw new Error(response.error as string);
+        const errorMessage =
+          typeof response.error === 'string' ? response.error : JSON.stringify(response.error);
+        throw new Error(errorMessage);
       }
 
       logger.info('Form submission successful', {

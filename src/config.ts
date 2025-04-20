@@ -15,6 +15,9 @@ export const config = {
     enabled: true,
     level: process.env.LOG_LEVEL || 'info',
   },
+  api: {
+    baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || '',
+  },
 };
 
 // Log application startup information

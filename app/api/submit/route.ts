@@ -9,20 +9,50 @@ import { logger } from '../../../src/utils/logger';
  * Validates and saves signup data to Supabase
  */
 export async function POST(request: Request) {
+  console.log('📥 API Route: Received submission request');
   try {
     // Check if we're in build time (should never happen in production)
     if (process.env.IS_BUILD_TIME === 'true') {
+      console.log('⚠️ API Route: In build time mode, returning placeholder');
       return NextResponse.json({
         success: true,
         message: 'Build-time placeholder response',
       });
     }
 
+    console.log('🔄 API Route: Parsing request body...');
     // Get form data from request
-    const data = await request.json();
+    let data;
+    try {
+      data = await request.json();
+      console.log('✅ API Route: Request body parsed successfully');
+    } catch (parseError) {
+      console.error('❌ API Route: Failed to parse request body:', parseError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid JSON in request body',
+        },
+        { status: 400 }
+      );
+    }
 
     // Validate form data
-    const validatedData = signupFormSchema.parse(data);
+    console.log('🔄 API Route: Validating form data...');
+    let validatedData;
+    try {
+      validatedData = signupFormSchema.parse(data);
+      console.log('✅ API Route: Form data validated successfully');
+    } catch (validationError) {
+      console.error('❌ API Route: Form validation failed:', validationError);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Validation failed: ' + getErrorMessage(validationError),
+        },
+        { status: 400 }
+      );
+    }
 
     // Sanitize data (example: trim strings)
     Object.keys(validatedData).forEach((key: string) => {
@@ -41,7 +71,7 @@ export async function POST(request: Request) {
 
       // Create loggable object with limited sensitive data
       const loggableData = {
-        businessName: dataToInsert.businessName,
+        businessName: dataToInsert.business_name,
         email: dataToInsert.email,
         timestamp: dataToInsert.created_at,
       };
@@ -65,7 +95,7 @@ export async function POST(request: Request) {
         );
       }
 
-      logger.supabase.dataSubmitted('signups', { id: dataToInsert.businessName });
+      logger.supabase.dataSubmitted('signups', { id: dataToInsert.business_name });
 
       // Set appropriate response headers
       const headers = new Headers();
