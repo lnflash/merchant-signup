@@ -21,7 +21,27 @@ export default function FileUpload() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get Supabase credentials from our hook
-  const { credentials, loading: credentialsLoading, error: credentialsError } = useCredentials();
+  const {
+    credentials,
+    loading: credentialsLoading,
+    error: credentialsError,
+    hookId,
+  } = useCredentials();
+
+  // Create a unique ID for this component instance for tracing
+  const componentId = useRef(
+    `upload_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 5)}`
+  );
+
+  // Initialize with empty state
+  useEffect(() => {
+    console.info(
+      `[📤] [${componentId.current}] FileUpload component initialized, credential hook ID: ${hookId}`
+    );
+    return () => {
+      console.info(`[📤] [${componentId.current}] FileUpload component cleanup`);
+    };
+  }, [hookId]);
 
   // File size limit in bytes (5MB)
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -65,28 +85,50 @@ export default function FileUpload() {
   }, []);
 
   const handleFiles = async (fileList: FileList) => {
+    // Generate a unique ID for this specific upload transaction
+    const uploadId = `${componentId.current}_${Date.now().toString(36)}`;
+
     try {
+      console.info(`[📤] [${uploadId}] Starting file upload process`);
       setErrorMessage(null);
       setUploadStatus('idle');
 
-      if (fileList.length === 0) return;
+      if (fileList.length === 0) {
+        console.info(`[📤] [${uploadId}] No files selected, aborting upload`);
+        return;
+      }
 
       const file = fileList[0];
 
       // Safety check
-      if (!file) return;
+      if (!file) {
+        console.warn(`[📤] [${uploadId}] File object is null/undefined, aborting`);
+        return;
+      }
 
       // Validate file type
       if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+        console.warn(`[📤] [${uploadId}] Invalid file type: ${file.type}`);
         setErrorMessage('Please upload a valid image (JPG, PNG, or HEIC)');
         return;
       }
 
       // Validate file size
       if (file.size > MAX_FILE_SIZE) {
+        console.warn(
+          `[📤] [${uploadId}] File too large: ${(file.size / 1024 / 1024).toFixed(2)}MB (max: ${MAX_FILE_SIZE / 1024 / 1024}MB)`
+        );
         setErrorMessage('File size exceeds 5MB limit');
         return;
       }
+
+      // Log file information
+      console.info(`[📤] [${uploadId}] Processing file:`, {
+        name: file.name,
+        type: file.type,
+        size: `${(file.size / 1024).toFixed(2)}KB`,
+        lastModified: new Date(file.lastModified).toISOString(),
+      });
 
       setUploading(true);
 
@@ -95,6 +137,7 @@ export default function FileUpload() {
       reader.onload = e => {
         if (e.target?.result) {
           setFilePreview(e.target.result as string);
+          console.info(`[📤] [${uploadId}] File preview created`);
         }
       };
       reader.readAsDataURL(file);
@@ -104,97 +147,333 @@ export default function FileUpload() {
       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
+      console.info(`[📤] [${uploadId}] Generated file path: ${filePath}`);
+
       // Attempt to upload the file to Supabase Storage using our credentials API
       let fileUrl: string;
 
       try {
-        // First check if credentials are still loading
+        // ==============================================
+        // STEP 1: Verify and prepare credentials
+        // ==============================================
+        console.info(`[📤] [${uploadId}] STEP 1: Verifying credentials from hook (ID: ${hookId})`);
+
+        // First check if credentials are still loading and wait if necessary
         if (credentialsLoading) {
-          logger.info('Waiting for credentials to load...');
-          // Wait a moment for credentials to load (optional)
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.warn(`[📤] [${uploadId}] ⏳ Credentials still loading, waiting...`);
+          // Wait for credentials to load (with timeout)
+          try {
+            await new Promise((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                reject(new Error('Timeout waiting for credentials'));
+              }, 3000);
+
+              // Check every 300ms if credentials have loaded
+              const checkCredentials = () => {
+                if (!credentialsLoading) {
+                  clearTimeout(timeout);
+                  resolve(true);
+                } else {
+                  setTimeout(checkCredentials, 300);
+                }
+              };
+
+              checkCredentials();
+            });
+            console.info(`[📤] [${uploadId}] ✓ Credentials finished loading`);
+          } catch (error) {
+            console.error(`[📤] [${uploadId}] ⚠️ Timed out waiting for credentials`);
+            // Continue anyway, we'll check credentials next
+          }
         }
 
-        // Log credential status
-        logger.info('Credentials status:', {
-          loading: credentialsLoading,
-          hasError: !!credentialsError,
-          hasCredentials: !!credentials,
-          hasUrl: credentials?.supabaseUrl ? true : false,
-          hasKey: credentials?.supabaseKey ? true : false,
+        // Log detailed credential status (extremely thorough for debugging)
+        const credStatus = {
+          uploadId,
+          hookId,
+          timestamp: new Date().toISOString(),
+          // File details
+          fileType: file.type,
+          fileSize: file.size,
+          fileName: file.name,
+          // Credential status
+          credentialsLoading,
+          credentialsError: credentialsError
+            ? {
+                message: credentialsError.message,
+                name: credentialsError.name,
+              }
+            : null,
+          // Credential details (sanitized to avoid logging actual values)
+          hasCredentialsObject: !!credentials,
+          hasUrl: !!credentials?.supabaseUrl,
+          hasKey: !!credentials?.supabaseKey,
+          urlLength: credentials?.supabaseUrl?.length || 0,
+          keyLength: credentials?.supabaseKey?.length || 0,
+          urlFirstChars: credentials?.supabaseUrl ? credentials.supabaseUrl.substring(0, 8) : '',
+          // Where credentials came from
+          credTraceId: credentials?.traceId || 'none',
+          serverTime: credentials?.serverTime,
+          timeSinceServerResponse: credentials?.serverTime
+            ? `${(new Date().getTime() - new Date(credentials.serverTime).getTime()) / 1000}s`
+            : 'unknown',
+          // Environment info
           bucket: credentials?.bucket || config.supabase.storageBucket,
-        });
+          environment: process.env.NODE_ENV,
+          platform: credentials?.platform || 'unknown',
+          buildTime: process.env.IS_BUILD_TIME,
+          // Config fallbacks
+          configHasSupabaseUrl: !!config.supabase.url,
+          configHasSupabaseKey: !!config.supabase.anonKey,
+          configSupabaseUrlLength: config.supabase.url?.length || 0,
+          configSupabaseKeyLength: config.supabase.anonKey?.length || 0,
+        };
 
-        let supabaseClient;
+        console.info(`[📤] [${uploadId}] 📋 Comprehensive credential status:`, credStatus);
+
+        // ==============================================
+        // STEP 2: Decision point - mock or real client
+        // ==============================================
+        console.info(`[📤] [${uploadId}] STEP 2: Initializing Supabase client`);
+
+        // Use specific bucket from credentials or config
         let bucket = credentials?.bucket || config.supabase.storageBucket;
+        let supabaseClient;
+        let clientType = 'unknown';
 
-        // If we have valid credentials, create a real client
+        // Handle primary credentials flow - first check from credentials API
         if (credentials?.supabaseUrl && credentials?.supabaseKey) {
-          logger.info('Creating Supabase client with fetched credentials');
-          supabaseClient = getSupabaseClient(credentials.supabaseUrl, credentials.supabaseKey);
-        } else {
-          // Otherwise, use mock client
-          logger.warn('Using mock client due to missing credentials');
+          console.info(
+            `[📤] [${uploadId}] ✅ Using real Supabase client with credentials from API response`
+          );
+          clientType = 'real_from_api';
+          try {
+            // Create the client with proper tracing
+            console.info(`[📤] [${uploadId}] Creating Supabase client with valid credentials:`, {
+              urlLength: credentials.supabaseUrl.length,
+              keyLength: credentials.supabaseKey.length,
+              bucket,
+            });
+
+            supabaseClient = getSupabaseClient(credentials.supabaseUrl, credentials.supabaseKey);
+
+            // Verify client was created correctly
+            if (!supabaseClient) {
+              throw new Error('getSupabaseClient returned null or undefined');
+            }
+
+            console.info(`[📤] [${uploadId}] ✓ Supabase client created successfully`);
+          } catch (error) {
+            clientType = 'mock_after_client_error';
+            console.error(`[📤] [${uploadId}] ❌ Failed to create Supabase client:`, {
+              error: error instanceof Error ? error.message : String(error),
+              stack:
+                error instanceof Error ? error.stack?.substring(0, 150) + '...' : 'No stack trace',
+            });
+            console.warn(
+              `[📤] [${uploadId}] ⚠️ Falling back to mock client after client creation error`
+            );
+            supabaseClient = createMockSupabaseClient();
+          }
+        }
+        // Fallback #1: Try config directly as a backup source of credentials
+        else if (config.supabase.url && config.supabase.anonKey) {
+          console.warn(
+            `[📤] [${uploadId}] ⚠️ API credentials missing, falling back to config.supabase values`
+          );
+          clientType = 'real_from_config';
+          try {
+            supabaseClient = getSupabaseClient(config.supabase.url, config.supabase.anonKey);
+            console.info(`[📤] [${uploadId}] ✓ Created fallback Supabase client from config`);
+          } catch (error) {
+            clientType = 'mock_after_fallback_error';
+            console.error(
+              `[📤] [${uploadId}] ❌ Failed to create fallback Supabase client:`,
+              error
+            );
+            supabaseClient = createMockSupabaseClient();
+          }
+        }
+        // Fallback #2: No valid credentials anywhere, use mock
+        else {
+          clientType = 'mock_no_credentials';
+          console.warn(`[📤] [${uploadId}] ⚠️ NO CREDENTIALS FOUND! Using mock client.`);
           supabaseClient = createMockSupabaseClient();
         }
 
-        // Perform the upload
-        logger.info(`Uploading file to Supabase storage bucket: ${bucket}`);
+        // ==============================================
+        // STEP 3: Perform the file upload
+        // ==============================================
+        console.info(`[📤] [${uploadId}] STEP 3: Uploading file using ${clientType} client`);
+        console.info(`[📤] [${uploadId}] Starting upload to bucket: ${bucket}, file: ${filePath}`);
+
+        // Actually perform the upload
+        const uploadStart = Date.now();
         const { data, error: uploadError } = await supabaseClient.storage
           .from(bucket)
           .upload(filePath, file, {
             cacheControl: '3600',
             upsert: true,
           });
+        const uploadDuration = Date.now() - uploadStart;
 
+        // Check for upload errors
         if (uploadError) {
-          logger.error('Supabase storage upload error:', uploadError);
+          console.error(`[📤] [${uploadId}] ❌ UPLOAD FAILED after ${uploadDuration}ms!`, {
+            error: uploadError,
+            errorMessage: uploadError.message,
+            errorCode: uploadError.code,
+            statusCode: uploadError.statusCode,
+            clientType,
+          });
           throw uploadError;
         }
+
+        console.info(`[📤] [${uploadId}] ✓ Upload succeeded in ${uploadDuration}ms`, {
+          data,
+          clientType,
+        });
+
+        // ==============================================
+        // STEP 4: Get and validate the public URL
+        // ==============================================
+        console.info(`[📤] [${uploadId}] STEP 4: Getting public URL for uploaded file`);
 
         // Get the public URL for the uploaded file
         const { data: urlData } = supabaseClient.storage.from(bucket).getPublicUrl(filePath);
 
-        // If we got a mock URL, try to generate a real one from credentials
-        if (urlData.publicUrl.includes('example.com')) {
-          logger.warn('Received mock URL despite using credentials', {
-            url: urlData.publicUrl,
+        console.info(`[📤] [${uploadId}] 🔗 Generated URL:`, {
+          publicUrl: urlData.publicUrl.substring(0, 30) + '...',
+          urlLength: urlData.publicUrl.length,
+          isMockUrl: urlData.publicUrl.includes('example.com'),
+          bucket,
+          filePath,
+          clientType,
+        });
+
+        // ==============================================
+        // STEP 5: Handle mock URL fallback if needed
+        // ==============================================
+
+        // If we got a mock URL but expected a real one, try to manually construct it
+        if (
+          urlData.publicUrl.includes('example.com') &&
+          (clientType === 'real_from_api' || clientType === 'real_from_config')
+        ) {
+          console.warn(`[📤] [${uploadId}] ⚠️ Received mock URL despite using real credentials!`, {
+            url: urlData.publicUrl.substring(0, 20) + '...',
+            clientType,
           });
 
           // Try to construct a valid URL using known Supabase patterns
-          if (credentials?.supabaseUrl) {
-            const projectRef = credentials.supabaseUrl.match(/https:\/\/([^.]+)/)?.[1];
+          const activeUrl = credentials?.supabaseUrl || config.supabase.url || '';
+          if (activeUrl) {
+            const projectRef = activeUrl.match(/https:\/\/([^.]+)/)?.[1];
             if (projectRef) {
               fileUrl = `https://${projectRef}.supabase.co/storage/v1/object/public/${bucket}/${filePath}`;
-              logger.info('Created direct Supabase storage URL', { url: fileUrl });
+              console.info(`[📤] [${uploadId}] 🔄 Created direct Supabase URL:`, {
+                url: fileUrl.substring(0, 30) + '...',
+                urlLength: fileUrl.length,
+                projectRef,
+              });
             } else {
               fileUrl = urlData.publicUrl;
+              console.warn(
+                `[📤] [${uploadId}] ⚠️ Couldn't extract project ref from URL: ${activeUrl.substring(0, 20)}...`
+              );
             }
           } else {
             fileUrl = urlData.publicUrl;
+            console.warn(`[📤] [${uploadId}] ⚠️ No Supabase URL available to extract project ref`);
           }
         } else {
           fileUrl = urlData.publicUrl;
-          logger.info('File uploaded successfully with real URL', { url: fileUrl });
+          if (!urlData.publicUrl.includes('example.com')) {
+            console.info(`[📤] [${uploadId}] ✅ UPLOAD SUCCESSFUL with real URL:`, {
+              url: fileUrl.substring(0, 30) + '...',
+              length: fileUrl.length,
+              clientType,
+            });
+          } else if (clientType.startsWith('mock')) {
+            console.info(`[📤] [${uploadId}] ✓ Using expected mock URL with mock client:`, {
+              url: fileUrl.substring(0, 30) + '...',
+              clientType,
+            });
+          }
         }
       } catch (error) {
-        logger.error('Error in file upload process', error);
+        // ==============================================
+        // Error handling and fallback URL generation
+        // ==============================================
+        console.error(`[📤] [${uploadId}] ❌ ERROR IN UPLOAD PROCESS:`, {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack?.substring(0, 150) + '...' : 'No stack trace',
+        });
+
+        // Generate a detailed error report
+        const errorReport = {
+          uploadId,
+          hookId,
+          timestamp: new Date().toISOString(),
+          errorMessage: error instanceof Error ? error.message : String(error),
+          errorName: error instanceof Error ? error.name : 'Unknown',
+          fileDetails: {
+            type: file.type,
+            size: file.size,
+            name: file.name,
+            path: filePath,
+          },
+          credentialStatus: {
+            hasCredentials: !!credentials,
+            hasUrl: !!credentials?.supabaseUrl,
+            hasKey: !!credentials?.supabaseKey,
+            urlLength: credentials?.supabaseUrl?.length || 0,
+            keyLength: credentials?.supabaseKey?.length || 0,
+            traceId: credentials?.traceId || 'none',
+            urlSource: credentials?.supabaseUrl
+              ? 'api_response'
+              : config.supabase.url
+                ? 'config_fallback'
+                : 'none',
+          },
+          browserInfo: {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            online: navigator.onLine,
+          },
+          environment: process.env.NODE_ENV,
+        };
+
+        console.error(`[📤] [${uploadId}] 📊 Comprehensive error details:`, errorReport);
         setErrorMessage('Failed to upload file. Please try again.');
 
         // Fallback to mock URL in development only
         if (process.env.NODE_ENV !== 'production') {
-          logger.warn('Using mock URL as fallback in development mode');
+          console.warn(`[📤] [${uploadId}] ⚠️ Using mock URL as fallback (development mode)`);
           const bucket = credentials?.bucket || config.supabase.storageBucket;
           fileUrl = `https://example.com/${bucket}/${filePath}`;
         } else {
           // In production, show error but allow form submission with mock URL
-          // (this is a business decision - you might want to prevent this instead)
           fileUrl = `https://example.com/${config.supabase.storageBucket}/${filePath}`;
-          logger.warn('Using mock URL in production due to upload failure - this should be fixed', {
-            url: fileUrl,
-          });
+          console.error(
+            `[📤] [${uploadId}] 🚨 CRITICAL: Using mock URL in PRODUCTION due to upload failure!`,
+            {
+              url: fileUrl.substring(0, 30) + '...',
+              formSubmitWill: 'continue with mock URL',
+              recommendation: 'Fix credentials on server',
+            }
+          );
         }
       }
+
+      // ==============================================
+      // STEP 6: Update form with file URL
+      // ==============================================
+      console.info(`[📤] [${uploadId}] STEP 6: Updating form with file URL:`, {
+        urlAvailable: !!fileUrl,
+        urlLength: fileUrl?.length || 0,
+        isMockUrl: fileUrl?.includes('example.com'),
+      });
 
       // Update the form state with the URL
       setValue('id_image_url', fileUrl, {
@@ -203,13 +482,20 @@ export default function FileUpload() {
 
       // Clear any existing errors for this field
       clearErrors('id_image_url');
+      console.info(`[📤] [${uploadId}] ✓ Form updated with file URL`);
 
       setUploadStatus('success');
     } catch (error) {
-      console.error('Error uploading file:', error);
+      console.error(`[📤] [${uploadId}] 💥 Unhandled error in file upload:`, {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+      });
       setUploadStatus('error');
       setErrorMessage('Upload failed. Please try again.');
     } finally {
+      console.info(
+        `[📤] [${uploadId}] ✓ File upload process complete with status: ${uploadStatus}`
+      );
       setUploading(false);
     }
   };
