@@ -1,5 +1,6 @@
 import { config } from '../config';
 import { ApiResponse, SignupFormData } from '../types';
+import { logger } from '../utils/logger';
 
 /**
  * API service for interacting with the backend
@@ -17,10 +18,9 @@ export const apiService = {
 
       // Construct the correct URL - avoiding double /api/ issues
       const submitUrl = new URL('/api/submit', baseUrl).href;
-      console.log('Submitting form to:', submitUrl);
 
-      // Log the actual data being sent
-      console.log('Request payload:', JSON.stringify(data, null, 2));
+      // Use enhanced logger for API requests
+      logger.api.request('POST', submitUrl, data);
 
       // Delay for debugging
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -34,14 +34,15 @@ export const apiService = {
           body: JSON.stringify(data),
         });
 
-        console.log('Fetch response status:', response.status);
+        const status = response.status;
 
         let result;
         try {
           result = await response.json();
-          console.log('Response data:', result);
+          // Log the response with our enhanced logger
+          logger.api.response('POST', submitUrl, status, result);
         } catch (jsonError) {
-          console.error('Failed to parse response as JSON:', jsonError);
+          logger.error('Failed to parse response as JSON', jsonError);
           return {
             success: false,
             error: 'Failed to parse server response',
@@ -49,28 +50,30 @@ export const apiService = {
         }
 
         if (!response.ok) {
-          console.error('API returned error:', result);
+          logger.error('API returned error response', {
+            status,
+            url: submitUrl,
+            response: result,
+          });
           return {
             success: false,
             error: result.error || 'An error occurred during form submission',
           };
         }
-
-        console.log('API request successful:', result);
         return {
           success: true,
           message: result.message || 'Form submitted successfully',
           data: result.data,
         };
       } catch (fetchError) {
-        console.error('Fetch error:', fetchError);
+        logger.error('Fetch error during API request', fetchError);
         return {
           success: false,
           error: 'Failed to connect to server. Please check your connection.',
         };
       }
     } catch (error) {
-      console.error('API service error:', error);
+      logger.error('API service error', error);
       return {
         success: false,
         error: 'Network error occurred. Please try again.',

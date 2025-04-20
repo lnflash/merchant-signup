@@ -14,6 +14,8 @@ export const config = {
   logging: {
     enabled: true,
     level: process.env.LOG_LEVEL || 'info',
+    debugInProduction: process.env.DEBUG_IN_PRODUCTION === 'true' || false,
+    remoteLogging: process.env.ENABLE_REMOTE_LOGGING === 'true' || false,
   },
   api: {
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL || '',
