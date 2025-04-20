@@ -322,7 +322,6 @@ export default function FileUpload() {
           console.error(`[📤] [${uploadId}] ❌ UPLOAD FAILED after ${uploadDuration}ms!`, {
             error: uploadError,
             errorMessage: uploadError.message,
-            errorCode: uploadError.code,
             statusCode: uploadError.statusCode,
             clientType,
           });
