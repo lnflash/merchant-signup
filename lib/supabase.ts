@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { config } from '../src/config';
+import { logger } from '../src/utils/logger';
 
 // Create mock client for build time or server without environment variables
 const createMockClient = () => {
+  logger.warn('Using mock Supabase client (credentials missing or build time)');
   return {
     from: () => ({
       insert: () => Promise.resolve({ error: null }),
@@ -36,3 +38,10 @@ export const supabase = hasValidCredentials
       },
     })
   : createMockClient();
+
+// Log initialization
+if (hasValidCredentials) {
+  logger.info('Supabase client initialized with real credentials', {
+    url: supabaseUrl.substring(0, 8) + '...', // Only log beginning of URL for security
+  });
+}

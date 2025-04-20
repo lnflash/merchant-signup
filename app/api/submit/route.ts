@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { signupFormSchema } from '../../../lib/validators';
 import { supabase } from '../../../lib/supabase';
 import { getErrorMessage } from '../../../src/utils/validation';
+import { logger } from '../../../src/utils/logger';
 
 /**
  * Form submission endpoint
@@ -38,11 +39,21 @@ export async function POST(request: Request) {
         created_at: new Date().toISOString(),
       };
 
+      // Create loggable object with limited sensitive data
+      const loggableData = {
+        businessName: dataToInsert.businessName,
+        email: dataToInsert.email,
+        timestamp: dataToInsert.created_at,
+      };
+
+      logger.info('Processing merchant signup form submission', loggableData);
+
       // Insert data into Supabase
+      logger.info('Sending data to Supabase...');
       const { error } = await supabase.from('signups').insert([dataToInsert]);
 
       if (error) {
-        console.error('Supabase error:', error);
+        logger.error('Supabase insertion error in API route', error);
         return NextResponse.json(
           {
             success: false,
@@ -53,6 +64,8 @@ export async function POST(request: Request) {
           }
         );
       }
+
+      logger.supabase.dataSubmitted('signups', { id: dataToInsert.businessName });
 
       // Set appropriate response headers
       const headers = new Headers();

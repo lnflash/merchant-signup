@@ -16,6 +16,7 @@ import { BusinessInfoStep } from './BusinessInfoStep';
 import { MerchantInfoStep } from './MerchantInfoStep';
 import Image from 'next/image';
 import FlashIcon from '../../../public/images/logos/flash_icon_transp.png';
+import { logger } from '../../../src/utils/logger';
 
 export default function SignupForm() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -141,18 +142,31 @@ export default function SignupForm() {
         return;
       }
 
-      console.log('Form data being submitted:', data);
+      // Log form submission with safe data (removing potentially sensitive fields)
+      const safeData = {
+        accountType: data.account_type,
+        businessName: data.business_name,
+        hasAcceptedTerms: data.terms_accepted,
+      };
+
+      logger.info('Submitting merchant registration form', safeData);
 
       // Call the API service to submit the form
       const response = await apiService.submitSignupForm(data);
 
       if (!response.success) {
+        logger.error('Form submission failed', response.error);
         throw new Error(response.error as string);
       }
 
+      logger.info('Form submission successful', {
+        timestamp: response.data?.created_at,
+        accountType: data.account_type,
+      });
+
       setSubmitSuccess(true);
     } catch (error) {
-      console.error('Error submitting form:', error);
+      logger.error('Error submitting form', error);
       alert('There was an error submitting your information. Please try again.');
     } finally {
       setSubmitting(false);

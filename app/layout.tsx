@@ -4,6 +4,7 @@ import Image from 'next/image';
 import FlashLogo from '../public/images/logos/flash.png';
 import FlashIcon from '../public/images/logos/flash_icon_transp.png';
 import { config } from '../src/config';
+import DatabaseStatus from '../src/components/DatabaseStatus';
 
 export const metadata: Metadata = {
   title: 'Sign up for Flash',
@@ -49,6 +50,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </footer>
         </div>
+
+        {/* Database connection status indicator */}
+        <DatabaseStatus />
       </body>
     </html>
   );

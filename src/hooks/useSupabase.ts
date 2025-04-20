@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
+import { logger } from '../utils/logger';
 
 type SupabaseResponse<T> = {
   data: T | null;
@@ -23,18 +24,23 @@ export function useSupabase() {
   // Function to check Supabase connection
   const checkConnection = async () => {
     try {
+      logger.info('Checking Supabase connection...');
       const { error } = await supabase.from('signups').select('id', { count: 'exact', head: true });
 
       if (error) {
+        logger.error('Supabase connection failed', error);
         setIsConnected(false);
         setError(error.message);
       } else {
+        logger.supabase.connectionSuccess();
         setIsConnected(true);
         setError(null);
       }
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('Supabase connection error', err);
       setIsConnected(false);
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(errorMessage);
     }
   };
 
@@ -46,18 +52,35 @@ export function useSupabase() {
     data: T
   ): Promise<{ error: string | null; data: any | null }> => {
     try {
+      // Safely log data without exposing sensitive fields
+      const loggableData = { ...data };
+      // Remove potentially sensitive fields for logging
+      if (typeof loggableData === 'object' && loggableData !== null) {
+        const sensitiveFields = ['password', 'card', 'ssn', 'secret', 'key'];
+        for (const key in loggableData) {
+          if (sensitiveFields.some(field => key.toLowerCase().includes(field))) {
+            (loggableData as any)[key] = '[REDACTED]';
+          }
+        }
+      }
+
+      logger.info(`Inserting data into "${table}" table`, loggableData);
       const response = await supabase.from(table).insert([data]);
 
       const error = response.error;
 
       if (error) {
+        logger.supabase.dataSubmissionFailed(table, error);
         return { error: error.message, data: null };
       }
 
+      logger.supabase.dataSubmitted(table);
       return { error: null, data: response };
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      logger.error(`Error inserting data into "${table}" table`, err);
       return {
-        error: err instanceof Error ? err.message : 'Unknown error',
+        error: errorMessage,
         data: null,
       };
     }
