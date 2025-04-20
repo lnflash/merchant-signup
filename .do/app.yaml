@@ -1,30 +1,12 @@
 name: flash-merchant-signup
-services:
+static_sites:
 - name: web
   github:
-    branch: main
+    branch: gh-pages # Changed to gh-pages from which we deploy
     deploy_on_push: true
     repo: your-github-org/merchant-signup # Update this with your actual GitHub repo
-  build_command: npm run build
-  run_command: npm start
-  http_port: 3000
-  instance_count: 1
-  instance_size_slug: basic-xs
+  output_dir: / # Root directory since it's already processed by GitHub Actions
   routes:
   - path: /
-  envs:
-  - key: NEXT_PUBLIC_SUPABASE_URL
-    scope: RUN_AND_BUILD_TIME
-    value: ${supabase.NEXT_PUBLIC_SUPABASE_URL}
-  - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
-    scope: RUN_AND_BUILD_TIME
-    value: ${supabase.NEXT_PUBLIC_SUPABASE_ANON_KEY}
-  - key: NEXT_PUBLIC_FLASH_API_URL
-    scope: RUN_AND_BUILD_TIME
-    value: https://api.getflash.io
-  - key: NEXT_PUBLIC_API_BASE_URL
-    scope: RUN_AND_BUILD_TIME
-    value: ${_self.HOSTNAME}/api
-  - key: NODE_ENV
-    scope: RUN_AND_BUILD_TIME
-    value: production
+  # No environment variables needed here - they're embedded at build time
+  error_document: 404.html

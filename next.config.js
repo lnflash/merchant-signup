@@ -15,6 +15,10 @@ const nextConfig = {
       '*': ['./app/api/**/*'],
     },
   },
+  // Generate 404 page
+  // Required for Static Site deployment to correctly handle route errors
+  generateStaticParams: true,
+  trailingSlash: false, // Set based on your DigitalOcean App Platform configuration
   eslint: {
     // Warning: This allows production builds to successfully complete even if
     // your project has ESLint errors.
@@ -34,6 +38,7 @@ const nextConfig = {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
   },
   images: {
+    unoptimized: true, // Required for static export
     domains: ['example.com'],
     formats: ['image/avif', 'image/webp'],
   },

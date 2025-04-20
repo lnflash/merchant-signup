@@ -47,6 +47,24 @@ jobs:
       with:
         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
         
+    - name: Verify static output
+      run: |
+        echo "Verifying static export content..."
+        ls -la out/
+        if [ -f "out/index.html" ]; then
+          echo "✅ index.html exists"
+        else
+          echo "❌ index.html is missing!"
+          exit 1
+        fi
+        if [ -f "out/form/index.html" ]; then
+          echo "✅ form/index.html exists"
+        else
+          echo "❌ form/index.html is missing!"
+          exit 1
+        fi
+        echo "✅ Static export verification complete"
+        
     - name: Upload static build to GitHub Pages branch
       run: |
         # Setup git user
@@ -64,6 +82,9 @@ jobs:
         mv out/* .
         rm -rf out
         
+        # Make sure we have a .nojekyll file to prevent GitHub Pages from trying to process the site with Jekyll
+        touch .nojekyll
+        
         # Add and commit the static files
         git add .
         git commit -m "Deploy static site to GitHub Pages"
@@ -71,5 +92,5 @@ jobs:
         # Force push to the gh-pages branch
         git push -f origin gh-pages
         
-        echo "Deployed to GitHub Pages!"
+        echo "✅ Deployed to GitHub Pages!"
         echo "To make this work with DigitalOcean, configure your app to deploy from the gh-pages branch"

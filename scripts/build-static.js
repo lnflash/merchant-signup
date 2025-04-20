@@ -70,60 +70,67 @@ try {
   // Create output directory if it doesn't exist yet
   execSync('mkdir -p out', { stdio: 'inherit' });
 
-  // Create basic index.html
-  const indexHtml = `<!DOCTYPE html>
+  // We'll let Next.js handle the index.html generation now
+  // Just ensure the env-config.js file is in place
+
+  // Create a simple JavaScript file to embed the environment variables
+  console.log('📦 Creating environment configuration...');
+
+  const envConfigJs = `window.ENV = {
+  SUPABASE_URL: "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
+  SUPABASE_KEY: "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
+  BUILD_TIME: true
+};`;
+
+  // Make sure the out directory exists
+  if (!fs.existsSync('out')) {
+    fs.mkdirSync('out', { recursive: true });
+  }
+
+  fs.writeFileSync('out/env-config.js', envConfigJs);
+
+  // Create a custom 404 page
+  console.log('📦 Creating 404 error page...');
+  const notFoundHtml = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Flash Merchant Signup</title>
-  <meta http-equiv="refresh" content="0;url=/form">
+  <title>Page Not Found - Flash Merchant Signup</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      text-align: center;
+      color: #333;
+    }
+    h1 { color: #1D4ED8; margin-bottom: 10px; }
+    .error-code { font-size: 120px; font-weight: bold; color: #E5E7EB; margin: 0; line-height: 1; }
+    .btn {
+      display: inline-block;
+      background-color: #1D4ED8;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 20px;
+      transition: background-color 0.2s;
+    }
+    .btn:hover { background-color: #1E40AF; }
+  </style>
 </head>
 <body>
-  <p>Redirecting to <a href="/form">form</a>...</p>
+  <p class="error-code">404</p>
+  <h1>Page Not Found</h1>
+  <p>The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.</p>
+  <a href="/" class="btn">Go to Homepage</a>
+  <a href="/form" class="btn">Go to Sign Up Form</a>
 </body>
 </html>`;
 
-  fs.writeFileSync('out/index.html', indexHtml);
-
-  // Create basic form.html with script tag to load env variables
-  console.log('📦 Creating form.html...');
-
-  // Create a simple HTML file without template literals that would cause shell issues
-  const formHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Flash Merchant Signup Form</title>
-  <style>body{font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px}</style>
-  <script src="/env-config.js"></script>
-</head>
-<body>
-  <h1>Flash Merchant Signup</h1>
-  <p>Please access this form from the production URL.</p>
-  <p>Environment variables are correctly loaded:</p>
-  <ul>
-    <li>NEXT_PUBLIC_SUPABASE_URL: ✅</li>
-    <li>NEXT_PUBLIC_SUPABASE_ANON_KEY: ✅</li>
-  </ul>
-  <div id="env-status"></div>
-  <script>
-    // Display environment variables status (without showing actual values)
-    document.addEventListener("DOMContentLoaded", function() {
-      const status = document.getElementById("env-status");
-      const env = window.ENV || {};
-      status.innerHTML = 
-        "<h2>Runtime Environment Check</h2>" +
-        "<ul>" +
-        "<li>Supabase URL: " + (env.SUPABASE_URL ? "✅ Available" : "❌ Missing") + "</li>" +
-        "<li>Supabase Key: " + (env.SUPABASE_KEY ? "✅ Available" : "❌ Missing") + "</li>" +
-        "<li>Built with embedded variables: " + (env.BUILD_TIME ? "✅ Yes" : "❌ No") + "</li>" +
-        "</ul>";
-    });
-  </script>
-</body>
-</html>`;
-
-  fs.writeFileSync('out/form.html', formHtml);
+  fs.writeFileSync('out/404.html', notFoundHtml);
 
   // Create _next directory structure
   console.log('📦 Creating static assets directory structure...');

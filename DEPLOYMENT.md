@@ -37,14 +37,19 @@ If you already have a DigitalOcean app:
 
 1. Go to your DigitalOcean App Platform dashboard
 2. Select your merchant-signup app
-3. Go to "Settings" > "Build & Deploy"
-4. Configure as a static site:
-   - **Source Directory**: `/`
-   - **Output Directory**: `out`
-   - **Build Command**: Leave blank (GitHub Actions will handle the build)
-5. Remove any existing environment variables (they're now embedded in the build)
-6. Under "Source Code Integration":
-   - Turn OFF "Autodeploy on Push" (GitHub Actions will handle deployment)
+3. Go to "Settings" > "Source"
+4. Change the Branch to `gh-pages` (this is where GitHub Actions deploys the static site)
+5. Go to "Settings" > "Build & Deploy"
+6. Configure as a static site:
+   - **Source Directory**: `/` (root of the gh-pages branch)
+   - **Output Directory**: Leave empty (files are already built)
+   - **Build Command**: Leave blank (GitHub Actions already handled the build)
+7. Remove any existing environment variables (they're now embedded in the build)
+8. Under "Routes":
+   - Make sure the site is served from `/`
+   - Add error handling with `404.html` as your error page
+9. Under "Source Code Integration":
+   - Turn ON "Autodeploy on Push" for the `gh-pages` branch only
    - Keep the GitHub connection active
 
 ### Option 2: Create a New App
@@ -54,9 +59,14 @@ If you're starting fresh:
 1. In DigitalOcean App Platform, create a new app
 2. Choose "Static Site" as the type
 3. Connect to your GitHub repository
-4. Use the app name that matches your GitHub Actions workflow (`merchant-signup`)
-5. Skip setting environment variables (they're embedded in the build)
-6. Turn OFF autodeploy (GitHub Actions will handle it)
+4. Select the `gh-pages` branch as the source
+5. Use the app name that matches your GitHub Actions workflow (`merchant-signup`)
+6. Configure as a static site:
+   - **Source Directory**: `/` (root of the gh-pages branch)
+   - **Output Directory**: Leave empty (files are already built)
+   - **Build Command**: Leave blank (GitHub Actions already handled the build)
+7. Skip setting environment variables (they're embedded in the build)
+8. Turn ON autodeploy for the `gh-pages` branch
 
 ## Deployment Process
 
@@ -90,12 +100,36 @@ After deploying, test the file upload functionality:
 
 ## Troubleshooting
 
+### 404 Errors on DigitalOcean
+
+If you're seeing 404 errors when accessing your deployed site:
+
+1. Verify that the GitHub Actions workflow completed successfully by checking the workflow logs
+2. Check that the `gh-pages` branch contains the correct files by browsing it on GitHub
+3. Ensure your DigitalOcean app is configured to deploy from the `gh-pages` branch
+4. Make sure you've set the proper routes in DigitalOcean App Platform:
+   - Root route should be `/`
+   - Error page should be `404.html`
+5. Check that the static files were properly generated with `index.html` files for each route
+6. Try manually triggering a redeployment in DigitalOcean App Platform
+
+### Missing Images or Styles
+
+If your site loads but is missing images or styles:
+
+1. Check the browser console for any resource loading errors
+2. Verify that the images and stylesheets are properly included in the static build
+3. Check the network tab in browser dev tools to see if resources are returning 404 errors
+4. Make sure all static assets are properly referenced with correct paths
+
+### File Upload Issues
+
 If file uploads are still using mock URLs:
 
 1. Check your browser console for any errors
-2. Verify that GitHub Actions completed successfully
-3. Make sure your GitHub repository has the required secrets set
-4. Check that your DigitalOcean app is configured correctly as a static site
+2. Verify that the environment variables were correctly embedded during build
+3. Check if there are any CSP (Content-Security-Policy) issues blocking connections to Supabase
+4. Verify Supabase bucket permissions and RLS policies
 
 ## Security Notes
 

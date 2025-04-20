@@ -94,8 +94,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Image
                   src={FlashIcon}
                   alt="Flash Icon"
-                  fill
-                  sizes="(max-width: 768px) 100vw, 64px"
+                  width={64}
+                  height={64}
                   style={{ objectFit: 'contain' }}
                   priority
                 />
