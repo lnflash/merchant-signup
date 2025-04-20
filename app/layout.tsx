@@ -9,6 +9,17 @@ import DatabaseStatus from '../src/components/DatabaseStatus';
 export const metadata: Metadata = {
   title: 'Sign up for Flash',
   description: 'Create your Flash account to start making secure payments',
+  manifest: '/manifest.json',
+  icons: {
+    icon: [{ url: '/favicon.ico' }, { url: '/favicon/favicon.png', type: 'image/png' }],
+    apple: [{ url: '/favicon/apple-touch-icon/apple-touch-icon.png' }],
+    shortcut: [{ url: '/favicon/favicon.png' }],
+  },
+  themeColor: '#ffffff',
+  appleWebApp: {
+    title: 'Flash Merchant Signup',
+    statusBarStyle: 'default',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
