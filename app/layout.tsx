@@ -10,11 +10,7 @@ export const metadata: Metadata = {
   description: 'Create your Flash account to start making secure payments',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -22,10 +18,11 @@ export default function RootLayout({
           <header className="mb-8 pt-8">
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 relative">
-                <Image 
+                <Image
                   src={FlashIcon}
-                  alt="Flash Icon" 
+                  alt="Flash Icon"
                   fill
+                  sizes="(max-width: 768px) 100vw, 64px"
                   style={{ objectFit: 'contain' }}
                   priority
                 />
@@ -38,9 +35,15 @@ export default function RootLayout({
             <div className="max-w-md mx-auto">
               <p className="mb-4">&copy; {new Date().getFullYear()} Flash. All rights reserved.</p>
               <div className="flex justify-center space-x-4 text-xs">
-                <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">Privacy Policy</a>
-                <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">Terms of Service</a>
-                <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">Help Center</a>
+                <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">
+                  Privacy Policy
+                </a>
+                <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">
+                  Terms of Service
+                </a>
+                <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">
+                  Help Center
+                </a>
               </div>
               <p className="mt-4 text-xs text-gray-400">Version {config.app.version}</p>
             </div>

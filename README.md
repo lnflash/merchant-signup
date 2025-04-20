@@ -24,46 +24,60 @@ This application provides a streamlined signup flow for merchants looking to acc
 - **Form Management**: React Hook Form
 - **Validation**: Zod
 - **Backend Storage**: Supabase
-- **Deployment**: Vercel (recommended)
+- **Deployment**: DigitalOcean App Platform
+- **Testing**: Jest, React Testing Library, Playwright
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - NPM or Yarn
 - Supabase account
 
 ### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/lnflash/merchant-signup.git
    cd merchant-signup
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
-   # or
-   yarn install
    ```
 
-3. Create a `.env.local` file based on `.env.example`:
+3. Create a `.env.local` file:
+
    ```bash
-   cp .env.example .env.local
+   cp .env/.env.example .env.local
    ```
 
 4. Update the environment variables in `.env.local` with your Supabase credentials.
 
 5. Run the development server:
+
    ```bash
    npm run dev
-   # or
-   yarn dev
    ```
 
 6. Open [http://localhost:3000](http://localhost:3000) to see the application.
+
+### Testing
+
+```bash
+# Run unit and component tests
+npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run E2E tests (requires development server to be running)
+npm run test:e2e
+```
 
 ### Database Setup
 
@@ -75,9 +89,10 @@ This application provides a streamlined signup flow for merchants looking to acc
 ```
 ├── app/                  # Next.js app directory
 │   ├── api/              # API routes
+│   │   ├── health/       # Health check endpoint
 │   │   └── submit/       # Form submission endpoint
 │   ├── form/             # Form pages and components
-│   │   └── components/   # Form step components 
+│   │   └── components/   # Form step components
 │   └── layout.tsx        # Root layout
 ├── lib/                  # Shared libraries
 │   ├── supabase.ts       # Supabase client
@@ -87,10 +102,26 @@ This application provides a streamlined signup flow for merchants looking to acc
 │       └── logos/        # Logo files
 ├── src/                  # Source code
 │   ├── config/           # Application configuration
-│   ├── services/         # API services
+│   ├── hooks/            # Custom React hooks
+│   ├── utils/            # Utility functions
+│   ├── api/              # API client
+│   ├── mocks/            # MSW mocks for testing
 │   └── types/            # TypeScript types
-└── supabase.sql          # Database schema
+├── e2e/                  # E2E tests
+├── .github/              # GitHub workflows
+├── .husky/               # Git hooks
+├── .env/                 # Environment examples
+└── jest.config.js        # Jest configuration
 ```
+
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration with the following jobs:
+
+- Type checking
+- Linting
+- Unit testing
+- E2E testing
 
 ## Database Schema
 
@@ -114,9 +145,18 @@ The Supabase database contains a `signups` table with the following schema:
 - **terms_accepted** (boolean)
 - **created_at** (timestamp with time zone, default: now())
 
+## Environment Variables
+
+| Variable                      | Description                                   | Required |
+| ----------------------------- | --------------------------------------------- | -------- |
+| NEXT_PUBLIC_SUPABASE_URL      | Your Supabase project URL                     | Yes      |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | Your Supabase anonymous key                   | Yes      |
+| NEXT_PUBLIC_API_BASE_URL      | Base URL for API endpoints (defaults to /api) | No       |
+| NEXT_PUBLIC_FLASH_API_URL     | URL for Flash API integration                 | No       |
+
 ## Integration with Flash
 
-This application is designed to integrate with the [Flash API](https://github.com/lnflash/flash). Merchant data is collected through this portal and then sent to the Flash backend for processing.
+This application is designed to integrate with the Flash API. Merchant data is collected through this portal and then sent to the Flash backend for processing.
 
 ## Contributing
 

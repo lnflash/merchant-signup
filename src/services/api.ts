@@ -10,7 +10,7 @@ export const apiService = {
    */
   async submitSignupForm(data: SignupFormData): Promise<ApiResponse> {
     try {
-      const response = await fetch(`${config.api.baseUrl}/submit`, {
+      const response = await fetch(`${config.api.baseUrl}/api/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -19,7 +19,7 @@ export const apiService = {
       });
 
       const result = await response.json();
-      
+
       if (!response.ok) {
         return {
           success: false,
