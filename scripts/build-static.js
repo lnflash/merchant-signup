@@ -257,10 +257,19 @@ console.log('Static build environment variables loaded:', {
     execSync('cp -r .next/static out/_next/', { stdio: 'inherit' });
   }
 
-  // Create public directory and copy assets
+  // Create public directory and copy assets (excluding node_modules)
   if (fs.existsSync('public')) {
-    console.log('📦 Copying public assets...');
-    execSync('cp -r public/* out/ 2>/dev/null || true', { stdio: 'inherit' });
+    console.log('📦 Copying public assets (excluding node_modules)...');
+    // Create directories first
+    execSync(
+      'find public -type d -not -path "*/node_modules*" -not -path "*/\\.*" | sed "s|^public/|out/|" | xargs mkdir -p',
+      { stdio: 'inherit' }
+    );
+    // Copy files
+    execSync(
+      'find public -type f -not -path "*/node_modules*" -not -path "*/\\.*" | while read file; do cp "$file" "out/${file#public/}"; done',
+      { stdio: 'inherit' }
+    );
   }
 
   // Restore the original app directory
