@@ -4,15 +4,32 @@ import { logger } from '../src/utils/logger';
 
 // Create mock client for build time or server without environment variables
 const createMockClient = () => {
-  logger.warn('Using mock Supabase client (credentials missing or build time)');
+  const isBuildTime = process.env.IS_BUILD_TIME === 'true';
+  const reason = isBuildTime ? 'build time' : 'missing credentials';
+
+  logger.warn(`Using mock Supabase client (${reason})`);
+
+  // Extended mock client with more realistic response handling
   return {
-    from: () => ({
-      insert: () => Promise.resolve({ error: null }),
-      select: () => Promise.resolve({ data: [], error: null }),
+    from: (table: string) => ({
+      insert: (data: any) => {
+        logger.info(`Mock insert into ${table} table`, { mock: true });
+        return Promise.resolve({ data: [{ id: 'mock-id' }], error: null });
+      },
+      select: (columns: string, options?: any) => {
+        logger.info(`Mock select from ${table} table`, { mock: true, columns });
+        return Promise.resolve({
+          data: [{ id: 'mock-id', created_at: new Date().toISOString() }],
+          error: null,
+        });
+      },
     }),
     storage: {
-      from: () => ({
-        upload: () => Promise.resolve({ error: null }),
+      from: (bucket: string) => ({
+        upload: (path: string, file: any) => {
+          logger.info(`Mock file upload to ${bucket}/${path}`, { mock: true });
+          return Promise.resolve({ data: { path }, error: null });
+        },
       }),
     },
     auth: {

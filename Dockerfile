@@ -40,6 +40,8 @@ WORKDIR /app
 
 # Set to production environment
 ENV NODE_ENV production
+ENV IS_BUILD_TIME false
+ENV NEXT_TELEMETRY_DISABLED 1
 
 # Add user for security
 RUN addgroup --system --gid 1001 nodejs

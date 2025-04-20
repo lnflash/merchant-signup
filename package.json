@@ -2,6 +2,10 @@
   "name": "merchant-signup",
   "version": "0.2.0",
   "private": true,
+  "cookieOptions": {
+    "sameSite": "none",
+    "secure": true
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

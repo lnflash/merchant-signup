@@ -20,6 +20,9 @@ export async function POST(request: Request) {
       });
     }
 
+    // Log current environment to help debug
+    console.log('Environment check: IS_BUILD_TIME =', process.env.IS_BUILD_TIME);
+
     console.log('🔄 API Route: Parsing request body...');
     // Get form data from request
     let data;
@@ -117,6 +120,9 @@ export async function POST(request: Request) {
       // Set appropriate response headers
       const headers = new Headers();
       headers.set('Cache-Control', 'no-store');
+
+      // Handle Cloudflare cookie issues
+      headers.set('Set-Cookie', '__cf_bm=; Path=/; Max-Age=0; SameSite=None; Secure; HttpOnly');
 
       return NextResponse.json(
         {
