@@ -7,7 +7,7 @@
     "build": "node scripts/check-env.js && next build",
     "build:prod": "node scripts/check-env.js && node scripts/build.js",
     "build:static": "node scripts/check-env.js && next build && next export",
-    "build:static:ci": "node scripts/build-static.js",
+    "build:static:ci": "node scripts/build-static-html.js",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
