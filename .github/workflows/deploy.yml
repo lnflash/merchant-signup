@@ -47,31 +47,29 @@ jobs:
       with:
         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
         
-    - name: Deploy to DigitalOcean App Platform
+    - name: Upload static build to GitHub Pages branch
       run: |
-        # Create a compressed archive of the out directory
-        echo "Creating deployment archive..."
-        tar -czf deploy.tar.gz -C out .
+        # Setup git user
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
         
-        # List available apps to find the correct ID
-        echo "Listing available apps..."
-        doctl apps list --format ID,Spec.Name --no-header | grep -i merchant
+        # Create a new orphan branch for GitHub Pages
+        echo "Creating GitHub Pages branch with static output..."
+        git checkout --orphan gh-pages
         
-        # Get app ID (using stored secret for reliability)
-        APP_ID="${{ secrets.DIGITALOCEAN_APP_ID }}"
-        if [ -z "$APP_ID" ]; then
-          echo "Using app ID lookup fallback..."
-          APP_ID=$(doctl apps list --format ID,Spec.Name --no-header | grep -i merchant | head -n 1 | awk '{print $1}')
-        fi
+        # Remove all files except the output directory
+        find . -maxdepth 1 ! -name "out" ! -name ".git" -exec rm -rf {} \;
         
-        # Validate app ID
-        if [ -z "$APP_ID" ]; then
-          echo "ERROR: Could not determine app ID. Please set the DIGITALOCEAN_APP_ID secret."
-          exit 1
-        fi
+        # Move output directory contents to the root and prepare for commit
+        mv out/* .
+        rm -rf out
         
-        echo "Using App ID: $APP_ID"
+        # Add and commit the static files
+        git add .
+        git commit -m "Deploy static site to GitHub Pages"
         
-        # Upload using doctl
-        echo "Uploading to DigitalOcean App Platform..."
-        doctl apps create-deployment $APP_ID --wait
+        # Force push to the gh-pages branch
+        git push -f origin gh-pages
+        
+        echo "Deployed to GitHub Pages!"
+        echo "To make this work with DigitalOcean, configure your app to deploy from the gh-pages branch"
