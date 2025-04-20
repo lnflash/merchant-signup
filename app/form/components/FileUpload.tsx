@@ -116,7 +116,7 @@ export default function FileUpload() {
           await new Promise(resolve => setTimeout(resolve, 1000));
 
           // Use a mock URL if Supabase is not available
-          fileUrl = `https://example.com/id_uploads/${filePath}`;
+          fileUrl = `https://example.com/${config.supabase.storageBucket}/${filePath}`;
         } else {
           // Real upload to Supabase storage
           logger.info(`Uploading file to Supabase storage`, {
@@ -126,26 +126,8 @@ export default function FileUpload() {
             fileType: file.type,
           });
 
-          // Create necessary bucket if it doesn't exist
-          try {
-            // Check if bucket exists first (not all Supabase instances allow bucket creation)
-            const { data: buckets } = await supabase.storage.listBuckets();
-            const bucketExists = buckets?.find(b => b.name === config.supabase.storageBucket);
-
-            if (!bucketExists) {
-              // Try to create the bucket (may require admin privileges)
-              logger.info(`Creating storage bucket: ${config.supabase.storageBucket}`);
-              await supabase.storage.createBucket(config.supabase.storageBucket, {
-                public: true,
-                fileSizeLimit: 5242880, // 5MB
-              });
-            }
-          } catch (bucketError) {
-            logger.warn('Unable to create bucket, will try to use existing bucket', {
-              bucket: config.supabase.storageBucket,
-              error: bucketError,
-            });
-          }
+          // Using existing 'id_uploads' bucket
+          logger.info(`Using existing storage bucket: ${config.supabase.storageBucket}`);
 
           // Perform the upload
           const { data, error: uploadError } = await supabase.storage
@@ -175,7 +157,7 @@ export default function FileUpload() {
         // Fallback to mock URL if upload fails (for development environments)
         if (process.env.NODE_ENV !== 'production') {
           logger.warn('Using mock URL as fallback in development mode');
-          fileUrl = `https://example.com/id_uploads/${filePath}`;
+          fileUrl = `https://example.com/${config.supabase.storageBucket}/${filePath}`;
         } else {
           // In production, re-throw the error to prevent using mock URLs
           throw error;

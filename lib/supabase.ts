@@ -34,7 +34,7 @@ const createMockClient = () => {
       listBuckets: () => {
         logger.info('Mock list Supabase storage buckets', { mock: true });
         return Promise.resolve({
-          data: [{ name: 'id_documents', public: true }],
+          data: [{ name: 'id_uploads', public: true }],
           error: null,
         });
       },
