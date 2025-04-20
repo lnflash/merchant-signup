@@ -1,49 +1,74 @@
 # Flash Merchant Signup Deployment Guide
 
-This guide explains how to properly configure environment variables for deployment, with a focus on DigitalOcean App Platform.
+This guide explains how to deploy the Flash Merchant Signup application to DigitalOcean App Platform using GitHub Actions with embedded environment variables.
 
-## Required Environment Variables
+## Overview
 
-The following environment variables **MUST** be set as **Runtime Environment Variables**:
+We've migrated to a new deployment approach that solves the issue with environment variables:
 
-| Variable                        | Description                                 | Example                                   |
-| ------------------------------- | ------------------------------------------- | ----------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`      | The URL of your Supabase project            | `https://abcdefghijklm.supabase.co`       |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | The anonymous key for your Supabase project | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` |
+1. Environment variables are embedded at build time using GitHub Actions
+2. The built static site is deployed to DigitalOcean
+3. No runtime environment variables are needed on DigitalOcean
 
-## Environment Variable Configuration
+This approach ensures that client-side components like the file upload can access Supabase credentials.
 
-### DigitalOcean App Platform
+## Prerequisites
 
-1. Go to your app in the DigitalOcean App Platform
-2. Navigate to **Settings** > **Environment Variables**
-3. Add the required variables mentioned above
-4. **CRITICAL**: Make sure to set these as **Runtime Environment Variables**, not Build-time Environment Variables
-   - Build-time variables are only available during build and not when the app is running
-   - The file upload functionality will not work if these are set as Build-time variables
+- GitHub repository with this code
+- GitHub repository secrets configured
+- DigitalOcean App Platform account
+- Supabase project with URL and anonymous key
 
-![DigitalOcean Environment Variables](/docs/images/do-env-vars.png)
+## Required GitHub Secrets
 
-### Troubleshooting Environment Variables
+Set these secrets in your GitHub repository (Settings > Secrets and variables > Actions):
 
-If you're experiencing issues with file uploads, follow these steps:
+| Secret                          | Description                                 | Example                                    |
+| ------------------------------- | ------------------------------------------- | ------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`      | The URL of your Supabase project            | `https://abcdefghijklm.supabase.co`        |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | The anonymous key for your Supabase project | `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`  |
+| `DIGITALOCEAN_ACCESS_TOKEN`     | DigitalOcean API token                      | (Create in DigitalOcean API > Tokens/Keys) |
 
-1. Verify the environment variables are set correctly:
+## Setting Up Your DigitalOcean App
 
-   ```
-   npm run check-env
-   ```
+### Option 1: Configure Existing App (Recommended)
 
-2. Ensure the variables are available at runtime:
+If you already have a DigitalOcean app:
 
-   - DigitalOcean: Verify they are set as Runtime Environment Variables, not Build-time
-   - Other platforms: Check your platform's documentation for environment variable configuration
+1. Go to your DigitalOcean App Platform dashboard
+2. Select your merchant-signup app
+3. Go to "Settings" > "Build & Deploy"
+4. Configure as a static site:
+   - **Source Directory**: `/`
+   - **Output Directory**: `out`
+   - **Build Command**: Leave blank (GitHub Actions will handle the build)
+5. Remove any existing environment variables (they're now embedded in the build)
+6. Under "Source Code Integration":
+   - Turn OFF "Autodeploy on Push" (GitHub Actions will handle deployment)
+   - Keep the GitHub connection active
 
-3. Look for these specific log messages in your application logs:
-   ```
-   [🔑] CRITICAL: Missing Supabase credentials
-   ```
-   This indicates the environment variables aren't available during runtime.
+### Option 2: Create a New App
+
+If you're starting fresh:
+
+1. In DigitalOcean App Platform, create a new app
+2. Choose "Static Site" as the type
+3. Connect to your GitHub repository
+4. Use the app name that matches your GitHub Actions workflow (`merchant-signup`)
+5. Skip setting environment variables (they're embedded in the build)
+6. Turn OFF autodeploy (GitHub Actions will handle it)
+
+## Deployment Process
+
+With the GitHub Actions workflow we've set up:
+
+1. Push your changes to the main branch
+2. GitHub Actions automatically:
+   - Builds the app with environment variables embedded in the JavaScript
+   - Exports a static site to the `out/` directory
+   - Deploys this to your DigitalOcean App Platform app
+
+You can also manually trigger the workflow from the GitHub Actions tab.
 
 ## Storage Configuration in Supabase
 
@@ -63,22 +88,25 @@ After deploying, test the file upload functionality:
 3. Check the browser console for any error messages
 4. Verify in Supabase Storage that the file was uploaded successfully
 
-## Common Issues
+## Troubleshooting
 
-1. **Mock URLs in Production**: If you see URLs like `https://example.com/id_uploads/...`, it means the application is falling back to mock mode because it can't access the Supabase credentials.
+If file uploads are still using mock URLs:
 
-2. **Credentials Loading Issues**: If you see `[🔑] ⚠️ MISSING CREDENTIALS IN RESPONSE!` in the console, check that:
+1. Check your browser console for any errors
+2. Verify that GitHub Actions completed successfully
+3. Make sure your GitHub repository has the required secrets set
+4. Check that your DigitalOcean app is configured correctly as a static site
 
-   - Environment variables are properly set
-   - They are available at runtime (not just build time)
-   - There are no typos or trailing/leading spaces in the values
+## Security Notes
 
-3. **API Endpoint Access**: Ensure your Supabase project allows API access from your deployment domain.
+- The Supabase anonymous key is embedded in client-side JavaScript and will be visible to users
+- This is expected behavior and is secure as long as you've configured proper Row Level Security (RLS) in Supabase
+- Ensure your Supabase storage buckets have appropriate RLS policies
 
 ## Support
 
 If you continue to experience issues, please provide:
 
-1. The output of `npm run check-env`
-2. Console logs from the browser
-3. Any error messages from the deployment platform
+1. GitHub Actions workflow logs
+2. Browser console logs
+3. Any error messages from the DigitalOcean platform
