@@ -53,6 +53,25 @@ jobs:
         echo "Creating deployment archive..."
         tar -czf deploy.tar.gz -C out .
         
+        # List available apps to find the correct ID
+        echo "Listing available apps..."
+        doctl apps list --format ID,Spec.Name --no-header | grep -i merchant
+        
+        # Get app ID (using stored secret for reliability)
+        APP_ID="${{ secrets.DIGITALOCEAN_APP_ID }}"
+        if [ -z "$APP_ID" ]; then
+          echo "Using app ID lookup fallback..."
+          APP_ID=$(doctl apps list --format ID,Spec.Name --no-header | grep -i merchant | head -n 1 | awk '{print $1}')
+        fi
+        
+        # Validate app ID
+        if [ -z "$APP_ID" ]; then
+          echo "ERROR: Could not determine app ID. Please set the DIGITALOCEAN_APP_ID secret."
+          exit 1
+        fi
+        
+        echo "Using App ID: $APP_ID"
+        
         # Upload using doctl
         echo "Uploading to DigitalOcean App Platform..."
-        doctl apps create-deployment merchant-signup --wait
+        doctl apps create-deployment $APP_ID --wait
