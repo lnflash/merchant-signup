@@ -68,7 +68,7 @@ const sendToRemoteLogger = (_level: LogLevel, _message: string, _data?: any) => 
 
   // This would be replaced with actual remote logging service in production
   // For now, just ensure we don't lose important logs
-  if (level === 'error' || level === 'warn') {
+  if (_level === 'error' || _level === 'warn') {
     try {
       // In a real implementation, this would call an API
       // const logData = {
