@@ -94,7 +94,7 @@ export async function GET(request: Request) {
 
     // Runtime info
     nodeVersion: process.version,
-    platform: process.platform,
+    systemPlatform: process.platform,
     buildTime: process.env.IS_BUILD_TIME === 'true',
     timestamp: new Date().toISOString(),
   };
