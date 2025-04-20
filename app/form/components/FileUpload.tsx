@@ -31,59 +31,11 @@ export default function FileUpload() {
     `upload_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 5)}`
   );
 
-  // Initialize with empty state
-  useEffect(() => {
-    // Store current componentId value to avoid the cleanup function using a changed ref value
-    const currentComponentId = componentId.current;
-    console.info(
-      `[📤] [${currentComponentId}] FileUpload component initialized, credential hook ID: ${hookId}`
-    );
-    return () => {
-      console.info(`[📤] [${currentComponentId}] FileUpload component cleanup`);
-    };
-  }, [hookId]);
-
   // File size limit in bytes (5MB)
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
   const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/png', 'image/jpg', 'image/heic'];
 
-  useEffect(() => {
-    const dropZone = dropZoneRef.current;
-    if (!dropZone) return;
-
-    const handleDragOver = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dropZone.classList.add('border-blue-500');
-    };
-
-    const handleDragLeave = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dropZone.classList.remove('border-blue-500');
-    };
-
-    const handleDrop = (e: DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dropZone.classList.remove('border-blue-500');
-
-      if (!e.dataTransfer) return;
-
-      handleFiles(e.dataTransfer.files);
-    };
-
-    dropZone.addEventListener('dragover', handleDragOver);
-    dropZone.addEventListener('dragleave', handleDragLeave);
-    dropZone.addEventListener('drop', handleDrop);
-
-    return () => {
-      dropZone.removeEventListener('dragover', handleDragOver);
-      dropZone.removeEventListener('dragleave', handleDragLeave);
-      dropZone.removeEventListener('drop', handleDrop);
-    };
-  }, [handleFiles]);
-
+  // Define handleFiles before the useEffect that depends on it
   const handleFiles = async (fileList: FileList) => {
     // Generate a unique ID for this specific upload transaction
     const uploadId = `${componentId.current}_${Date.now().toString(36)}`;
@@ -497,6 +449,56 @@ export default function FileUpload() {
       setUploading(false);
     }
   };
+
+  // Add React hooks for initialization and cleanup
+  useEffect(() => {
+    // Store current componentId value to avoid the cleanup function using a changed ref value
+    const currentComponentId = componentId.current;
+    console.info(
+      `[📤] [${currentComponentId}] FileUpload component initialized, credential hook ID: ${hookId}`
+    );
+    return () => {
+      console.info(`[📤] [${currentComponentId}] FileUpload component cleanup`);
+    };
+  }, [hookId]);
+
+  // Add event listeners for drag and drop
+  useEffect(() => {
+    const dropZone = dropZoneRef.current;
+    if (!dropZone) return;
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.add('border-blue-500');
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('border-blue-500');
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropZone.classList.remove('border-blue-500');
+
+      if (!e.dataTransfer) return;
+
+      handleFiles(e.dataTransfer.files);
+    };
+
+    dropZone.addEventListener('dragover', handleDragOver);
+    dropZone.addEventListener('dragleave', handleDragLeave);
+    dropZone.addEventListener('drop', handleDrop);
+
+    return () => {
+      dropZone.removeEventListener('dragover', handleDragOver);
+      dropZone.removeEventListener('dragleave', handleDragLeave);
+      dropZone.removeEventListener('drop', handleDrop);
+    };
+  }, [handleFiles]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
