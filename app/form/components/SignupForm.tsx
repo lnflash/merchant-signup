@@ -17,6 +17,7 @@ import { MerchantInfoStep } from './MerchantInfoStep';
 import Image from 'next/image';
 import FlashIcon from '../../../public/images/logos/flash_icon_transp.png';
 import { logger } from '../../../src/utils/logger';
+import TestSubmit from './TestSubmit';
 
 export default function SignupForm() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -37,12 +38,15 @@ export default function SignupForm() {
   // We'll remove the central nextStep function as each component now handles its own validation
 
   const onSubmit = async (data: SignupFormData) => {
+    console.log('Form onSubmit called with data:', data);
     try {
       setSubmitting(true);
+      console.log('Setting submitting state to true');
 
       // Do a final manual validation based on account type
       const { getValues } = methods;
       const values = getValues();
+      console.log('Form values from getValues:', values);
       let isValid = true;
 
       // Basic fields validation
@@ -339,6 +343,9 @@ export default function SignupForm() {
         <TermsStep currentStep={currentStep} setCurrentStep={setCurrentStep} />
 
         {/* Each step component handles its own next/back buttons now */}
+
+        {/* Add Test Submit button for debugging */}
+        <TestSubmit />
       </form>
     </FormProvider>
   );
