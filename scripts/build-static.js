@@ -48,18 +48,30 @@ console.log('\n🏗️ Starting static build process...');
 const { execSync } = require('child_process');
 
 try {
-  // Force-remove any api route directories that might cause issues with static export
-  console.log('🗑️ Cleaning up API routes to avoid static export issues...');
-  try {
-    execSync('rm -rf app/api', { stdio: 'inherit' });
-  } catch (e) {
-    console.warn('Warning: Could not remove API routes directory (might not exist)');
-  }
+  // Create a temporary directory for the API-free build
+  console.log('📂 Creating temporary build environment...');
+  execSync('mkdir -p temp_build_app', { stdio: 'inherit' });
+
+  // Copy app directory without API routes
+  console.log('📋 Copying app directory without API routes...');
+  execSync('cp -r app temp_build_app/', { stdio: 'inherit' });
+  execSync('rm -rf temp_build_app/app/api', { stdio: 'inherit' });
+
+  // Temporarily rename the original app directory and use our modified one
+  console.log('🔄 Swapping app directories...');
+  execSync('mv app app_original', { stdio: 'inherit' });
+  execSync('mv temp_build_app/app ./', { stdio: 'inherit' });
 
   // Run the build with the current environment variables
   // With 'output: export' in next.config.js, this will automatically build and export
   console.log('📦 Building Next.js app (with automatic export)...');
   execSync('next build', { stdio: 'inherit' });
+
+  // Restore the original app directory
+  console.log('🔄 Restoring original app directory...');
+  execSync('rm -rf app', { stdio: 'inherit' });
+  execSync('mv app_original app', { stdio: 'inherit' });
+  execSync('rm -rf temp_build_app', { stdio: 'inherit' });
 
   console.log('\n✅ Static build completed successfully!');
   console.log('📂 Output directory: ./out');
