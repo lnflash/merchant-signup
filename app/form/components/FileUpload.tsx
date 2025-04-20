@@ -3,8 +3,6 @@ import { useFormContext } from 'react-hook-form';
 import { getSupabaseClient, createMockSupabaseClient } from '../../../lib/supabase-singleton';
 import { useCredentials } from '../../../src/hooks/useCredentials';
 import { config } from '../../../src/config';
-import { isFileInstance } from '../../../src/utils/validation';
-import { logger } from '../../../src/utils/logger';
 
 export default function FileUpload() {
   const [uploading, setUploading] = useState(false);
@@ -35,11 +33,13 @@ export default function FileUpload() {
 
   // Initialize with empty state
   useEffect(() => {
+    // Store current componentId value to avoid the cleanup function using a changed ref value
+    const currentComponentId = componentId.current;
     console.info(
-      `[📤] [${componentId.current}] FileUpload component initialized, credential hook ID: ${hookId}`
+      `[📤] [${currentComponentId}] FileUpload component initialized, credential hook ID: ${hookId}`
     );
     return () => {
-      console.info(`[📤] [${componentId.current}] FileUpload component cleanup`);
+      console.info(`[📤] [${currentComponentId}] FileUpload component cleanup`);
     };
   }, [hookId]);
 
@@ -82,7 +82,7 @@ export default function FileUpload() {
       dropZone.removeEventListener('dragleave', handleDragLeave);
       dropZone.removeEventListener('drop', handleDrop);
     };
-  }, []);
+  }, [handleFiles]);
 
   const handleFiles = async (fileList: FileList) => {
     // Generate a unique ID for this specific upload transaction

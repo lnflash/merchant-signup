@@ -12,7 +12,6 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 // Environment detection
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = process.env.NODE_ENV === 'development';
-const isTest = process.env.NODE_ENV === 'test';
 
 // Add application metadata to logs
 const getMetadata = () => ({
@@ -37,7 +36,7 @@ const shouldLog = (level: LogLevel): boolean => {
 };
 
 // Format the log message
-const formatMessage = (level: LogLevel, message: string, context?: object): string => {
+const formatMessage = (level: LogLevel, message: string): string => {
   let prefix = '';
 
   switch (level) {
@@ -64,7 +63,7 @@ const formatMessage = (level: LogLevel, message: string, context?: object): stri
 };
 
 // Function to send logs to a remote service in production
-const sendToRemoteLogger = (level: LogLevel, message: string, data?: any) => {
+const sendToRemoteLogger = (_level: LogLevel, _message: string, _data?: any) => {
   if (!isProduction) return;
 
   // This would be replaced with actual remote logging service in production

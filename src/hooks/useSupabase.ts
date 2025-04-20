@@ -1,12 +1,6 @@
 import { useState, useEffect } from 'react';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { logger } from '../utils/logger';
-
-type SupabaseResponse<T> = {
-  data: T | null;
-  error: Error | null;
-};
 
 /**
  * Custom hook for interacting with Supabase
@@ -109,7 +103,7 @@ export function useSupabase() {
   // Log connection status on first render
   useEffect(() => {
     console.log('useSupabase hook initial state:', { isConnected, error });
-  }, []);
+  }, [isConnected, error]);
 
   return {
     supabase,

@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { logger } from '../utils/logger';
 
 /**
  * Type for Supabase credentials
@@ -38,10 +37,12 @@ export function useCredentials() {
 
   // Log information about the hook instance being created
   useEffect(() => {
-    console.info(`[🔑] [${hookId.current}] useCredentials hook initialized`);
+    // Store current hookId value to avoid the cleanup function using a changed ref value
+    const currentHookId = hookId.current;
+    console.info(`[🔑] [${currentHookId}] useCredentials hook initialized`);
 
     return () => {
-      console.info(`[🔑] [${hookId.current}] useCredentials hook cleanup`);
+      console.info(`[🔑] [${currentHookId}] useCredentials hook cleanup`);
     };
   }, []);
 
@@ -167,7 +168,7 @@ export function useCredentials() {
     }
 
     fetchCredentials();
-  }, [error]); // Only re-run if there was an error that was cleared
+  }, [error, credentials?.supabaseUrl]); // Include credential URL dependency
 
   return { credentials, loading, error, hookId: hookId.current };
 }
