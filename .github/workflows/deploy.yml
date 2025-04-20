@@ -42,13 +42,17 @@ jobs:
         echo "Static export structure:"
         ls -la out/ || echo "No 'out' directory found"
         
-    - name: Deploy to DigitalOcean App Platform
-      uses: digitalocean/app_action@v1.1.5
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
       with:
-        app_name: merchant-signup
         token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-        # Use the App Platform static site approach
-        type: static
-        static_site: true
-        # No need to build on DO, we've already built it
-        output_dir: "out"
+        
+    - name: Deploy to DigitalOcean App Platform
+      run: |
+        # Create a compressed archive of the out directory
+        echo "Creating deployment archive..."
+        tar -czf deploy.tar.gz -C out .
+        
+        # Upload using doctl
+        echo "Uploading to DigitalOcean App Platform..."
+        doctl apps create-deployment merchant-signup --wait
