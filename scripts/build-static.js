@@ -48,19 +48,8 @@ console.log('\n🏗️ Starting static build process...');
 const { execSync } = require('child_process');
 
 try {
-  // Create a temporary directory for the API-free build
-  console.log('📂 Creating temporary build environment...');
-  execSync('mkdir -p temp_build_app', { stdio: 'inherit' });
-
-  // Copy app directory without API routes
-  console.log('📋 Copying app directory without API routes...');
-  execSync('cp -r app temp_build_app/', { stdio: 'inherit' });
-  execSync('rm -rf temp_build_app/app/api', { stdio: 'inherit' });
-
-  // Temporarily rename the original app directory and use our modified one
-  console.log('🔄 Swapping app directories...');
-  execSync('mv app app_original', { stdio: 'inherit' });
-  execSync('mv temp_build_app/app ./', { stdio: 'inherit' });
+  // Skip directory manipulation entirely
+  console.log('📦 Simplifying build process for CI...');
 
   // Generate a simple index.html and form.html to ensure we have valid output
   console.log('📦 Creating minimal static output...');
@@ -84,7 +73,7 @@ EOF',
     { stdio: 'inherit' }
   );
 
-  // Create basic form.html
+  // Create basic form.html with script tag to load env variables
   execSync(
     'cat > out/form.html << EOF\n\
 <!DOCTYPE html>\n\
@@ -93,6 +82,7 @@ EOF',
   <meta charset="utf-8">\n\
   <title>Flash Merchant Signup Form</title>\n\
   <style>body{font-family:sans-serif;max-width:800px;margin:0 auto;padding:20px}</style>\n\
+  <script src="/env-config.js"></script>\n\
 </head>\n\
 <body>\n\
   <h1>Flash Merchant Signup</h1>\n\
@@ -102,6 +92,21 @@ EOF',
     <li>NEXT_PUBLIC_SUPABASE_URL: ✅</li>\n\
     <li>NEXT_PUBLIC_SUPABASE_ANON_KEY: ✅</li>\n\
   </ul>\n\
+  <div id="env-status"></div>\n\
+  <script>\n\
+    // Display environment variables status (without showing actual values)\n\
+    document.addEventListener("DOMContentLoaded", function() {\n\
+      const status = document.getElementById("env-status");\n\
+      const env = window.ENV || {};\n\
+      status.innerHTML = `\n\
+        <h2>Runtime Environment Check</h2>\n\
+        <ul>\n\
+          <li>Supabase URL: ${env.SUPABASE_URL ? "✅ Available" : "❌ Missing"}</li>\n\
+          <li>Supabase Key: ${env.SUPABASE_KEY ? "✅ Available" : "❌ Missing"}</li>\n\
+          <li>Built with embedded variables: ${env.BUILD_TIME ? "✅ Yes" : "❌ No"}</li>\n\
+        </ul>`;\n\
+    });\n\
+  </script>\n\
 </body>\n\
 </html>\n\
 EOF',
@@ -117,11 +122,24 @@ EOF',
   // Create simple empty CSS file
   execSync('touch out/_next/static/css/main.css', { stdio: 'inherit' });
 
-  // Restore the original app directory
-  console.log('🔄 Restoring original app directory...');
-  execSync('rm -rf app', { stdio: 'inherit' });
-  execSync('mv app_original app', { stdio: 'inherit' });
-  execSync('rm -rf temp_build_app', { stdio: 'inherit' });
+  // Create a public directory and copy some basic assets
+  console.log('📦 Creating public directory...');
+  execSync('mkdir -p out/public', { stdio: 'inherit' });
+
+  // Create a simple JavaScript file to embed the environment variables
+  console.log('📦 Creating environment configuration...');
+  execSync(
+    `cat > out/env-config.js << EOF
+window.ENV = {
+  SUPABASE_URL: "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
+  SUPABASE_KEY: "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
+  BUILD_TIME: true
+};
+EOF`,
+    { stdio: 'inherit' }
+  );
+
+  // Skip directory restoration - nothing to restore
 
   console.log('\n✅ Static build completed successfully!');
   console.log('📂 Output directory: ./out');
