@@ -211,10 +211,9 @@ try {
   // Create form directory if it doesn't exist yet
   execSync('mkdir -p out/form', { stdio: 'inherit' });
 
-  // If Next.js didn't generate a form/index.html, create one
-  if (!fs.existsSync('out/form/index.html')) {
-    fs.writeFileSync('out/form/index.html', formHtml);
-  }
+  // Always create a form/index.html as a fallback
+  console.log('📦 Creating form/index.html fallback...');
+  fs.writeFileSync('out/form/index.html', formHtml);
 
   // Create _next directory structure
   console.log('📦 Creating static assets directory structure...');
@@ -270,6 +269,15 @@ console.log('Static build environment variables loaded:', {
       'find public -type f -not -path "*/node_modules*" -not -path "*/\\.*" | while read file; do cp "$file" "out/${file#public/}"; done',
       { stdio: 'inherit' }
     );
+  }
+
+  // Ensure images directory exists
+  execSync('mkdir -p out/images/logos', { stdio: 'inherit' });
+
+  // Copy logo files if they don't exist
+  if (fs.existsSync('app/assets')) {
+    console.log('📦 Copying logo assets...');
+    execSync('cp -r app/assets/* out/images/logos/ 2>/dev/null || true', { stdio: 'inherit' });
   }
 
   // Restore the original app directory

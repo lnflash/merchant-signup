@@ -87,15 +87,27 @@ jobs:
         # Clear the working directory
         git rm -rf .
         
-        # Copy the output directory contents (excluding node_modules)
-        echo "Copying static build files (excluding node_modules)..."
-        # First create necessary directories
-        find out -type d -not -path "*/node_modules*" -not -path "*/\.*" | xargs mkdir -p
-        # Then copy files
-        find out -type f -not -path "*/node_modules*" -not -path "*/\.*" | while read file; do
-          target="${file#out/}"
-          cp "$file" "$target"
-        done
+        # Create necessary directories
+        echo "Creating directory structure..."
+        mkdir -p form _next/static/css _next/static/media _next/static/chunks images/logos public
+        
+        # Copy from the out directory using find to exclude node_modules
+        echo "Copying static files and excluding large files..."
+        cp out/index.html ./index.html
+        cp out/404.html ./404.html
+        cp out/env-config.js ./env-config.js
+        
+        # Copy the form directory content
+        cp -r out/form/* ./form/ 2>/dev/null || true
+        
+        # Copy other assets directly
+        cp -r out/images ./
+        cp -r out/public ./
+        
+        # Copy Next.js files if they exist
+        cp -r out/_next/static/css/* ./_next/static/css/ 2>/dev/null || true
+        cp -r out/_next/static/media/* ./_next/static/media/ 2>/dev/null || true
+        cp -r out/_next/static/chunks/* ./_next/static/chunks/ 2>/dev/null || true
         
         # Make sure we have a .nojekyll file to prevent GitHub Pages from trying to process the site with Jekyll
         touch .nojekyll
