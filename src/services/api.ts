@@ -467,11 +467,26 @@ export const apiService = {
               };
             } else {
               console.error(`Error uploading to ${bucket} bucket:`, uploadResult.error);
-              storageResult = uploadResult; // Keep the last error for reporting
+              // Ensure the error object has the correct structure
+              storageResult = {
+                error: {
+                  message: uploadResult.error?.message || `Error uploading to ${bucket} bucket`,
+                },
+              };
             }
           } catch (bucketError) {
             console.error(`Exception uploading to ${bucket} bucket:`, bucketError);
-            storageResult = { error: bucketError };
+            // Make sure error has the expected structure with a message property
+            storageResult = {
+              error: {
+                message:
+                  bucketError instanceof Error
+                    ? bucketError.message
+                    : typeof bucketError === 'string'
+                      ? bucketError
+                      : 'Unknown storage error',
+              },
+            };
           }
         }
 
