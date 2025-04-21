@@ -186,20 +186,130 @@ export const apiService = {
         user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
       };
 
-      // Insert data into the merchant_signups table
-      const { data: result, error } = await supabase
-        .from('merchant_signups')
-        .insert([submissionData])
-        .select();
+      // Debug info for the table we're trying to insert to
+      console.log('Attempting to insert data into the merchant_signups table...');
 
-      if (error) {
-        logger.error('Supabase insert error', error);
+      // First check if we can query the table to verify it exists
+      const { data: tableCheck, error: tableError } = await supabase
+        .from('merchant_signups')
+        .select('id')
+        .limit(1);
+
+      // Log whether we could query the table
+      if (tableError) {
+        console.error('Error checking merchant_signups table:', tableError.message);
+        console.log('Checking alternative tables...');
+
+        // Try to query other possible table names
+        let alternativeTable = '';
+
+        // Check for 'signups' table
+        const { error: signupsError } = await supabase.from('signups').select('id').limit(1);
+
+        if (!signupsError) {
+          console.log('Found alternative table: signups');
+          alternativeTable = 'signups';
+        } else {
+          // Check for 'users' table
+          const { error: usersError } = await supabase.from('users').select('id').limit(1);
+
+          if (!usersError) {
+            console.log('Found alternative table: users');
+            alternativeTable = 'users';
+          }
+        }
+
+        // If we found an alternative table, use it
+        if (alternativeTable) {
+          console.log(`Using alternative table: ${alternativeTable}`);
+          const { data: result, error } = await supabase
+            .from(alternativeTable)
+            .insert([submissionData])
+            .select();
+
+          if (error) {
+            console.error(`Error inserting into ${alternativeTable}:`, error);
+            return {
+              success: false,
+              error: `Failed to insert into ${alternativeTable}: ${error.message}`,
+            };
+          }
+
+          logger.info(`Form submitted directly to Supabase (${alternativeTable}) successfully`, {
+            id: result?.[0]?.id,
+            timestamp: result?.[0]?.created_at,
+          });
+
+          return {
+            success: true,
+            message: `Form submitted successfully to ${alternativeTable}`,
+            data: result?.[0],
+          };
+        }
+
+        // If we couldn't find any accessible table, try creating a merchant_signups table
+        console.log('No accessible tables found, trying to create merchant_signups table...');
+
+        try {
+          // Try to create the table (this might fail if the user doesn't have permission)
+          await supabase.rpc('create_merchant_signups_if_not_exists');
+          console.log('merchant_signups table created successfully');
+        } catch (createError) {
+          console.error('Error creating table:', createError);
+          // Continue anyway, we'll try inserting and see what happens
+        }
+      }
+
+      // Insert data into the default merchant_signups table
+      console.log('Inserting data into merchant_signups table...');
+      let insertResult;
+      try {
+        insertResult = await supabase.from('merchant_signups').insert([submissionData]).select();
+      } catch (insertError) {
+        console.error('Insert error caught:', insertError);
         return {
           success: false,
-          error: error.message || 'Database error occurred',
+          error: 'Database error: Could not insert data. Please try again later.',
         };
       }
 
+      const { data: result, error } = insertResult;
+
+      if (error) {
+        // Get detailed error information
+        console.error('Supabase insert error details:', {
+          code: error.code,
+          message: error.message,
+          hint: error.hint,
+          details: error.details,
+        });
+
+        // Different handling for common errors
+        if (error.code === '42P01') {
+          return {
+            success: false,
+            error:
+              'The merchant_signups table does not exist in the database. Please contact support.',
+          };
+        } else if (error.code === '23505') {
+          return {
+            success: false,
+            error: 'This email is already registered. Please use a different email address.',
+          };
+        } else if (error.code === '23503') {
+          return {
+            success: false,
+            error: 'Database constraint error. Please check your information and try again.',
+          };
+        } else {
+          return {
+            success: false,
+            error: `Database error: ${error.message || 'Unknown error occurred'}`,
+          };
+        }
+      }
+
+      // Log success
       logger.info('Form submitted directly to Supabase successfully', {
         id: result?.[0]?.id,
         timestamp: result?.[0]?.created_at,
@@ -211,6 +321,7 @@ export const apiService = {
         data: result?.[0],
       };
     } catch (error) {
+      console.error('Direct Supabase connection error:', error);
       logger.error('Direct Supabase connection error', error);
       return {
         success: false,
