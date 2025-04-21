@@ -103,6 +103,47 @@ jobs:
         });
         EOF
         
+        # Enhance all HTML files with scripts and meta tags needed for static build
+        echo "Enhancing all HTML files for static build..."
+        find out -name "*.html" -type f | while read htmlfile; do
+          # Add env-config.js script if missing
+          if ! grep -q "env-config.js" "$htmlfile"; then
+            sed -i 's|</head>|<script src="/env-config.js"></script></head>|' "$htmlfile"
+            echo "✅ Added env-config.js script to $htmlfile"
+          fi
+          
+          # Add static-build meta tag if missing
+          if ! grep -q 'meta name="static-build"' "$htmlfile"; then
+            sed -i 's|<head>|<head>\n  <meta name="static-build" content="true">|' "$htmlfile"
+            echo "✅ Added static-build meta tag to $htmlfile"
+          fi
+          
+          # Add Supabase credentials meta tags if missing
+          if ! grep -q 'meta name="supabase-url"' "$htmlfile"; then
+            sed -i 's|<head>|<head>\n  <meta name="supabase-url" content="'"$NEXT_PUBLIC_SUPABASE_URL"'">|' "$htmlfile"
+            echo "✅ Added supabase-url meta tag to $htmlfile"
+          fi
+          
+          if ! grep -q 'meta name="supabase-anon-key"' "$htmlfile"; then
+            sed -i 's|<head>|<head>\n  <meta name="supabase-anon-key" content="'"$NEXT_PUBLIC_SUPABASE_ANON_KEY"'">|' "$htmlfile"
+            echo "✅ Added supabase-anon-key meta tag to $htmlfile"
+          fi
+          
+          # Inject inline script for setting window.ENV if missing (after title tag)
+          if ! grep -q "window.ENV = " "$htmlfile"; then
+            sed -i '/<title>/a \
+  <script>\
+    window.ENV = window.ENV || {\
+      SUPABASE_URL: "'"$NEXT_PUBLIC_SUPABASE_URL"'",\
+      SUPABASE_KEY: "'"$NEXT_PUBLIC_SUPABASE_ANON_KEY"'",\
+      BUILD_TIME: true,\
+      BUILD_DATE: "'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"\
+    };\
+  </script>' "$htmlfile"
+            echo "✅ Added window.ENV initialization script to $htmlfile"
+          fi
+        done
+        
         # Create routes.json for DigitalOcean App Platform using our script
         echo "Creating routes.json for DigitalOcean App Platform..."
         node scripts/create-routes-config.js
@@ -130,6 +171,27 @@ jobs:
           echo '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' >> out/form/index.html
           echo '  <meta name="supabase-url" content="'"$NEXT_PUBLIC_SUPABASE_URL"'">' >> out/form/index.html
           echo '  <meta name="supabase-anon-key" content="'"$NEXT_PUBLIC_SUPABASE_ANON_KEY"'">' >> out/form/index.html
+          echo '  <meta name="static-build" content="true">' >> out/form/index.html
+          echo '  <meta name="build-date" content="'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'">' >> out/form/index.html
+          
+          # Add environment variables directly to ensure they're available in static mode
+          echo '  <script>' >> out/form/index.html
+          echo '    // Directly initialize window.ENV to ensure it exists before env-config.js loads' >> out/form/index.html
+          echo '    window.ENV = {' >> out/form/index.html
+          echo '      SUPABASE_URL: "'"$NEXT_PUBLIC_SUPABASE_URL"'",' >> out/form/index.html
+          echo '      SUPABASE_KEY: "'"$NEXT_PUBLIC_SUPABASE_ANON_KEY"'",' >> out/form/index.html
+          echo '      BUILD_TIME: true,' >> out/form/index.html
+          echo '      BUILD_DATE: "'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'",' >> out/form/index.html
+          echo '      PLATFORM: "StaticBuild"' >> out/form/index.html
+          echo '    };' >> out/form/index.html
+          echo '    console.log("Static build environment initialized from inline script with credentials:", {' >> out/form/index.html
+          echo '      hasUrl: !!window.ENV.SUPABASE_URL,' >> out/form/index.html 
+          echo '      hasKey: !!window.ENV.SUPABASE_KEY,' >> out/form/index.html
+          echo '      buildTime: window.ENV.BUILD_TIME' >> out/form/index.html
+          echo '    });' >> out/form/index.html
+          echo '  </script>' >> out/form/index.html
+          
+          # Add env-config.js (will be loaded after the inline script)
           echo '  <script src="/env-config.js"></script>' >> out/form/index.html
           echo '  <style>' >> out/form/index.html
           echo '    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; text-align: center; color: #333; }' >> out/form/index.html

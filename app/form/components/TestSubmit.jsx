@@ -7,8 +7,15 @@ export default function TestSubmit() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Check if we're in a static build
-  const isStaticBuild = typeof window !== 'undefined' && window.ENV && window.ENV.BUILD_TIME;
+  // Check if we're in a static build - more comprehensive detection
+  const isStaticBuild = typeof window !== 'undefined' && (
+    // Check window.ENV.BUILD_TIME
+    (window.ENV && window.ENV.BUILD_TIME) ||
+    // Check URL for DigitalOcean domain
+    (window.location.hostname.includes('digitalocean') && !window.navigator.serviceWorker) ||
+    // Check for other static build indicators
+    document.querySelector('meta[name="static-build"]') !== null
+  );
   
   const handleTestSubmit = async () => {
     setLoading(true);
