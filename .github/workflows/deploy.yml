@@ -129,18 +129,30 @@ jobs:
             echo "✅ Added supabase-anon-key meta tag to $htmlfile"
           fi
           
-          # Inject inline script for setting window.ENV if missing (after title tag)
+          # Use echo statements to create the script file - avoiding YAML heredoc issues
+          echo "Creating temporary script file for injection..."
+          echo '<script>' > /tmp/window-env-script.html
+          echo '  window.ENV = window.ENV || {' >> /tmp/window-env-script.html
+          echo '    SUPABASE_URL: "'"$NEXT_PUBLIC_SUPABASE_URL"'",' >> /tmp/window-env-script.html
+          echo '    SUPABASE_KEY: "'"$NEXT_PUBLIC_SUPABASE_ANON_KEY"'",' >> /tmp/window-env-script.html
+          echo '    BUILD_TIME: true,' >> /tmp/window-env-script.html
+          echo '    BUILD_DATE: "'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"' >> /tmp/window-env-script.html
+          echo '  };' >> /tmp/window-env-script.html
+          echo '</script>' >> /tmp/window-env-script.html
+          
+          # Inject the script file after title tag if window.ENV is missing
           if ! grep -q "window.ENV = " "$htmlfile"; then
-            sed -i '/<title>/a \
-  <script>\
-    window.ENV = window.ENV || {\
-      SUPABASE_URL: "'"$NEXT_PUBLIC_SUPABASE_URL"'",\
-      SUPABASE_KEY: "'"$NEXT_PUBLIC_SUPABASE_ANON_KEY"'",\
-      BUILD_TIME: true,\
-      BUILD_DATE: "'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"\
-    };\
-  </script>' "$htmlfile"
-            echo "✅ Added window.ENV initialization script to $htmlfile"
+            # Find the line number of the title tag
+            TITLE_LINE=$(grep -n "<title>" "$htmlfile" | cut -d':' -f1)
+            if [ -n "$TITLE_LINE" ]; then
+              # Insert the content after the title line
+              sed -i "${TITLE_LINE}r /tmp/window-env-script.html" "$htmlfile"
+              echo "✅ Added window.ENV initialization script to $htmlfile"
+            else
+              # If no title tag found, insert after head tag
+              sed -i '/<head>/r /tmp/window-env-script.html' "$htmlfile"
+              echo "✅ Added window.ENV initialization script to $htmlfile (after head tag)"
+            fi
           fi
         done
         
