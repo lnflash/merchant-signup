@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState, useEffect, useRef } from 'react';
+import { supabase } from '../../lib/supabase-singleton';
 import { logger } from '../utils/logger';
 
 /**
@@ -9,30 +9,71 @@ import { logger } from '../utils/logger';
 export function useSupabase() {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isStaticBuild, setIsStaticBuild] = useState<boolean>(false);
+  const hookId = useRef(
+    `supabase_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 5)}`
+  );
 
-  // Check connection on mount
+  // Detect if we're in a static build
   useEffect(() => {
+    const inStaticBuild = typeof window !== 'undefined' && window.ENV && window.ENV.BUILD_TIME;
+    setIsStaticBuild(!!inStaticBuild);
+    
+    logger.info(`[🔌] [${hookId.current}] useSupabase hook initialized`, {
+      isStaticBuild: !!inStaticBuild,
+      timestamp: new Date().toISOString(),
+    });
+    
+    // Check connection on mount
     checkConnection();
+    
+    return () => {
+      logger.info(`[🔌] [${hookId.current}] useSupabase hook cleanup`);
+    };
   }, []);
 
   // Function to check Supabase connection
   const checkConnection = async () => {
     try {
-      logger.info('Checking Supabase connection...');
-      const { error } = await supabase.from('signups').select('id', { count: 'exact', head: true });
+      logger.info(`[🔌] [${hookId.current}] Checking Supabase connection...`);
+      
+      // If this is a static build, check for window.ENV credentials
+      if (isStaticBuild) {
+        if (typeof window !== 'undefined' && window.ENV && window.ENV.SUPABASE_URL && window.ENV.SUPABASE_KEY) {
+          logger.info(`[🔌] [${hookId.current}] Static build with valid credentials`, {
+            hasUrl: true,
+            hasKey: true,
+            source: 'window.ENV',
+          });
+          setIsConnected(true);
+          setError(null);
+          return;
+        }
+      }
+      
+      // Try a simple query to test the connection
+      const testTable = 'signups'; // or any table you have in your Supabase
+      const { error } = await supabase.from(testTable).select('id', { count: 'exact', head: true });
 
       if (error) {
-        logger.error('Supabase connection failed', error);
+        logger.error(`[🔌] [${hookId.current}] Supabase connection failed`, {
+          error: error.message,
+          code: error.code,
+          details: error.details,
+        });
         setIsConnected(false);
         setError(error.message);
       } else {
-        logger.supabase.connectionSuccess();
+        logger.info(`[🔌] [${hookId.current}] Supabase connection successful`);
         setIsConnected(true);
         setError(null);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      logger.error('Supabase connection error', err);
+      logger.error(`[🔌] [${hookId.current}] Supabase connection error`, {
+        error: errorMessage,
+        stack: err instanceof Error ? err.stack?.substring(0, 150) : 'No stack',
+      });
       setIsConnected(false);
       setError(errorMessage);
     }
@@ -91,26 +132,50 @@ export function useSupabase() {
 
   // Debug method to verify connection status
   const debugConnectionStatus = () => {
-    console.log('Current Supabase connection status:', {
+    // Get client details for diagnostics (safely)
+    const credentials = typeof window !== 'undefined' && window.ENV 
+      ? { 
+          source: 'window.ENV',
+          hasUrl: !!window.ENV.SUPABASE_URL, 
+          hasKey: !!window.ENV.SUPABASE_KEY,
+          isStaticBuild: !!window.ENV.BUILD_TIME
+        }
+      : { 
+          source: 'process.env',
+          hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          isStaticBuild: process.env.IS_BUILD_TIME === 'true'
+        };
+    
+    console.log(`[🔌] [${hookId.current}] Current Supabase connection status:`, {
       isConnected,
       error,
+      isStaticBuild,
       supabaseInstance: supabase ? 'exists' : 'missing',
+      credentials
     });
+    
     // Force a new connection check
     checkConnection();
   };
 
-  // Log connection status on first render
+  // Log connection status on changes
   useEffect(() => {
-    console.log('useSupabase hook initial state:', { isConnected, error });
-  }, [isConnected, error]);
+    logger.info(`[🔌] [${hookId.current}] Supabase connection status changed:`, { 
+      isConnected, 
+      hasError: !!error,
+      isStaticBuild 
+    });
+  }, [isConnected, error, isStaticBuild]);
 
   return {
     supabase,
     isConnected,
     error,
+    isStaticBuild,
     checkConnection,
     insertData,
     debugConnectionStatus,
+    hookId: hookId.current,
   };
 }

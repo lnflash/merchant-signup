@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react';
 import { useSupabase } from '../hooks/useSupabase';
 
 export const DatabaseStatus = () => {
-  const { isConnected, error, checkConnection, debugConnectionStatus } = useSupabase();
+  const { isConnected, error, isStaticBuild, checkConnection, debugConnectionStatus } = useSupabase();
   const [showStatus, setShowStatus] = useState(true); // Always show initially
 
   // Debug log
-  console.log('DatabaseStatus rendering:', { isConnected, error, showStatus });
+  console.log('DatabaseStatus rendering:', { isConnected, error, isStaticBuild, showStatus });
 
   useEffect(() => {
     // Always show on first load, error, or when connection status changes
@@ -55,8 +55,10 @@ export const DatabaseStatus = () => {
           {error
             ? 'Database connection error'
             : isConnected === true
-              ? 'Connected to database'
-              : 'Connecting to database...'}
+              ? isStaticBuild
+                ? 'Using static Supabase credentials'
+                : 'Connected to database'
+              : 'Checking database connection...'}
         </div>
 
         <button
