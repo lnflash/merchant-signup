@@ -9,6 +9,11 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      IS_BUILD_TIME: "true"
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -23,25 +28,29 @@ jobs:
       run: npm ci
       
     - name: Run environment checks
-      run: node scripts/check-env.js
-      env:
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      run: |
+        node scripts/check-env.js
+        npm run env-debug
       
     - name: Build Next.js app (static export)
       run: |
+        # Log environment variables (without showing values)
         npm run check-build-env
+        
+        # Build the app with static export mode (using output: 'export' in next.config.js)
+        # IS_BUILD_TIME=true activates the output: 'export' setting
+        echo "Building Next.js app with static export mode..."
         npm run build
         
-        # Ensure the API routes are properly handled before static export
-        echo "Creating API route fallbacks for static export..."
-        mkdir -p .next/static-api-fallbacks
+        # Create API route fallbacks for static export
+        echo "Adding API fallbacks to static output..."
+        mkdir -p out/api/credentials
         
         # Create credentials fallback JSON
-        cat > .next/static-api-fallbacks/credentials.json << 'EOF'
+        cat > out/api/credentials/index.json << EOF
         {
-          "supabaseUrl": "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}",
-          "supabaseKey": "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}",
+          "supabaseUrl": "$NEXT_PUBLIC_SUPABASE_URL",
+          "supabaseKey": "$NEXT_PUBLIC_SUPABASE_ANON_KEY",
           "bucket": "id_uploads",
           "environment": "production",
           "buildTime": true,
@@ -51,22 +60,27 @@ jobs:
         }
         EOF
         
-        # Temporarily remove API routes that cause issues with static export
-        echo "Removing API routes from server build..."
-        rm -rf .next/server/app/api
+        # Enhanced env-config.js to ensure credentials are available client-side
+        echo "Creating enhanced env-config.js..."
+        cat > out/env-config.js << EOF
+        // Static build environment configuration
+        window.ENV = {
+          SUPABASE_URL: "$NEXT_PUBLIC_SUPABASE_URL",
+          SUPABASE_KEY: "$NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          BUILD_TIME: true,
+          BUILD_DATE: "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+          PLATFORM: "GithubStaticDeploy",
+          DEPLOY_ID: "$GITHUB_RUN_ID"
+        };
         
-        # Now create the static export using npx to ensure next is in path
-        echo "Running static export..."
-        npx next export
-        
-        # Copy API fallbacks to the out directory
-        echo "Adding API fallbacks to static output..."
-        mkdir -p out/api/credentials
-        cp .next/static-api-fallbacks/credentials.json out/api/credentials/index.json
-      env:
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-        IS_BUILD_TIME: "true"
+        // Log that the environment variables have been loaded from the static build
+        console.log('Static build environment variables loaded:', {
+          hasUrl: !!window.ENV.SUPABASE_URL,
+          hasKey: !!window.ENV.SUPABASE_KEY,
+          buildTime: window.ENV.BUILD_TIME,
+          buildDate: window.ENV.BUILD_DATE
+        });
+        EOF
         
     - name: List built files
       run: |
@@ -97,6 +111,22 @@ jobs:
         else
           echo "⚠️ form page not found in expected locations, but continuing anyway"
         fi
+        
+        # Check for env-config.js and API fallbacks
+        if [ -f "out/env-config.js" ]; then
+          echo "✅ env-config.js exists"
+        else
+          echo "❌ env-config.js is missing!" 
+          exit 1
+        fi
+        
+        if [ -f "out/api/credentials/index.json" ]; then
+          echo "✅ API credentials fallback exists"
+        else
+          echo "❌ API credentials fallback is missing!"
+          exit 1
+        fi
+        
         echo "✅ Static export verification complete"
         
     - name: Upload static build to GitHub Pages branch
@@ -120,7 +150,7 @@ jobs:
         
         # Create necessary directories
         echo "Creating directory structure..."
-        mkdir -p form _next/static/css _next/static/media _next/static/chunks images/logos public
+        mkdir -p form _next/static/css _next/static/media _next/static/chunks images/logos public api/credentials
         
         # Copy from the out directory using find to exclude node_modules
         echo "Copying static files and excluding large files..."
@@ -142,8 +172,12 @@ jobs:
           echo "⚠️ Warning: env-config.js not found in out directory"
         fi
         
-        # Make directories before copying
-        mkdir -p form images
+        # Copy API fallbacks
+        if [ -f "out/api/credentials/index.json" ]; then
+          cp out/api/credentials/index.json ./api/credentials/index.json
+        else
+          echo "⚠️ Warning: API credentials fallback not found"
+        fi
         
         # Copy the form directory content
         if [ -d "out/form" ]; then
@@ -168,9 +202,11 @@ jobs:
         fi
         
         # Copy Next.js files if they exist
-        cp -r out/_next/static/css/* ./_next/static/css/ 2>/dev/null || true
-        cp -r out/_next/static/media/* ./_next/static/media/ 2>/dev/null || true
-        cp -r out/_next/static/chunks/* ./_next/static/chunks/ 2>/dev/null || true
+        if [ -d "out/_next" ]; then
+          cp -r out/_next ./ 2>/dev/null || echo "⚠️ Warning: Error copying _next directory, but continuing..."
+        else
+          echo "⚠️ Warning: _next directory not found in out directory"
+        fi
         
         # Make sure we have a .nojekyll file to prevent GitHub Pages from trying to process the site with Jekyll
         touch .nojekyll

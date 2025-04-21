@@ -3,8 +3,8 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // For static export - DON'T use output: 'export' to avoid errors with API routes
-  // This way we can build normally and then export afterwards
+  // Using conditional output mode based on build environment
+  ...(process.env.IS_BUILD_TIME === 'true' ? { output: 'export' } : {}),
   distDir: '.next',
   // Set trailing slash and static parameters
   trailingSlash: false,
