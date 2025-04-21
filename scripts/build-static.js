@@ -216,9 +216,30 @@ try {
     execSync('cp -r .next/server/app/form/* out/form/ 2>/dev/null || true', { stdio: 'inherit' });
   }
 
-  // Always create a form/index.html as a fallback
-  console.log('📦 Creating form/index.html fallback...');
-  fs.writeFileSync('out/form/index.html', formHtml);
+  // Check if the form index.html exists or create an enhanced fallback
+  console.log('📦 Creating enhanced form/index.html fallback...');
+  
+  // Check if we have a debug fallback template
+  let enhancedFormHtml = formHtml; // Default to simple version
+  
+  if (fs.existsSync('debug/form-fallback.html')) {
+    console.log('📦 Using enhanced form fallback from debug/form-fallback.html');
+    try {
+      enhancedFormHtml = fs.readFileSync('debug/form-fallback.html', 'utf8');
+      
+      // Replace placeholders with actual Supabase credentials
+      enhancedFormHtml = enhancedFormHtml
+        .replace(/SUPABASE_URL_PLACEHOLDER/g, process.env.NEXT_PUBLIC_SUPABASE_URL || '')
+        .replace(/SUPABASE_KEY_PLACEHOLDER/g, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
+        
+      console.log('📦 Successfully processed enhanced form fallback');
+    } catch (error) {
+      console.error('Error reading enhanced fallback:', error);
+      console.log('📦 Falling back to simple form template');
+    }
+  }
+  
+  fs.writeFileSync('out/form/index.html', enhancedFormHtml);
 
   // Create fake API endpoint to prevent redirects to non-existent API endpoints
   console.log('📦 Creating API fallbacks to prevent redirects...');

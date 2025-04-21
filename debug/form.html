@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Form Page</title>
+    <script>
+        // Debugging script to log the window.ENV object
+        window.onload = function() {
+            console.log('window.ENV:', window.ENV);
+            
+            // Check for environment variables
+            const envInfo = {
+                hasENV: !!window.ENV,
+                hasSupabaseURL: window.ENV && !!window.ENV.SUPABASE_URL,
+                hasSupabaseKey: window.ENV && !!window.ENV.SUPABASE_KEY,
+                isBuildTime: window.ENV && !!window.ENV.BUILD_TIME,
+                envKeys: window.ENV ? Object.keys(window.ENV) : [],
+                hasPublicEnv: !!window.NEXT_PUBLIC_SUPABASE_URL && !!window.NEXT_PUBLIC_SUPABASE_ANON_KEY
+            };
+            
+            console.log('Environment Information:', envInfo);
+            
+            // Display the information on the page
+            document.getElementById('env-info').innerHTML = JSON.stringify(envInfo, null, 2);
+            
+            // Check for React and Next.js
+            document.getElementById('react-status').innerHTML = 
+                typeof React !== 'undefined' ? 'Available' : 'Not Available';
+            document.getElementById('nextjs-status').innerHTML = 
+                typeof Next !== 'undefined' ? 'Available' : 'Not Available';
+                
+            // Check for errors
+            if (window.errors && window.errors.length) {
+                document.getElementById('errors').innerHTML = window.errors.join('<br>');
+            }
+        };
+    </script>
+</head>
+<body style="font-family: system-ui, -apple-system, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px;">
+    <h1>Debug Form Page</h1>
+    
+    <h2>Environment Information</h2>
+    <pre id="env-info" style="background-color: #f5f5f5; padding: 10px; border-radius: 5px;"></pre>
+    
+    <h2>Library Status</h2>
+    <p><strong>React:</strong> <span id="react-status"></span></p>
+    <p><strong>Next.js:</strong> <span id="nextjs-status"></span></p>
+    
+    <h2>Console Errors</h2>
+    <div id="errors" style="color: red;"></div>
+    
+    <script>
+        // Capture errors
+        window.errors = [];
+        window.addEventListener('error', function(event) {
+            window.errors.push(event.message);
+            document.getElementById('errors').innerHTML = window.errors.join('<br>');
+        });
+    </script>
+</body>
+</html>
