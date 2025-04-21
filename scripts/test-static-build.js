@@ -25,11 +25,26 @@ const fs = require('fs');
 const path = require('path');
 
 try {
-  // Build the Next.js application with static export
-  console.log('📦 Building Next.js app with static export...');
-  execSync('next build', { stdio: 'inherit' });
+  // Temporarily move the API directory out of the way for static export
+  console.log('📦 Temporarily removing API routes for static export...');
+  let apiBackupCreated = false;
+  if (fs.existsSync('app/api')) {
+    // Create backup directory
+    fs.mkdirSync('app-api-backup', { recursive: true });
+    execSync('cp -r app/api app-api-backup/', { stdio: 'inherit' });
+    execSync('rm -rf app/api', { stdio: 'inherit' });
+    apiBackupCreated = true;
+    console.log('✅ API routes temporarily moved');
+  } else {
+    console.log('⚠️ No API routes found in app/api directory');
+  }
 
-  // Check if the out directory exists
+  // Build the Next.js application with static export
+  try {
+    console.log('📦 Building Next.js app with static export...');
+    execSync('next build', { stdio: 'inherit' });
+
+    // Check if the out directory exists
   if (!fs.existsSync('out')) {
     console.error('❌ Static export failed: "out" directory not found');
     process.exit(1);
@@ -114,4 +129,16 @@ console.log('Static build environment variables loaded:', {
 } catch (error) {
   console.error('\n❌ Build failed:', error.message);
   process.exit(1);
+} finally {
+  // Always restore the API directory if we backed it up
+  if (apiBackupCreated) {
+    console.log('📦 Restoring API routes...');
+    if (fs.existsSync('app-api-backup/api')) {
+      execSync('rm -rf app/api 2>/dev/null || true', { stdio: 'inherit' });
+      execSync('mkdir -p app', { stdio: 'inherit' });
+      execSync('mv app-api-backup/api app/', { stdio: 'inherit' });
+      execSync('rm -rf app-api-backup', { stdio: 'inherit' });
+      console.log('✅ API routes restored');
+    }
+  }
 }

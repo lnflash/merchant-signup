@@ -37,10 +37,31 @@ jobs:
         # Log environment variables (without showing values)
         npm run check-build-env
         
+        # Temporarily move API routes out of the way before static build
+        echo "Temporarily removing API routes for static export..."
+        if [ -d "app/api" ]; then
+          mkdir -p app-api-backup
+          cp -r app/api app-api-backup/
+          rm -rf app/api
+          echo "✅ API routes temporarily moved"
+        else
+          echo "⚠️ No API routes found in app/api directory"
+        fi
+        
         # Build the app with static export mode (using output: 'export' in next.config.js)
         # IS_BUILD_TIME=true activates the output: 'export' setting
         echo "Building Next.js app with static export mode..."
         npm run build
+        
+        # Restore API routes
+        echo "Restoring API routes..."
+        if [ -d "app-api-backup/api" ]; then
+          rm -rf app/api 2>/dev/null || true
+          mkdir -p app
+          mv app-api-backup/api app/
+          rm -rf app-api-backup
+          echo "✅ API routes restored"
+        fi
         
         # Create API route fallbacks for static export
         echo "Adding API fallbacks to static output..."
