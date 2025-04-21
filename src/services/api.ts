@@ -212,8 +212,18 @@ export const apiService = {
           // Optional business/merchant fields
           ...(data.business_name ? { business_name: data.business_name } : {}),
           ...(data.business_address ? { business_address: data.business_address } : {}),
-          ...(data.latitude ? { latitude: parseFloat(data.latitude.toString()) } : {}),
-          ...(data.longitude ? { longitude: parseFloat(data.longitude.toString()) } : {}),
+          ...(data.latitude !== undefined
+            ? {
+                latitude:
+                  typeof data.latitude === 'string' ? parseFloat(data.latitude) : data.latitude,
+              }
+            : {}),
+          ...(data.longitude !== undefined
+            ? {
+                longitude:
+                  typeof data.longitude === 'string' ? parseFloat(data.longitude) : data.longitude,
+              }
+            : {}),
           ...(data.bank_name ? { bank_name: data.bank_name } : {}),
           ...(data.bank_branch ? { bank_branch: data.bank_branch } : {}),
           ...(data.bank_account_type ? { bank_account_type: data.bank_account_type } : {}),

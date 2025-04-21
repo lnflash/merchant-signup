@@ -32,6 +32,10 @@ export default function TestSubmit() {
       // Empty fields for business/merchant
       business_name: "",
       business_address: "",
+      // Location coordinates
+      latitude: null,
+      longitude: null,
+      // Banking and ID info
       bank_name: "",
       bank_branch: "",
       bank_account_type: "",
@@ -69,6 +73,10 @@ export default function TestSubmit() {
             // Optional business/merchant fields
             ...(testData.business_name ? { business_name: testData.business_name } : {}),
             ...(testData.business_address ? { business_address: testData.business_address } : {}),
+            // Location coordinates if they exist
+            ...(testData.latitude !== null && testData.latitude !== undefined ? { latitude: testData.latitude } : {}),
+            ...(testData.longitude !== null && testData.longitude !== undefined ? { longitude: testData.longitude } : {}),
+            // Banking and ID info
             ...(testData.bank_name ? { bank_name: testData.bank_name } : {}),
             ...(testData.bank_branch ? { bank_branch: testData.bank_branch } : {}),
             ...(testData.bank_account_type ? { bank_account_type: testData.bank_account_type } : {}),

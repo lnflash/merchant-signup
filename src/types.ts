@@ -24,6 +24,8 @@ export interface SignupFormData {
   business_address?: string;
   business_type?: string;
   business_description?: string;
+  latitude?: number;
+  longitude?: number;
 
   // Merchant information
   merchant_type?: string;
