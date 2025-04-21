@@ -103,37 +103,97 @@ jobs:
         });
         EOF
         
-        # Create routes.json for DigitalOcean App Platform
+        # Create routes.json for DigitalOcean App Platform using our script
         echo "Creating routes.json for DigitalOcean App Platform..."
-        cat > out/routes.json << EOF
-        {
-          "routes": [
-            {
-              "handle": "filesystem"
-            },
-            {
-              "src": "/form",
-              "dest": "/form/index.html"
-            },
-            {
-              "src": "/form/",
-              "dest": "/form/index.html"
-            },
-            {
-              "src": "/api/credentials",
-              "dest": "/api/credentials/index.json"
-            },
-            {
-              "src": "/api/(.*)",
-              "dest": "/api/\$1/index.json"
-            },
-            {
-              "src": "/(.*)",
-              "dest": "/index.html"
-            }
-          ]
-        }
-        EOF
+        node scripts/create-routes-config.js
+        
+        # Ensure the form directory and index.html exist
+        echo "Ensuring form/index.html exists..."
+        mkdir -p out/form
+        
+        # Check if form/index.html exists
+        if [ ! -f "out/form/index.html" ]; then
+          echo "⚠️ form/index.html not found, creating fallback..."
+          
+          # Create a basic form/index.html fallback
+          cat > out/form/index.html << EOF
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Flash Merchant Signup Form</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 20px;
+      text-align: center;
+      color: #333;
+    }
+    .logo {
+      max-width: 120px;
+      margin-bottom: 20px;
+    }
+    h1 { color: #1D4ED8; margin-bottom: 10px; }
+    .btn {
+      display: inline-block;
+      background-color: #1D4ED8;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 20px;
+      transition: background-color 0.2s;
+    }
+    .btn:hover { background-color: #1E40AF; }
+  </style>
+  <meta name="supabase-url" content="$NEXT_PUBLIC_SUPABASE_URL">
+  <meta name="supabase-anon-key" content="$NEXT_PUBLIC_SUPABASE_ANON_KEY">
+  <script src="/env-config.js"></script>
+</head>
+<body>
+  <h1>Flash Merchant Signup</h1>
+  <p>Loading signup form...</p>
+  <div id="loading">
+    <div style="border: 4px solid #f3f3f3; border-top: 4px solid #1D4ED8; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto;"></div>
+    <p>Setting up the form...</p>
+  </div>
+  <div id="env-status"></div>
+  <a href="/" class="btn">Return to Home</a>
+  
+  <script>
+    // Animation for loading spinner
+    document.head.insertAdjacentHTML('beforeend', '<style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>');
+    
+    // Display environment variables status (without showing actual values)
+    document.addEventListener("DOMContentLoaded", function() {
+      const status = document.getElementById("env-status");
+      const env = window.ENV || {};
+      status.innerHTML = 
+        "<h2>Environment Configuration</h2>" +
+        "<ul style='list-style: none; padding: 0;'>" +
+        "<li>Supabase URL: " + (env.SUPABASE_URL ? "✅ Available" : "❌ Missing") + "</li>" +
+        "<li>Supabase Key: " + (env.SUPABASE_KEY ? "✅ Available" : "❌ Missing") + "</li>" +
+        "<li>Built with embedded variables: " + (env.BUILD_TIME ? "✅ Yes" : "❌ No") + "</li>" +
+        "</ul>";
+    });
+  </script>
+</body>
+</html>
+EOF
+          echo "✅ Created form/index.html fallback"
+        fi
+        
+        # Verify form/index.html exists
+        if [ -f "out/form/index.html" ]; then
+          echo "✅ form/index.html exists"
+        else 
+          echo "❌ ERROR: Could not create form/index.html!"
+          exit 1
+        fi
         
     - name: List built files
       run: |

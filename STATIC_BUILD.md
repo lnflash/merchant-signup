@@ -1,96 +1,144 @@
-# Static Build Process for Flash Merchant Signup
+# Static Build Guide for Flash Merchant Signup
 
-This document explains how the Flash Merchant Signup application is built as a static site and deployed to DigitalOcean App Platform.
+This document provides instructions for building and deploying the Flash Merchant Signup app as a static site on DigitalOcean App Platform.
 
 ## Overview
 
-The application is built using Next.js with static export functionality, which converts the React application into static HTML, CSS, and JavaScript files that can be deployed to any static hosting service.
+The Flash Merchant Signup app is a Next.js application that can be deployed as a static site. This approach has some limitations but allows for simple hosting on platforms like DigitalOcean App Platform.
 
-Since the application needs to interact with Supabase directly from the client in static mode (without API routes), we've implemented several mechanisms to ensure Supabase credentials are available to the client.
+## Key Challenges in Static Builds
 
-## Build Process
+1. **API Routes**: Next.js static exports do not support API routes. We handle this by:
 
-1. **Static Export Configuration**:
+   - Temporarily removing API routes during the build process
+   - Creating static JSON fallbacks for API endpoints
+   - Adding client-side fallbacks to directly connect to Supabase
 
-   - We use Next.js's `output: 'export'` configuration in `next.config.js`, which is conditionally applied when the `IS_BUILD_TIME` environment variable is set to `'true'`
-   - This configuration replaces the deprecated `next export` command
+2. **Routing**: DigitalOcean App Platform requires a `routes.json` file to correctly handle routing. We create this file during the build process.
 
-2. **API Route Handling**:
+3. **Environment Variables**: Static builds cannot access server environment variables at runtime. We handle this by:
+   - Embedding environment variables in the client-side JavaScript at build time
+   - Using a `window.ENV` object to make them available to client code
 
-   - API routes are not available in static exports
-   - We create static JSON fallbacks for API endpoints in the `out/api` directory
-   - Client-side code uses these fallbacks when the real API endpoints are not available
+## Building Locally
 
-3. **Environment Variable Embedding**:
+To build and test the static export locally:
 
-   - Supabase credentials (URL and anon key) are embedded into the static build through:
-     - Meta tags in HTML (via `_document.js`)
-     - Window variables (via inline scripts)
-     - Static JSON files in the `api/credentials` directory
-     - `env-config.js` file that populates `window.ENV`
+```bash
+# Build the static site
+npm run build:static:legacy
 
-4. **Client-Side Credential Detection**:
-   - The `useCredentials` hook tries multiple sources to get Supabase credentials:
-     1. `window.ENV` variables (populated by `env-config.js`)
-     2. Environment variables during build time
-     3. API fetch from `/api/credentials` endpoint (with fallback to static JSON)
+# Test the static site with a local server
+npm run test:static-server
+```
+
+This will build the app and start a local server at http://localhost:3456 that simulates the routing behavior of DigitalOcean App Platform.
 
 ## Deployment Process
 
-The deployment process is automated using GitHub Actions:
+The app is automatically deployed to DigitalOcean App Platform via GitHub Actions when commits are pushed to the main branch.
 
-1. Code is pushed to the main branch
-2. GitHub Actions workflow (`deploy.yml`) is triggered
-3. The workflow:
-   - Checks out the repository
-   - Sets up Node.js environment
-   - Installs dependencies
-   - Sets `IS_BUILD_TIME=true` environment variable
-   - Builds the application with static export mode
-   - Creates API fallbacks and enhanced `env-config.js`
-   - Verifies the static output
-   - Deploys to GitHub Pages (as an intermediary)
-   - DigitalOcean App Platform pulls from the GitHub Pages branch
+The deployment process:
 
-## Testing Locally
+1. Builds the app with `IS_BUILD_TIME=true`
+2. Temporarily removes API routes
+3. Creates static fallbacks for API endpoints
+4. Generates the `routes.json` file for routing
+5. Creates a GitHub Pages branch with the static build
+6. Deploys to DigitalOcean App Platform
 
-To test the static build locally:
+## Routing Configuration
 
-```bash
-# Build the static site with test credentials
-npm run build:static:test
+The `routes.json` file is crucial for proper routing in DigitalOcean App Platform. It contains the following routes:
 
-# Serve the static site
-npx serve out
+```json
+{
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/form",
+      "dest": "/form/index.html",
+      "status": 200
+    },
+    {
+      "src": "/form/",
+      "dest": "/form/index.html",
+      "status": 200
+    },
+    {
+      "src": "/form/(.*)",
+      "dest": "/form/index.html",
+      "status": 200
+    },
+    {
+      "src": "/api/credentials",
+      "dest": "/api/credentials/index.json",
+      "status": 200
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1/index.json",
+      "status": 200
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "status": 200
+    }
+  ]
+}
 ```
 
-## File Structure
+This configuration ensures that:
 
-Key files involved in the static build process:
-
-- `next.config.js` - Configures Next.js for static export
-- `scripts/test-static-build.js` - Script to test the static build locally
-- `.github/workflows/deploy.yml` - GitHub Actions workflow for deployment
-- `src/hooks/useCredentials.ts` - Hook to retrieve Supabase credentials
-- `pages/_document.js` - HTML document with meta tags for credentials
-- `public/env-config.js` - Client-side script to populate `window.ENV`
+- The form page is accessible at `/form`
+- API endpoints have static fallbacks
+- All other routes fallback to the index page
 
 ## Troubleshooting
 
-Common issues and solutions:
+### 404 Errors on Form Page
 
-1. **Missing Credentials**:
+If you get a 404 error when accessing the form page:
 
-   - Check if `env-config.js` is properly generated
-   - Verify that meta tags are present in the HTML
-   - Ensure API fallbacks are created in `out/api/credentials`
+1. Verify that `routes.json` exists in your deployment
+2. Ensure that the `form/index.html` file exists in your build
+3. Check if the deployment platform is correctly using the `routes.json` file
 
-2. **Next.js Configuration Issues**:
+To fix 404 errors:
 
-   - Make sure `IS_BUILD_TIME=true` is set when building
-   - Verify that `output: 'export'` is conditionally applied in `next.config.js`
+- Rebuild and redeploy the app
+- Manually check the `out/form/index.html` file exists in the build
+- Run the `test:static-server` script locally to verify routes work
 
-3. **Deployment Failures**:
-   - Check GitHub Actions logs for errors
-   - Verify that the static output structure is correct
-   - Make sure no large files (>50MB) are included in the build
+### Environment Variables
+
+If environment variables are not available in the static build:
+
+1. Check if `env-config.js` is being loaded in the HTML
+2. Verify that meta tags with Supabase credentials are present
+3. Use the debug tools to inspect the environment:
+
+```javascript
+// In browser console
+console.log('ENV check:', {
+  hasWindowENV: !!window.ENV,
+  envKeys: window.ENV ? Object.keys(window.ENV) : [],
+  supabaseUrl: window.ENV?.SUPABASE_URL ? 'Available' : 'Missing',
+  supabaseKey: window.ENV?.SUPABASE_KEY ? 'Available' : 'Missing',
+});
+```
+
+## Testing the Deployment
+
+After deploying, verify the following URLs work:
+
+- Home: https://flash-merchant-signup-ov4yh.ondigitalocean.app/
+- Form: https://flash-merchant-signup-ov4yh.ondigitalocean.app/form
+- API: https://flash-merchant-signup-ov4yh.ondigitalocean.app/api/credentials
+
+The debug navigation page is available at:
+
+- Debug: https://flash-merchant-signup-ov4yh.ondigitalocean.app/debug-nav.html
