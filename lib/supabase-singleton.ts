@@ -201,7 +201,9 @@ export function createMockSupabaseClient(): SupabaseClient {
     }),
   });
 
-  return mockClient as SupabaseClient;
+  // Use a double type assertion to bypass TypeScript's type checking
+  // This is necessary because our mock doesn't implement all SupabaseClient properties
+  return mockClient as unknown as SupabaseClient;
 }
 
 /**
