@@ -271,15 +271,28 @@ fs.writeFileSync(path.join(formDir, 'index.html'), formHtml);
 console.log('📦 Creating images directory...');
 fs.mkdirSync(path.join(outDir, 'images', 'logos'), { recursive: true });
 
-// Copy public directory to the output directory
-console.log('📦 Copying public assets...');
-if (fs.existsSync('public')) {
-  try {
-    execSync(`cp -r public/* ${outDir}/`, { stdio: 'inherit' });
-  } catch (e) {
-    console.warn('Warning: Error copying public assets, but continuing...');
+// Copy specific assets from public directory
+console.log('📦 Copying specific assets directly...');
+
+// Directly copy individual files we need
+const filesToCopy = [
+  { src: 'public/favicon.ico', dest: 'favicon.ico' },
+  { src: 'public/manifest.json', dest: 'manifest.json' },
+  { src: 'public/env-config.js', dest: 'env-config.js' },
+];
+
+filesToCopy.forEach(({ src, dest }) => {
+  if (fs.existsSync(src)) {
+    try {
+      fs.copyFileSync(src, path.join(outDir, dest));
+      console.log(`✅ Copied ${src} to ${dest}`);
+    } catch (e) {
+      console.warn(`⚠️ Warning: Error copying ${src}, but continuing...`);
+    }
+  } else {
+    console.warn(`⚠️ Warning: Source file ${src} not found, skipping...`);
   }
-}
+});
 
 // Copy asset files
 console.log('📦 Copying logo assets...');

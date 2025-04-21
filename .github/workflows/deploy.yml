@@ -93,16 +93,48 @@ jobs:
         
         # Copy from the out directory using find to exclude node_modules
         echo "Copying static files and excluding large files..."
-        cp out/index.html ./index.html
-        cp out/404.html ./404.html
-        cp out/env-config.js ./env-config.js
+        if [ -f "out/index.html" ]; then
+          cp out/index.html ./index.html
+        else
+          echo "⚠️ Warning: index.html not found in out directory"
+        fi
+        
+        if [ -f "out/404.html" ]; then
+          cp out/404.html ./404.html
+        else
+          echo "⚠️ Warning: 404.html not found in out directory"
+        fi
+        
+        if [ -f "out/env-config.js" ]; then
+          cp out/env-config.js ./env-config.js
+        else
+          echo "⚠️ Warning: env-config.js not found in out directory"
+        fi
+        
+        # Make directories before copying
+        mkdir -p form images
         
         # Copy the form directory content
-        cp -r out/form/* ./form/ 2>/dev/null || true
+        if [ -d "out/form" ]; then
+          cp -r out/form/* ./form/ 2>/dev/null || echo "⚠️ Warning: Error copying form directory, but continuing..."
+        else
+          echo "⚠️ Warning: form directory not found in out directory"
+        fi
         
-        # Copy other assets directly
-        cp -r out/images ./
-        cp -r out/public ./
+        # Copy images if available
+        if [ -d "out/images" ]; then
+          cp -r out/images/* ./images/ 2>/dev/null || echo "⚠️ Warning: Error copying images, but continuing..."
+        else
+          echo "⚠️ Warning: images directory not found in out directory"
+        fi
+        
+        # Copy public if available, but don't fail if missing
+        if [ -d "out/public" ]; then
+          mkdir -p public
+          cp -r out/public/* ./public/ 2>/dev/null || echo "⚠️ Warning: Error copying public directory, but continuing..."
+        else
+          echo "⚠️ Warning: public directory not found in out directory, skipping..."
+        fi
         
         # Copy Next.js files if they exist
         cp -r out/_next/static/css/* ./_next/static/css/ 2>/dev/null || true
