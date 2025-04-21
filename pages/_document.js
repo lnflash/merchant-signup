@@ -13,8 +13,19 @@ export default function Document() {
         {supabaseUrl && <meta name="supabase-url" content={supabaseUrl} />}
         {supabaseAnonKey && <meta name="supabase-anon-key" content={supabaseAnonKey} />}
 
-        {/* Environment configuration script */}
-        <script src="/env-config.js" />
+        {/* Environment configuration script - MUST be loaded first */}
+        <script src="/env-config.js" strategy="beforeInteractive" />
+
+        {/* Add inline script to ensure environment variables are available */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Inline environment variables as a fallback
+              window.NEXT_PUBLIC_SUPABASE_URL = "${supabaseUrl || ''}";
+              window.NEXT_PUBLIC_SUPABASE_ANON_KEY = "${supabaseAnonKey || ''}";
+            `,
+          }}
+        />
 
         {/* Additional meta tags for cookie handling */}
         <meta httpEquiv="Accept-CH" content="Sec-CH-UA-Platform-Version, Sec-CH-UA-Model" />

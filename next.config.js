@@ -3,11 +3,10 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // For static export - allows exporting static HTML and JS
-  ...(process.env.IS_BUILD_TIME === 'true' ? { output: 'export' } : {}),
-  // When exporting, we need to exclude API routes since they require server-side runtime
-  distDir: process.env.IS_BUILD_TIME === 'true' ? '.next-static' : '.next',
-  // Set trailing slash and static parameters based on build type
+  // For static export - DON'T use output: 'export' to avoid errors with API routes
+  // This way we can build normally and then export afterwards
+  distDir: '.next',
+  // Set trailing slash and static parameters
   trailingSlash: false,
   eslint: {
     // Warning: This allows production builds to successfully complete even if
