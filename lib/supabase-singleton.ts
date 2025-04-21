@@ -110,10 +110,20 @@ export function getSupabaseClient(url?: string, key?: string): SupabaseClient {
 /**
  * Creates a mock Supabase client for testing or fallback purposes
  */
-export function createMockSupabaseClient() {
+export function createMockSupabaseClient(): SupabaseClient {
   logger.warn('Creating mock Supabase client');
 
-  return {
+  // Create a real client with dummy credentials
+  const dummyUrl = 'https://example.supabase.co';
+  const dummyKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYxNjE1ODgwMCwiZXhwIjoxOTMxNzM0NDAwfQ.fake-token-for-typescript-only';
+
+  // Create a real client with dummy credentials to satisfy TypeScript
+  const realClient = createClient(dummyUrl, dummyKey);
+  
+  // Override methods to create a mock implementation
+  const mockClient = {
+    ...realClient,
+    // Replace with mock implementations
     from: (table: string) => ({
       insert: (data: any) => {
         logger.info(`Mock insert into ${table} table`, { mock: true });
@@ -152,7 +162,11 @@ export function createMockSupabaseClient() {
         };
       },
     }),
-    storage: {
+  };
+
+  // Add storage mock by overriding the storage property
+  Object.defineProperty(mockClient, 'storage', {
+    get: () => ({
       from: (bucket: string) => ({
         upload: (path: string, file: any, options?: any) => {
           logger.info(`Mock file upload to ${bucket}/${path}`, { mock: true });
@@ -171,8 +185,12 @@ export function createMockSupabaseClient() {
           return Promise.resolve({ data: { paths }, error: null });
         },
       }),
-    },
-    auth: {
+    }),
+  });
+
+  // Add auth mock by overriding the auth property
+  Object.defineProperty(mockClient, 'auth', {
+    get: () => ({
       getSession: () => {
         return Promise.resolve({ data: { session: null }, error: null });
       },
@@ -180,8 +198,10 @@ export function createMockSupabaseClient() {
         logger.info(`Mock sign in with OTP`, { mock: true, email: opts?.email });
         return Promise.resolve({ data: {}, error: null });
       },
-    },
-  };
+    }),
+  });
+
+  return mockClient as SupabaseClient;
 }
 
 /**
