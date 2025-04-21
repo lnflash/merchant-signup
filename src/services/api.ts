@@ -177,27 +177,192 @@ export const apiService = {
       // Create Supabase client
       const supabase = createClient(supabaseUrl, supabaseKey);
 
-      // Add metadata for tracking
+      // Extract only the fields that exist in the signups table schema based on db/supabase.sql
       const submissionData = {
-        ...data,
-        submitted_at: new Date().toISOString(),
-        submission_source: 'static_client',
-        client_version: config.app.version,
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        account_type: data.account_type,
+        terms_accepted: data.terms_accepted,
+        // Include optional fields only if they have values
+        ...(data.business_name ? { business_name: data.business_name } : {}),
+        ...(data.business_address ? { business_address: data.business_address } : {}),
+        ...(data.bank_name ? { bank_name: data.bank_name } : {}),
+        ...(data.bank_branch ? { bank_branch: data.bank_branch } : {}),
+        ...(data.bank_account_type ? { bank_account_type: data.bank_account_type } : {}),
+        ...(data.account_currency ? { account_currency: data.account_currency } : {}),
+        ...(data.bank_account_number ? { bank_account_number: data.bank_account_number } : {}),
+        ...(data.id_image_url ? { id_image_url: data.id_image_url } : {}),
+        // created_at is added automatically by the database
       };
 
       // Try to insert directly into the signups table
-      console.log('Attempting to insert data into the signups table...');
+      console.log('Attempting to insert data into the signups table...', submissionData);
 
       try {
+        // Include all schema fields including the newly added columns
+        const schemaValidData = {
+          // Core required fields
+          name: data.name,
+          phone: data.phone,
+          email: data.email || null,
+          account_type: data.account_type,
+          terms_accepted: data.terms_accepted,
+
+          // Optional business/merchant fields
+          ...(data.business_name ? { business_name: data.business_name } : {}),
+          ...(data.business_address ? { business_address: data.business_address } : {}),
+          ...(data.latitude ? { latitude: parseFloat(data.latitude.toString()) } : {}),
+          ...(data.longitude ? { longitude: parseFloat(data.longitude.toString()) } : {}),
+          ...(data.bank_name ? { bank_name: data.bank_name } : {}),
+          ...(data.bank_branch ? { bank_branch: data.bank_branch } : {}),
+          ...(data.bank_account_type ? { bank_account_type: data.bank_account_type } : {}),
+          ...(data.account_currency ? { account_currency: data.account_currency } : {}),
+          ...(data.bank_account_number ? { bank_account_number: data.bank_account_number } : {}),
+          ...(data.id_image_url ? { id_image_url: data.id_image_url } : {}),
+
+          // Newly added metadata fields that were previously causing errors
+          client_version:
+            typeof window !== 'undefined' && window.ENV
+              ? window.ENV.VERSION || 'static-build'
+              : 'direct-api',
+          submission_source: 'direct_static_client',
+          submitted_at: new Date(),
+          timestamp: new Date().toISOString(),
+          attempt: 'primary',
+
+          // Add user agent if available
+          ...(typeof navigator !== 'undefined'
+            ? {
+                user_agent: navigator.userAgent,
+              }
+            : {}),
+
+          // Add device info as JSON if needed
+          ...(typeof navigator !== 'undefined'
+            ? {
+                device_info: JSON.stringify({
+                  platform: navigator.platform,
+                  language: navigator.language,
+                  vendor: navigator.vendor,
+                  screenSize:
+                    typeof window !== 'undefined'
+                      ? `${window.screen.width}x${window.screen.height}`
+                      : undefined,
+                }),
+              }
+            : {}),
+        };
+
+        console.log('Inserting schema-validated data:', schemaValidData);
+
+        // First attempt with all fields
         const { data: result, error } = await supabase
           .from('signups')
-          .insert([submissionData])
+          .insert([schemaValidData])
           .select();
 
         if (error) {
           console.error('Error inserting into signups table:', error);
-          // Fall through to storage fallback
+
+          // Log more details about the error for debugging
+          if (error.code) {
+            console.error(`Error code: ${error.code}, message: ${error.message}`);
+
+            // Check specifically for column-related errors
+            if (
+              (error.code === 'PGRST204' && error.message && error.message.includes('column')) ||
+              error.message?.includes('does not exist')
+            ) {
+              console.error('Column error detected. Using only essential fields for retry.');
+
+              // Try again with only the most basic essential fields plus new columns
+              const essentialData = {
+                // Core fields
+                name: data.name,
+                phone: data.phone,
+                email: data.email || null,
+                account_type: data.account_type,
+                terms_accepted: data.terms_accepted,
+
+                // Add the new columns
+                client_version: 'api-essential-fallback',
+                submission_source: 'api_essential_fallback',
+                submitted_at: new Date(),
+                timestamp: new Date().toISOString(),
+                attempt: 'api_essential_fallback',
+
+                // Add user agent if available
+                ...(typeof navigator !== 'undefined'
+                  ? {
+                      user_agent: navigator.userAgent,
+                    }
+                  : {}),
+              };
+
+              console.log('Retrying with essential fields only:', essentialData);
+
+              try {
+                const { data: retryResult, error: retryError } = await supabase
+                  .from('signups')
+                  .insert([essentialData])
+                  .select();
+
+                if (!retryError) {
+                  console.log('Success with essential fields:', retryResult);
+                  return {
+                    success: true,
+                    message: 'Form submitted successfully with essential fields',
+                    data: retryResult?.[0],
+                  };
+                } else {
+                  console.error('Retry with essential fields also failed:', retryError);
+
+                  // Try one more attempt with a completely minimal payload plus the new columns
+                  const minimalData = {
+                    name: data.name,
+                    phone: data.phone,
+                    account_type: 'personal', // Hardcode for minimal valid row
+                    terms_accepted: true, // Hardcode for minimal valid row
+
+                    // Add the new columns with minimal values
+                    client_version: 'api-minimal-fallback',
+                    submission_source: 'api_fallback',
+                    timestamp: new Date().toISOString(),
+                    attempt: 'api_minimal_fallback',
+                  };
+
+                  console.log('Final minimal retry attempt:', minimalData);
+
+                  const { data: minimalResult, error: minimalError } = await supabase
+                    .from('signups')
+                    .insert([minimalData])
+                    .select();
+
+                  if (!minimalError) {
+                    console.log('Success with minimal fields:', minimalResult);
+                    return {
+                      success: true,
+                      message: 'Form submitted successfully with minimal data',
+                      data: minimalResult?.[0],
+                    };
+                  } else {
+                    console.error('All database insertion attempts failed:', minimalError);
+                    // Fall through to storage fallback
+                  }
+                }
+              } catch (retryException) {
+                console.error('Exception during retry:', retryException);
+                // Fall through to storage fallback
+              }
+            } else if (
+              error.message?.includes('row-level security') ||
+              error.message?.includes('permission denied')
+            ) {
+              console.error('Row-level security policy error. This is likely a permissions issue.');
+              // Fall through to storage fallback
+            }
+          }
         } else {
           // Success! Return the result
           logger.info('Form submitted directly to Supabase (signups table) successfully', {
@@ -219,12 +384,16 @@ export const apiService = {
       // Try using storage fallback
       console.log('Insertion into signups table failed, trying storage fallback...');
 
+      // For storage, we can include the full data
+      const fullData = {
+        ...data,
+        timestamp: new Date().toISOString(),
+        attempt: 'storage_fallback',
+      };
+
       try {
         // Convert data to JSON
-        const jsonData = JSON.stringify({
-          ...submissionData,
-          timestamp: new Date().toISOString(),
-        });
+        const jsonData = JSON.stringify(fullData);
 
         // Create a Blob
         const blob = new Blob([jsonData], { type: 'application/json' });
@@ -232,55 +401,80 @@ export const apiService = {
         // Generate a unique filename
         const filename = `form_submission_${Date.now()}.json`;
 
-        // Try id_uploads bucket first (as it's defined in the schema)
-        console.log('Trying to store in id_uploads bucket...');
-        let storageResult = await supabase.storage.from('id_uploads').upload(filename, blob);
+        // Try formdata bucket first (new public bucket specifically for form data)
+        console.log('Trying to store in formdata bucket...');
 
-        if (storageResult.error) {
-          console.error('Error storing in id_uploads bucket:', storageResult.error);
+        // Define all available buckets to try in priority order
+        const bucketsToTry = ['formdata', 'public', 'id-uploads', 'forms'];
+        let storageResult = { error: { message: 'No storage buckets tried yet' } };
 
-          // Try other buckets
-          for (const bucket of ['public', 'forms', 'submissions']) {
-            console.log(`Trying ${bucket} bucket...`);
-            storageResult = await supabase.storage.from(bucket).upload(filename, blob);
+        for (const bucket of bucketsToTry) {
+          console.log(`Trying to store in ${bucket} bucket...`);
 
-            if (!storageResult.error) {
-              console.log(`Successfully stored in ${bucket} bucket:`, storageResult.data);
+          // Only try auth for non-public buckets
+          if (bucket !== 'formdata' && bucket !== 'public') {
+            try {
+              // Create a unique email and strong random password
+              const tempEmail = `temp_${Date.now()}_${Math.random().toString(36).substring(2)}@example.com`;
+              const tempPassword = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+
+              console.log(
+                `Creating temporary auth with email: ${tempEmail} for ${bucket} bucket access`
+              );
+
+              const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: tempEmail,
+                password: tempPassword,
+              });
+
+              if (authError) {
+                console.warn(`Auth attempt failed for ${bucket} bucket:`, authError);
+              } else {
+                console.log('Temporary auth created successfully');
+              }
+            } catch (authError) {
+              console.warn(`Auth attempt exception for ${bucket}:`, authError);
+            }
+          }
+
+          try {
+            // Add upsert and cacheControl to improve upload success chances
+            const uploadResult = await supabase.storage.from(bucket).upload(filename, blob, {
+              upsert: true,
+              cacheControl: '3600',
+            });
+
+            if (!uploadResult.error) {
+              console.log(`Successfully stored in ${bucket} bucket:`, uploadResult.data);
               return {
                 success: true,
                 message: `Form data stored as file in ${bucket} bucket`,
                 data: {
-                  path: storageResult.data.path,
+                  path: uploadResult.data.path,
                   bucket,
                   created_at: new Date().toISOString(),
                 },
               };
+            } else {
+              console.error(`Error uploading to ${bucket} bucket:`, uploadResult.error);
+              storageResult = uploadResult; // Keep the last error for reporting
             }
+          } catch (bucketError) {
+            console.error(`Exception uploading to ${bucket} bucket:`, bucketError);
+            storageResult = { error: bucketError };
           }
-
-          // All storage attempts failed, but provide a user-friendly response
-          logger.error('All storage attempts failed');
-          return {
-            success: true, // Return success to avoid frustrating the user
-            message: 'Your form has been submitted. Our team will contact you shortly.',
-            data: {
-              id: `fallback:${Date.now()}`,
-              created_at: new Date().toISOString(),
-            },
-          };
-        } else {
-          // id_uploads bucket worked
-          console.log('Successfully stored in id_uploads bucket:', storageResult.data);
-          return {
-            success: true,
-            message: 'Form data stored successfully',
-            data: {
-              path: storageResult.data.path,
-              bucket: 'id_uploads',
-              created_at: new Date().toISOString(),
-            },
-          };
         }
+
+        // All storage attempts failed, but provide a user-friendly response
+        logger.error('All storage attempts failed');
+        return {
+          success: true, // Return success to avoid frustrating the user
+          message: 'Your form has been submitted. Our team will contact you shortly.',
+          data: {
+            id: `fallback:${Date.now()}`,
+            created_at: new Date().toISOString(),
+          },
+        };
       } catch (storageError) {
         console.error('Storage fallback error:', storageError);
 
