@@ -9,7 +9,15 @@ export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
 // Support File in any environment
 declare global {
   interface Window {
-    ENV: Record<string, string>;
+    ENV: {
+      SUPABASE_URL: string;
+      SUPABASE_KEY: string;
+      BUILD_TIME: boolean;
+      BUILD_DATE?: string;
+      [key: string]: any;
+    };
+    NEXT_PUBLIC_SUPABASE_URL?: string;
+    NEXT_PUBLIC_SUPABASE_ANON_KEY?: string;
   }
 
   // Add File constructor in non-browser environments

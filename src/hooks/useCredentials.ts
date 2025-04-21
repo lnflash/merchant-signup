@@ -54,14 +54,38 @@ export function useCredentials() {
       return;
     }
 
-    // Check if we're in a static build with embedded credentials
+    // Check if window.ENV is populated (browser runtime)
+    if (
+      typeof window !== 'undefined' &&
+      window.ENV &&
+      window.ENV.SUPABASE_URL &&
+      window.ENV.SUPABASE_KEY
+    ) {
+      console.info(
+        `[🔑] [${hookId.current}] Using credentials from window.ENV (static deployment)`
+      );
+      setCredentials({
+        supabaseUrl: window.ENV.SUPABASE_URL,
+        supabaseKey: window.ENV.SUPABASE_KEY,
+        bucket: 'id_uploads',
+        environment: process.env.NODE_ENV || 'production',
+        buildTime: true,
+        platform: 'StaticDeployment',
+        traceId: `static_${Date.now().toString(36)}`,
+        serverTime: new Date().toISOString(),
+      });
+      setLoading(false);
+      return;
+    }
+
+    // Check if we're in a static build with embedded credentials (during build time)
     if (process.env.IS_BUILD_TIME === 'true') {
-      console.info(`[🔑] [${hookId.current}] Using embedded static credentials (static build)`);
+      console.info(`[🔑] [${hookId.current}] Using embedded static credentials (build time)`);
       setCredentials({
         supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
         supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
         bucket: 'id_uploads',
-        environment: process.env.NODE_ENV,
+        environment: process.env.NODE_ENV || 'production',
         buildTime: true,
         platform: 'StaticBuild',
         traceId: `static_${Date.now().toString(36)}`,
@@ -165,7 +189,31 @@ export function useCredentials() {
           retryCount: retryCount.current,
         });
 
-        // Retry on failure
+        // Try to fall back to window.ENV if API fetch fails
+        if (
+          typeof window !== 'undefined' &&
+          window.ENV &&
+          window.ENV.SUPABASE_URL &&
+          window.ENV.SUPABASE_KEY
+        ) {
+          console.info(
+            `[🔑] [${hookId.current}] 🔄 API fetch failed, falling back to window.ENV credentials`
+          );
+          setCredentials({
+            supabaseUrl: window.ENV.SUPABASE_URL,
+            supabaseKey: window.ENV.SUPABASE_KEY,
+            bucket: 'id_uploads',
+            environment: 'production',
+            buildTime: true,
+            platform: 'StaticDeploymentFallback',
+            traceId: `fallback_${Date.now().toString(36)}`,
+            serverTime: new Date().toISOString(),
+          });
+          setError(null);
+          return;
+        }
+
+        // Retry on failure if window.ENV fallback wasn't available
         if (retryCount.current < maxRetries) {
           retryCount.current += 1;
           console.info(

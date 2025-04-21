@@ -32,10 +32,37 @@ jobs:
       run: |
         npm run check-build-env
         npm run build
+        
+        # Ensure the API routes are properly handled before static export
+        echo "Creating API route fallbacks for static export..."
+        mkdir -p .next/static-api-fallbacks
+        
+        # Create credentials fallback JSON
+        cat > .next/static-api-fallbacks/credentials.json << 'EOF'
+        {
+          "supabaseUrl": "${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}",
+          "supabaseKey": "${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}",
+          "bucket": "id_uploads",
+          "environment": "production",
+          "buildTime": true,
+          "platform": "StaticBuild",
+          "traceId": "static_build_$(date +%s)",
+          "serverTime": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+        }
+        EOF
+        
         # Temporarily remove API routes that cause issues with static export
+        echo "Removing API routes from server build..."
         rm -rf .next/server/app/api
-        # Now create the static export
-        next export
+        
+        # Now create the static export using npx to ensure next is in path
+        echo "Running static export..."
+        npx next export
+        
+        # Copy API fallbacks to the out directory
+        echo "Adding API fallbacks to static output..."
+        mkdir -p out/api/credentials
+        cp .next/static-api-fallbacks/credentials.json out/api/credentials/index.json
       env:
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
