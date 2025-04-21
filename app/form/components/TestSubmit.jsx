@@ -54,93 +54,37 @@ export default function TestSubmit() {
         // Test the connection
         console.log('Testing Supabase connection');
         
-        // First check if the merchant_signups table exists
-        console.log('Checking if merchant_signups table exists...');
-        const { data: tableCheck, error: tableCheckError } = await supabase
-          .from('merchant_signups')
-          .select('id')
-          .limit(1);
-          
-        if (tableCheckError) {
-          console.error('Error checking merchant_signups table:', tableCheckError.message);
-          
-          // Try alternative tables
-          console.log('Trying alternative tables...');
-          
-          // Check for 'signups' table
-          const { error: signupsError } = await supabase
+        // Try inserting directly into the signups table (primary table)
+        console.log('Attempting to insert directly into signups table...');
+        try {
+          const { data, error } = await supabase
             .from('signups')
-            .select('id')
-            .limit(1);
+            .insert([
+              {
+                ...testData,
+                created_at: new Date().toISOString()
+              }
+            ])
+            .select();
             
-          if (!signupsError) {
-            console.log('Found alternative table: signups');
-            
-            // Insert into signups table
-            const { data, error } = await supabase
-              .from('signups')
-              .insert([
-                {
-                  ...testData,
-                  submitted_at: new Date().toISOString(),
-                  submission_source: 'test_static_client'
-                }
-              ])
-              .select();
-              
-            if (error) {
-              throw new Error(`Error inserting into signups table: ${error.message}`);
-            }
-            
-            console.log('Successfully inserted into signups table:', data);
-            setResponse({
-              success: true,
-              message: 'Form submitted successfully to signups table',
-              data: data[0]
-            });
-            setLoading(false);
-            return;
+          if (error) {
+            console.error('Error inserting into signups table:', error);
+            throw new Error(`Error inserting into signups table: ${error.message}`);
           }
           
-          // Try users table as fallback
-          console.log('Checking users table as fallback...');
-          const { error: usersError } = await supabase
-            .from('users')
-            .select('id')
-            .limit(1);
-            
-          if (!usersError) {
-            console.log('Found users table, attempting to insert...');
-            
-            // Insert into users table with minimal fields
-            const { data, error } = await supabase
-              .from('users')
-              .insert([
-                {
-                  email: testData.email,
-                  name: testData.name,
-                  created_at: new Date().toISOString(),
-                  source: 'test_static_client'
-                }
-              ])
-              .select();
-              
-            if (error) {
-              throw new Error(`Error inserting into users table: ${error.message}`);
-            }
-            
-            console.log('Successfully inserted into users table:', data);
-            setResponse({
-              success: true,
-              message: 'Form submitted successfully to users table',
-              data: data[0]
-            });
-            setLoading(false);
-            return;
-          }
+          console.log('Successfully inserted data into signups table:', data);
+          setResponse({
+            success: true,
+            message: 'Form submitted successfully via direct Supabase connection',
+            data: data[0]
+          });
+          setLoading(false);
+          return;
+        } catch (insertError) {
+          console.error('Failed to insert into signups table:', insertError);
           
-          // Last resort: try storing in storage
-          console.log('No suitable tables found, trying to store in Storage...');
+          // Try using the storage fallback
+          console.log('Trying storage fallback...');
           
           try {
             // Convert data to JSON string
@@ -156,86 +100,42 @@ export default function TestSubmit() {
             // Generate a unique filename
             const filename = `form_submission_${Date.now()}.json`;
             
-            // Upload to default bucket or create one
-            const { data, error } = await supabase
-              .storage
-              .from('forms')
-              .upload(filename, blob);
-              
-            if (error) {
-              // Try to create the bucket first if it doesn't exist
-              if (error.message && error.message.includes('bucket')) {
-                // Try another bucket name
-                const { data: altData, error: altError } = await supabase
+            // Try both the id_uploads bucket and fallback buckets
+            for (const bucketName of ['id_uploads', 'public', 'forms']) {
+              try {
+                console.log(`Trying to upload to ${bucketName} bucket...`);
+                const { data, error } = await supabase
                   .storage
-                  .from('test-submissions')
+                  .from(bucketName)
                   .upload(filename, blob);
                   
-                if (altError) {
-                  throw new Error(`Could not upload to storage: ${altError.message}`);
+                if (!error) {
+                  console.log(`Successfully uploaded to ${bucketName} bucket:`, data);
+                  setResponse({
+                    success: true,
+                    message: `Form data stored as file in ${bucketName} bucket`,
+                    data: {
+                      path: data.path,
+                      bucket: bucketName,
+                      created_at: new Date().toISOString()
+                    }
+                  });
+                  setLoading(false);
+                  return;
+                } else {
+                  console.error(`Error uploading to ${bucketName}:`, error);
                 }
-                
-                console.log('Uploaded to alternative storage bucket:', altData);
-                setResponse({
-                  success: true,
-                  message: 'Data stored as file in alternative storage bucket',
-                  data: altData
-                });
-                setLoading(false);
-                return;
+              } catch (bucketError) {
+                console.error(`Error with ${bucketName} bucket:`, bucketError);
               }
-              
-              throw new Error(`Could not upload to storage: ${error.message}`);
             }
             
-            console.log('Successfully stored in Storage:', data);
-            setResponse({
-              success: true,
-              message: 'Data stored as file in Storage',
-              data: data
-            });
-            setLoading(false);
-            return;
+            // If we get here, all storage attempts failed
+            throw new Error('All storage fallback attempts failed');
           } catch (storageError) {
-            console.error('Storage error:', storageError);
-            throw new Error(`All submission methods failed. Storage error: ${storageError.message}`);
+            console.error('Storage fallback failed:', storageError);
+            throw new Error(`Could not submit form data: ${storageError.message}`);
           }
-        }
-        
-        // If we get here, the merchant_signups table exists, try to insert into it
-        console.log('Inserting test data directly to Supabase merchant_signups table');
-        try {
-          const { data, error } = await supabase
-            .from('merchant_signups')
-            .insert([
-              {
-                ...testData,
-                submitted_at: new Date().toISOString(),
-                submission_source: 'test_static_client'
-              }
-            ])
-            .select();
-            
-          if (error) {
-            // Get detailed error information 
-            console.error('Supabase insert error details:', {
-              code: error.code,
-              message: error.message,
-              hint: error.hint || 'No hint'
-            });
-            
-            throw new Error(`Supabase insert error: ${error.message || 'Unknown error'}`);
-          }
-          
-          console.log('Direct Supabase insertion successful:', data);
-          setResponse({
-            success: true,
-            message: 'Form submitted successfully via direct Supabase connection',
-            data: data[0]
-          });
-        } catch (insertError) {
-          console.error('Error during insert operation:', insertError);
-          throw insertError;
         }
       } else {
         // For regular builds, use the API endpoint
