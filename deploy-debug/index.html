@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flash Merchant Signup - Navigation Test</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.5;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2563eb;
+        }
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            background-color: #f9fafb;
+        }
+        .test-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .test-links a {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        .test-links a:hover {
+            background-color: #1d4ed8;
+        }
+        pre {
+            background-color: #f3f4f6;
+            padding: 12px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flash Merchant Signup Navigation Test</h1>
+    <p>This page helps test navigation and identify routing issues in the static site deployment.</p>
+    
+    <div class="card">
+        <h2>Navigation Test Links</h2>
+        <div class="test-links">
+            <a href="/">Home (Root)</a>
+            <a href="/form">Form Page (form/)</a>
+            <a href="/form/index.html">Form Page with explicit index.html</a>
+            <a href="/api/credentials">API Credentials Test</a>
+            <a href="/form.html">Form.html Fallback</a>
+        </div>
+    </div>
+    
+    <div class="card">
+        <h2>Environment Information</h2>
+        <div id="env-info"></div>
+    </div>
+    
+    <div class="card">
+        <h2>Current Location</h2>
+        <pre id="location-info"></pre>
+    </div>
+    
+    <script>
+        // Display environment information
+        function displayEnvironment() {
+            const envInfo = document.getElementById('env-info');
+            const hasEnv = typeof window.ENV !== 'undefined';
+            const hasSupabaseUrl = hasEnv && !!window.ENV.SUPABASE_URL;
+            const hasSupabaseKey = hasEnv && !!window.ENV.SUPABASE_KEY;
+            
+            envInfo.innerHTML = `
+                <p><strong>window.ENV:</strong> ${hasEnv ? 'Available' : 'Not Available'}</p>
+                <p><strong>Supabase URL:</strong> ${hasSupabaseUrl ? 'Set' : 'Not Set'}</p>
+                <p><strong>Supabase Key:</strong> ${hasSupabaseKey ? 'Set' : 'Not Set'}</p>
+                <p><strong>Build Time:</strong> ${hasEnv && window.ENV.BUILD_TIME ? 'Yes' : 'No'}</p>
+                <p><strong>Build Date:</strong> ${hasEnv && window.ENV.BUILD_DATE ? window.ENV.BUILD_DATE : 'Not Available'}</p>
+            `;
+        }
+        
+        // Display location information
+        function displayLocation() {
+            const locationInfo = document.getElementById('location-info');
+            locationInfo.textContent = JSON.stringify({
+                href: window.location.href,
+                protocol: window.location.protocol,
+                host: window.location.host,
+                pathname: window.location.pathname,
+                search: window.location.search,
+                hash: window.location.hash
+            }, null, 2);
+        }
+        
+        // Run on page load
+        window.onload = function() {
+            displayEnvironment();
+            displayLocation();
+        };
+    </script>
+</body>
+</html>

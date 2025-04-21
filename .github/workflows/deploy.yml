@@ -103,6 +103,38 @@ jobs:
         });
         EOF
         
+        # Create routes.json for DigitalOcean App Platform
+        echo "Creating routes.json for DigitalOcean App Platform..."
+        cat > out/routes.json << EOF
+        {
+          "routes": [
+            {
+              "handle": "filesystem"
+            },
+            {
+              "src": "/form",
+              "dest": "/form/index.html"
+            },
+            {
+              "src": "/form/",
+              "dest": "/form/index.html"
+            },
+            {
+              "src": "/api/credentials",
+              "dest": "/api/credentials/index.json"
+            },
+            {
+              "src": "/api/(.*)",
+              "dest": "/api/\$1/index.json"
+            },
+            {
+              "src": "/(.*)",
+              "dest": "/index.html"
+            }
+          ]
+        }
+        EOF
+        
     - name: List built files
       run: |
         echo "Static export structure:"

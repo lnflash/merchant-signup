@@ -268,6 +268,76 @@ try {
   // Create a public directory and copy some basic assets
   console.log('📦 Creating public directory...');
   execSync('mkdir -p out/public', { stdio: 'inherit' });
+  
+  // Create debug-nav.html for navigation testing
+  console.log('📦 Creating debug navigation test page...');
+  if (fs.existsSync('debug/index.html')) {
+    fs.copyFileSync('debug/index.html', 'out/debug-nav.html');
+  } else {
+    // Create a simple debug navigation page
+    const debugNavHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Flash Merchant Signup - Navigation Debug</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
+  <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <script src="/env-config.js"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .card { border: 1px solid #e5e7eb; padding: 15px; margin: 15px 0; border-radius: 8px; }
+    .links { display: flex; flex-direction: column; gap: 10px; }
+    .links a { display: inline-block; padding: 8px 16px; background-color: #2563eb; color: white; text-decoration: none; border-radius: 4px; }
+    pre { background-color: #f3f4f6; padding: 12px; border-radius: 4px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>Navigation Debug Page</h1>
+  
+  <div class="card">
+    <h2>Test Links</h2>
+    <div class="links">
+      <a href="/">Home</a>
+      <a href="/form">Form Page</a>
+      <a href="/form/index.html">Form (explicit index.html)</a>
+      <a href="/api/credentials">API Credentials</a>
+    </div>
+  </div>
+  
+  <div class="card">
+    <h2>Environment</h2>
+    <div id="env-info"></div>
+  </div>
+  
+  <div class="card">
+    <h2>Current Location</h2>
+    <pre id="location-info"></pre>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Environment info
+      const env = window.ENV || {};
+      document.getElementById('env-info').innerHTML = 
+        '<p>window.ENV: ' + (window.ENV ? 'Available' : 'Not Available') + '</p>' +
+        '<p>Supabase URL: ' + (env.SUPABASE_URL ? 'Set' : 'Not Set') + '</p>' +
+        '<p>Supabase Key: ' + (env.SUPABASE_KEY ? 'Set' : 'Not Set') + '</p>' + 
+        '<p>Build Time: ' + (env.BUILD_TIME ? 'Yes' : 'No') + '</p>';
+      
+      // Location info
+      document.getElementById('location-info').textContent = JSON.stringify({
+        href: window.location.href,
+        pathname: window.location.pathname,
+        host: window.location.host
+      }, null, 2);
+    });
+  </script>
+</body>
+</html>`;
+    
+    fs.writeFileSync('out/debug-nav.html', debugNavHtml);
+  }
 
   // Create a simple JavaScript file to embed the environment variables
   console.log('📦 Creating environment configuration...');
@@ -289,6 +359,33 @@ console.log('Static build environment variables loaded:', {
 });`;
 
   fs.writeFileSync('out/env-config.js', envConfig);
+  
+  // Create routes.json for DigitalOcean App Platform
+  console.log('📦 Creating routes.json for DigitalOcean App Platform...');
+  
+  try {
+    // Try to use the create-routes-config script
+    const createRoutesConfig = require('./create-routes-config');
+    createRoutesConfig();
+  } catch (error) {
+    console.error('❌ Error creating routes.json:', error.message);
+    
+    // Fallback: Create routes.json manually
+    console.log('📦 Creating routes.json manually...');
+    
+    const routesConfig = {
+      routes: [
+        { handle: "filesystem" },
+        { src: "/form", dest: "/form/index.html", status: 200 },
+        { src: "/form/", dest: "/form/index.html", status: 200 },
+        { src: "/api/credentials", dest: "/api/credentials/index.json", status: 200 },
+        { src: "/api/(.*)", dest: "/api/$1/index.json", status: 200 },
+        { src: "/(.*)", dest: "/index.html", status: 200 }
+      ]
+    };
+    
+    fs.writeFileSync('out/routes.json', JSON.stringify(routesConfig, null, 2));
+  }
 
   // Copy the output directory from .next to out if needed
   console.log('📦 Ensuring static files are in the out directory...');
