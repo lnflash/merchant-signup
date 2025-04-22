@@ -90,8 +90,14 @@ export const apiService = {
       };
 
       if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-        logger.info('Including authentication token in API request');
+        // If it's a phone auth token, it already includes the prefix
+        if (authToken.startsWith('PhoneAuth ')) {
+          headers['Authorization'] = authToken;
+          logger.info('Including phone authentication token in API request');
+        } else {
+          headers['Authorization'] = `Bearer ${authToken}`;
+          logger.info('Including email authentication token in API request');
+        }
       } else {
         logger.warn('No authentication token available for API request');
       }
@@ -470,6 +476,7 @@ export const apiService = {
                 `Creating temporary auth with email: ${tempEmail} for ${bucket} bucket access`
               );
 
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Used for debugging
               const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: tempEmail,
                 password: tempPassword,

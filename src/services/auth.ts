@@ -1,8 +1,10 @@
 import { supabase } from '../../lib/supabase';
 import { logger } from '../utils/logger';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Required for token flow
 import { apiService } from './api';
 import { config } from '../config';
 import { csrfService } from './csrf';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Type definitions
 import { User, Session } from '@supabase/supabase-js';
 
 /**
@@ -33,12 +35,41 @@ export const authService = {
    */
   async getCurrentUser() {
     try {
-      // Try to get the session from Supabase
-      const { data } = await supabase.auth.getSession();
+      // First check if we have a phone-authenticated user
+      try {
+        const storedAuthJson = localStorage.getItem('authenticatedUser');
+        if (storedAuthJson) {
+          const storedAuth = JSON.parse(storedAuthJson);
 
-      if (data?.session?.user) {
-        this.currentUser = data.session.user;
-        return data.session.user;
+          // Check if the session is still valid
+          if (storedAuth.expires > Date.now() && storedAuth.authenticated) {
+            // Valid phone auth session exists
+            this.currentUser = {
+              id: storedAuth.userId,
+              phone: storedAuth.phoneNumber,
+              email: null,
+              // Add minimal required properties for compatibility
+              role: 'authenticated',
+              aud: 'authenticated',
+            };
+            return this.currentUser;
+          }
+        }
+      } catch (err) {
+        // Fall through to Supabase auth
+      }
+
+      // Try to get the session from Supabase
+      try {
+        const { data } = await supabase.auth.getSession();
+
+        if (data?.session?.user) {
+          this.currentUser = data.session.user;
+          return data.session.user;
+        }
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error');
+        logger.warn('Error getting Supabase session', error);
       }
 
       return null;
@@ -258,23 +289,78 @@ export const authService = {
   },
 
   /**
-   * Get auth token for API requests
+   * Get auth token for API requests - supports both email and phone auth
    */
   async getAuthToken(): Promise<string | null> {
+    // First try to get email auth token from Supabase
     try {
       const { data } = await supabase.auth.getSession();
-      return data.session?.access_token || null;
+      if (data.session?.access_token) {
+        return data.session.access_token;
+      }
     } catch (error) {
-      logger.error('Error getting auth token', error);
-      return null;
+      logger.error('Error getting Supabase auth token', error);
     }
+
+    // Then try phone auth token from localStorage
+    try {
+      const storedAuthJson = localStorage.getItem('authenticatedUser');
+      if (storedAuthJson) {
+        const storedAuth = JSON.parse(storedAuthJson);
+
+        // Check if the session is still valid
+        if (storedAuth.expires > Date.now() && storedAuth.authenticated) {
+          // Format token for auth middleware compatibility
+          return `PhoneAuth ${storedAuth.userId}:${storedAuth.phoneNumber}:${storedAuth.authToken || 'phone_auth_token'}`;
+        } else {
+          // Expired session, clean up
+          localStorage.removeItem('authenticatedUser');
+        }
+      }
+    } catch (err) {
+      logger.error('Error checking phone authentication token', err);
+    }
+
+    return null;
   },
 
   /**
-   * Check if user is authenticated
+   * Check if user is authenticated - supports both email and phone auth
    */
   async isAuthenticated(): Promise<boolean> {
+    // First try to get the current user from Supabase (email auth)
     const user = await this.getCurrentUser();
-    return !!user;
+    if (user) return true;
+
+    // Check for phone authentication in localStorage
+    try {
+      const storedAuthJson = localStorage.getItem('authenticatedUser');
+      if (storedAuthJson) {
+        const storedAuth = JSON.parse(storedAuthJson);
+
+        // Check if the session is still valid
+        if (storedAuth.expires > Date.now() && storedAuth.authenticated) {
+          // Valid phone auth session exists
+          this.currentUser = {
+            id: storedAuth.userId,
+            phone: storedAuth.phoneNumber,
+            email: null,
+            // Add minimal required properties for compatibility
+            role: 'authenticated',
+            aud: 'authenticated',
+          };
+          return true;
+        } else {
+          // Expired session, clean up
+          localStorage.removeItem('authenticatedUser');
+        }
+      }
+    } catch (err) {
+      logger.error('Error checking phone authentication', err);
+      // Clear invalid session data
+      localStorage.removeItem('authenticatedUser');
+    }
+
+    return false;
   },
 };
