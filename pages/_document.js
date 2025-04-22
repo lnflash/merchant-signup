@@ -14,7 +14,7 @@ export default function Document() {
         {supabaseAnonKey && <meta name="supabase-anon-key" content={supabaseAnonKey} />}
 
         {/* Environment configuration script - MUST be loaded first */}
-        <script src="/env-config.js" strategy="beforeInteractive" />
+        <script src="/env-config.js" />
 
         {/* Add inline script to ensure environment variables are available */}
         <script

@@ -10,7 +10,7 @@ import { PersonalInfoStep, AccountTypeStep, TermsStep } from './Steps';
 import { BusinessInfoStep } from './BusinessInfoStep';
 import { MerchantInfoStep } from './MerchantInfoStep';
 import Image from 'next/image';
-import FlashIcon from '../../../public/images/logos/flash_icon_transp.png';
+import FlashIcon from '../../assets/flash_icon_transp.png';
 import { logger } from '../../../src/utils/logger';
 import TestSubmit from './TestSubmit';
 
@@ -21,7 +21,7 @@ import { authService } from '../../../src/services/auth';
 export default function SignupForm() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [submitting, setSubmitting] = useState(false);
+  const [, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const methods = useForm<SignupFormData>({
@@ -32,8 +32,7 @@ export default function SignupForm() {
     },
   });
 
-  const { handleSubmit, watch, trigger } = methods;
-  const accountType = watch('account_type');
+  const { handleSubmit } = methods;
 
   // We'll remove the central nextStep function as each component now handles its own validation
 
@@ -281,7 +280,7 @@ export default function SignupForm() {
           </a>
 
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-            <p className="text-sm text-gray-600 mb-2">On our download page, you'll find:</p>
+            <p className="text-sm text-gray-600 mb-2">On our download page, you&apos;ll find:</p>
             <ul className="text-xs text-gray-600 text-left list-disc pl-5 space-y-1">
               <li>App Store and Google Play links</li>
               <li>TestFlight beta version access</li>
@@ -345,7 +344,7 @@ export default function SignupForm() {
               // Determine the status of each step
               const isActive = currentStep === step;
               const isCompleted = currentStep > step;
-              const isPending = currentStep < step;
+              // const isPending = currentStep < step;
 
               return (
                 <div key={step} className="flex flex-col items-center z-10 relative">

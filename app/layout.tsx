@@ -1,8 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import FlashLogo from '../public/images/logos/flash.png';
-import FlashIcon from '../public/images/logos/flash_icon_transp.png';
+import FlashIcon from './assets/flash_icon_transp.png';
 import { config } from '../src/config';
 import DatabaseStatus from '../src/components/DatabaseStatus';
 

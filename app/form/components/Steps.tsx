@@ -314,25 +314,10 @@ export const TermsStep: React.FC<StepProps> = ({ currentStep, setCurrentStep }) 
     formState: { errors },
     watch,
     setValue,
-    trigger,
-    handleSubmit,
   } = useFormContext<SignupFormData>();
   const accountType = watch('account_type');
 
   if (currentStep !== 5) return null;
-
-  const validateAndSubmit = async () => {
-    const termsAccepted = watch('terms_accepted');
-
-    if (!termsAccepted) {
-      setValue('terms_accepted', false as unknown as true, { shouldValidate: true });
-      await trigger('terms_accepted');
-      return false;
-    }
-
-    // This function just validates - actual submission happens in the form onSubmit
-    return true;
-  };
 
   return (
     <div className="bg-white rounded-lg">

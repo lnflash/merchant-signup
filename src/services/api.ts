@@ -460,7 +460,6 @@ export const apiService = {
 
         // Define all available buckets to try in priority order
         const bucketsToTry = ['formdata', 'public', 'id-uploads', 'forms'];
-        let storageResult = { error: { message: 'No storage buckets tried yet' } };
 
         for (const bucket of bucketsToTry) {
           console.log(`Trying to store in ${bucket} bucket...`);
@@ -513,25 +512,16 @@ export const apiService = {
             } else {
               console.error(`Error uploading to ${bucket} bucket:`, uploadResult.error);
               // Ensure the error object has the correct structure
-              storageResult = {
-                error: {
-                  message: uploadResult.error?.message || `Error uploading to ${bucket} bucket`,
-                },
-              };
+              // Error handled at the fallback level
             }
           } catch (bucketError) {
             console.error(`Exception uploading to ${bucket} bucket:`, bucketError);
             // Make sure error has the expected structure with a message property
-            storageResult = {
-              error: {
-                message:
-                  bucketError instanceof Error
-                    ? bucketError.message
-                    : typeof bucketError === 'string'
-                      ? bucketError
-                      : 'Unknown storage error',
-              },
-            };
+            // Error will be handled at the fallback level
+            logger.error(
+              'Storage bucket error:',
+              bucketError instanceof Error ? bucketError.message : 'Unknown error'
+            );
           }
         }
 
