@@ -25,13 +25,13 @@ export function getBestCredentials(): { url: string; key: string } | null {
     if (isStaticBuild && typeof window !== 'undefined' && window.ENV) {
       const envUrl = window.ENV.SUPABASE_URL;
       const envKey = window.ENV.SUPABASE_KEY;
-      
+
       if (envUrl && envKey) {
         logger.info('Using Supabase credentials from window.ENV (static build)');
         return { url: envUrl, key: envKey };
       }
     }
-    
+
     // Try environment variables
     if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
       logger.info('Using Supabase credentials from environment variables');
@@ -40,7 +40,7 @@ export function getBestCredentials(): { url: string; key: string } | null {
         key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       };
     }
-    
+
     // No valid credentials found
     logger.warn('No valid Supabase credentials found from any source');
     return null;
@@ -62,7 +62,7 @@ export function getSupabaseClient(url?: string, key?: string): SupabaseClient {
   // Try to use provided credentials or fall back to best available
   let finalUrl = url;
   let finalKey = key;
-  
+
   // If credentials not provided, try to get them from available sources
   if (!finalUrl || !finalKey) {
     const bestCreds = getBestCredentials();
@@ -71,7 +71,7 @@ export function getSupabaseClient(url?: string, key?: string): SupabaseClient {
       finalKey = bestCreds.key;
     }
   }
-  
+
   // Validate inputs
   if (!finalUrl || !finalKey) {
     logger.error('getSupabaseClient called with invalid credentials', {
@@ -113,13 +113,13 @@ export function getSupabaseClient(url?: string, key?: string): SupabaseClient {
 export function createMockSupabaseClient(): SupabaseClient {
   logger.warn('Creating mock Supabase client');
 
-  // Create a real client with dummy credentials
-  const dummyUrl = 'https://example.supabase.co';
-  const dummyKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV4YW1wbGUiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTYxNjE1ODgwMCwiZXhwIjoxOTMxNzM0NDAwfQ.fake-token-for-typescript-only';
+  // Use non-functional placeholder URLs - these won't actually connect to anything
+  const dummyUrl = 'https://example.com/mock-supabase';
+  const dummyKey = 'mock-key-not-valid';
 
   // Create a real client with dummy credentials to satisfy TypeScript
   const realClient = createClient(dummyUrl, dummyKey);
-  
+
   // Override methods to create a mock implementation
   const mockClient = {
     ...realClient,
@@ -127,7 +127,10 @@ export function createMockSupabaseClient(): SupabaseClient {
     from: (table: string) => ({
       insert: (data: any) => {
         logger.info(`Mock insert into ${table} table`, { mock: true });
-        return Promise.resolve({ data: [{ id: 'mock-id', created_at: new Date().toISOString() }], error: null });
+        return Promise.resolve({
+          data: [{ id: 'mock-id', created_at: new Date().toISOString() }],
+          error: null,
+        });
       },
       select: (columns: string = '*', options?: any) => {
         logger.info(`Mock select from ${table} table`, { mock: true, columns });

@@ -29,7 +29,7 @@ To fully fix the issues, you need to update your Supabase database and storage s
 2. Go to "Storage" in the left menu
 3. Click "Create bucket"
 4. Name: `formdata` (only lowercase letters, numbers, dots, and hyphens are allowed)
-5. Check "Public bucket" checkbox
+5. Uncheck "Public bucket" checkbox to ensure the bucket is private
 6. Click "Create bucket"
 
 ### 2. Update RLS Policies for Storage
@@ -41,29 +41,27 @@ To fully fix the issues, you need to update your Supabase database and storage s
 3. Select "Create policies from scratch"
 4. Add the following policies:
 
-**INSERT Policy for Anonymous Users:**
+**INSERT Policy for Authenticated Users Only:**
 
-- Policy name: `Allow anonymous uploads to formdata`
-- Target roles: `anon, authenticated`
+- Policy name: `Allow authenticated uploads to formdata`
+- Target roles: `authenticated`
 - Using expression: `bucket_id = 'formdata'`
 
-**SELECT Policy for Anonymous Users:**
+**SELECT Policy for Authenticated Users Only:**
 
-- Policy name: `Allow public access to formdata`
-- Target roles: `anon, authenticated`
+- Policy name: `Allow authenticated access to formdata`
+- Target roles: `authenticated`
 - Using expression: `bucket_id = 'formdata'`
 
 #### For the `id-uploads` bucket:
 
 1. Go to the "Policies" tab of the `id-uploads` bucket (or `id_uploads` depending on how it was created)
-2. Modify the existing INSERT policy to remove the owner check:
+2. Ensure the existing INSERT policy includes the owner check:
 
-   - Change `bucket_id = 'id-uploads' AND auth.uid() = owner`
-   - To: `bucket_id = 'id-uploads'`
+   - Set to: `bucket_id = 'id-uploads' AND auth.uid() = owner`
 
-3. Modify the existing SELECT policy to remove the owner check:
-   - Change `bucket_id = 'id-uploads' AND auth.uid() = owner`
-   - To: `bucket_id = 'id-uploads'`
+3. Ensure the existing SELECT policy includes the owner check:
+   - Set to: `bucket_id = 'id-uploads' AND auth.uid() = owner`
 
 ### 3. Add Missing Columns to the Signups Table
 

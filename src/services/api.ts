@@ -2,6 +2,7 @@ import { config } from '../config';
 import { ApiResponse, SignupFormData } from '../types';
 import { logger } from '../utils/logger';
 import { createClient } from '@supabase/supabase-js';
+import { csrfService } from './csrf';
 
 /**
  * API service for interacting with the backend
@@ -66,12 +67,49 @@ export const apiService = {
     });
 
     try {
+      // Get auth token if available
+      let authToken = null;
+      try {
+        // Try to get token from the authService
+        if (typeof window !== 'undefined') {
+          try {
+            // Use dynamic import to avoid circular dependency
+            const { authService } = await import('./auth');
+            authToken = await authService.getAuthToken();
+          } catch (err) {
+            console.warn('Error importing authService', err);
+          }
+        }
+      } catch (authError: any) {
+        logger.warn('Failed to get auth token for API request', { error: authError?.message });
+      }
+
+      // Prepare headers with authentication if available
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+        logger.info('Including authentication token in API request');
+      } else {
+        logger.warn('No authentication token available for API request');
+      }
+
+      // Get CSRF token and add it to the request
+      const csrfToken = await csrfService.getToken();
+
+      // Add the CSRF token to the form data
+      const dataWithCSRF = {
+        ...data,
+        csrf_token: csrfToken,
+      };
+
       const response = await fetch(submitUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        headers,
+        credentials: 'include', // Important to include cookies for CSRF validation
+        body: JSON.stringify(dataWithCSRF),
       });
 
       const status = response.status;
