@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -19,7 +19,12 @@ import FlashIcon from '../../../public/images/logos/flash_icon_transp.png';
 import { logger } from '../../../src/utils/logger';
 import TestSubmit from './TestSubmit';
 
+// Import AuthForm component
+import AuthForm from './AuthForm';
+import { authService } from '../../../src/services/auth';
+
 export default function SignupForm() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -181,6 +186,21 @@ export default function SignupForm() {
     }
   };
 
+  // Check for existing authentication on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuthed = await authService.isAuthenticated();
+      setIsAuthenticated(isAuthed);
+    };
+
+    checkAuth();
+  }, []);
+
+  // Handle successful authentication
+  const handleAuthenticated = () => {
+    setIsAuthenticated(true);
+  };
+
   if (submitSuccess) {
     return (
       <div className="text-center py-10 max-w-md mx-auto">
@@ -245,6 +265,33 @@ export default function SignupForm() {
             Need help? Contact our support at{' '}
             <a href="mailto:support@flash.com" className="text-blue-600 hover:underline">
               support@flash.com
+            </a>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show authentication form first
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-md mx-auto">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-bold text-gray-800">Merchant Signup</h1>
+          <p className="text-gray-600">Please sign in or create an account to continue</p>
+        </div>
+
+        <AuthForm onAuthenticated={handleAuthenticated} />
+
+        <div className="mt-8 text-center text-sm text-gray-500">
+          <p>
+            By signing in, you agree to our{' '}
+            <a href="#" className="text-blue-600 hover:underline">
+              Terms of Service
+            </a>{' '}
+            and{' '}
+            <a href="#" className="text-blue-600 hover:underline">
+              Privacy Policy
             </a>
           </p>
         </div>
@@ -328,6 +375,20 @@ export default function SignupForm() {
               aria-valuemin={0}
               aria-valuemax={100}
             ></div>
+          </div>
+
+          {/* Show authenticated user info */}
+          <div className="mt-2 text-right">
+            <span className="text-xs text-gray-500">
+              Signed in as: {authService.currentUser?.email || 'User'}
+              <button
+                type="button"
+                onClick={() => authService.signOut().then(() => setIsAuthenticated(false))}
+                className="ml-2 text-blue-600 hover:underline"
+              >
+                Sign Out
+              </button>
+            </span>
           </div>
         </div>
 

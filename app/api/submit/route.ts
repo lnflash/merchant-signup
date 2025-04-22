@@ -4,13 +4,23 @@ import { getSupabaseClient, createMockSupabaseClient } from '../../../lib/supaba
 import { serverCredentials } from '../../../lib/server-credentials';
 import { getErrorMessage } from '../../../src/utils/validation';
 import { logger } from '../../../src/utils/logger';
+import { requireAuth, AuthenticatedRequest } from '../../../lib/auth-middleware';
 
 /**
  * Form submission endpoint
  * Validates and saves signup data to Supabase
+ * Requires authentication
  */
 export async function POST(request: Request) {
-  console.log('📥 API Route: Received submission request');
+  // Use the authentication middleware
+  return requireAuth(request, handleSubmission);
+}
+
+/**
+ * Handle authenticated form submission
+ */
+async function handleSubmission(request: AuthenticatedRequest) {
+  console.log('📥 API Route: Received authenticated submission request');
   try {
     // Check for actual Supabase credentials instead of relying on IS_BUILD_TIME
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -24,6 +34,14 @@ export async function POST(request: Request) {
       hasSupabaseKey: !!supabaseAnonKey,
       nodeEnv: process.env.NODE_ENV,
       isBuildTime: process.env.IS_BUILD_TIME,
+    });
+
+    // Log authenticated user info (redacted)
+    const authenticatedUser = request.auth.user;
+    logger.info('Authenticated user submission', {
+      userId: authenticatedUser?.id,
+      userEmail: authenticatedUser?.email ? `${authenticatedUser.email.substring(0, 3)}...` : null,
+      authMethod: authenticatedUser?.app_metadata?.provider || 'unknown',
     });
 
     // Get Supabase client with server credentials
@@ -101,10 +119,12 @@ export async function POST(request: Request) {
     });
 
     try {
-      // Add creation timestamp
+      // Add creation timestamp and user ID
       const dataToInsert = {
         ...validatedData,
         created_at: new Date().toISOString(),
+        // Add authenticated user ID to link the submission to the user account
+        user_id: request.auth.user?.id,
       };
 
       // Create loggable object with properly redacted sensitive data
@@ -114,11 +134,12 @@ export async function POST(request: Request) {
         hasEmail: !!dataToInsert.email,
         hasIdImage: !!dataToInsert.id_image_url,
         timestamp: dataToInsert.created_at,
+        userId: request.auth.user?.id,
         // Generate a reference ID for the submission that doesn't contain PII
         referenceId: `sub_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`,
       };
 
-      logger.info('Processing merchant signup form submission', loggableData);
+      logger.info('Processing authenticated merchant signup form submission', loggableData);
 
       // Insert data into Supabase
       logger.info('Sending data to Supabase...');
@@ -151,8 +172,6 @@ export async function POST(request: Request) {
       // Set appropriate response headers
       const headers = new Headers();
       headers.set('Cache-Control', 'no-store');
-
-      // No need to handle Cloudflare cookies server-side
 
       return NextResponse.json(
         {

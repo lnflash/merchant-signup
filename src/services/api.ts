@@ -66,11 +66,31 @@ export const apiService = {
     });
 
     try {
+      // Get auth token if available
+      let authToken = null;
+      try {
+        // Import dynamically to avoid circular dependency
+        const { authService } = await import('./auth');
+        authToken = await authService.getAuthToken();
+      } catch (authError) {
+        logger.warn('Failed to get auth token for API request', authError);
+      }
+
+      // Prepare headers with authentication if available
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+        logger.info('Including authentication token in API request');
+      } else {
+        logger.warn('No authentication token available for API request');
+      }
+
       const response = await fetch(submitUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(data),
       });
 
