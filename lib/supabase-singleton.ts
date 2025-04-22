@@ -93,9 +93,20 @@ export function getSupabaseClient(url?: string, key?: string): SupabaseClient {
   // Create and cache a new instance
   try {
     logger.info('Creating new Supabase client instance');
+    // Get site URL for auth redirects
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      process.env.NEXT_PUBLIC_VERCEL_URL ||
+      config.supabase.siteUrl;
+
     const client = createClient(finalUrl, finalKey, {
       auth: {
         persistSession: true,
+        autoRefreshToken: true,
+        // Use proper site URL to prevent localhost appearing in redirect URLs
+        site_url: siteUrl || undefined,
+        // For OAuth and email confirmations
+        redirectTo: siteUrl || undefined,
       },
     });
 

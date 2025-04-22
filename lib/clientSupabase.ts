@@ -38,9 +38,22 @@ export function createSupabaseClient() {
       url: supabaseUrl.substring(0, 8) + '...',
     });
 
+    // Get site URL for auth redirects
+    const siteUrl =
+      typeof window !== 'undefined' && window.location
+        ? window.location.origin
+        : process.env.NEXT_PUBLIC_SITE_URL ||
+          process.env.NEXT_PUBLIC_VERCEL_URL ||
+          config.supabase.siteUrl;
+
     return createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
+        autoRefreshToken: true,
+        // Use proper site URL to prevent localhost appearing in redirect URLs
+        site_url: siteUrl || undefined,
+        // For OAuth and email confirmations
+        redirectTo: siteUrl || undefined,
       },
     });
   } else {

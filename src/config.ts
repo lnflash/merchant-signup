@@ -11,6 +11,7 @@ export const config = {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
     storageBucket: 'id_uploads', // Existing bucket name for storing ID documents
+    siteUrl: process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL || '', // For auth redirects
   },
   logging: {
     enabled: true,

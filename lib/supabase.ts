@@ -100,11 +100,20 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || config.supa
 const hasValidCredentials =
   supabaseUrl && supabaseAnonKey && supabaseUrl !== '' && supabaseAnonKey !== '';
 
+// Get site URL for auth redirects
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_VERCEL_URL || config.supabase.siteUrl;
+
 // Create Supabase client with credentials or use mock
 export const supabase = hasValidCredentials
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
+        autoRefreshToken: true,
+        // Use proper site URL to prevent localhost appearing in redirect URLs
+        site_url: siteUrl || undefined,
+        // For OAuth and email confirmations
+        redirectTo: siteUrl || undefined,
       },
     })
   : createMockClient();
