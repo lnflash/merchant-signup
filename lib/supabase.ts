@@ -82,8 +82,12 @@ const createMockClient = () => {
       }),
     },
     auth: {
-      signUp: () => Promise.resolve({ error: null }),
-      signIn: () => Promise.resolve({ error: null }),
+      signUp: () => Promise.resolve({ data: { user: null, session: null }, error: null }),
+      signIn: () => Promise.resolve({ data: { user: null, session: null }, error: null }),
+      signInWithPassword: () =>
+        Promise.resolve({ data: { user: null, session: null }, error: null }),
+      signOut: () => Promise.resolve({ error: null }),
+      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
     },
   };
 };

@@ -46,11 +46,19 @@ export function validateCSRFToken(request: Request, token: string): boolean {
     }
 
     // Parse cookies
-    const cookies = cookieHeader.split(';').reduce((acc: Record<string, string>, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {});
+    const cookies: Record<string, string> = {};
+
+    // Safely parse cookies
+    cookieHeader.split(';').forEach(cookie => {
+      const parts = cookie.trim().split('=');
+      if (parts.length >= 2 && parts[0] !== undefined) {
+        const key = parts[0].trim();
+        const value = parts.slice(1).join('=').trim(); // Handle values that may contain =
+        if (key && key.length > 0) {
+          cookies[key] = value;
+        }
+      }
+    });
 
     // Get CSRF cookie
     const csrfCookie = cookies['csrf_token'];

@@ -8,19 +8,23 @@ import { logger } from '../../../src/utils/logger';
  */
 export async function GET() {
   try {
+    // Generate token first
+    const token = generateCSRFToken();
+    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour from now
+
     // Create response
     const response = NextResponse.json({
       success: true,
       // Generate time-limited token that will expire
       data: {
-        expires: Date.now() + 60 * 60 * 1000, // 1 hour from now
+        expires: expiresAt,
         // Don't include "csrf" in the property name to avoid pattern detection
-        token: generateCSRFToken(),
+        token: token,
       },
     });
 
     // Set CSRF cookie with the same token
-    setCSRFCookie(response, response.data.token);
+    setCSRFCookie(response, token);
 
     logger.info('CSRF token generated');
 

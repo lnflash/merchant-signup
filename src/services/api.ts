@@ -70,11 +70,18 @@ export const apiService = {
       // Get auth token if available
       let authToken = null;
       try {
-        // Import dynamically to avoid circular dependency
-        const { authService } = await import('./auth');
-        authToken = await authService.getAuthToken();
-      } catch (authError) {
-        logger.warn('Failed to get auth token for API request', authError);
+        // Try to get token from the authService
+        if (typeof window !== 'undefined') {
+          try {
+            // Use dynamic import to avoid circular dependency
+            const { authService } = await import('./auth');
+            authToken = await authService.getAuthToken();
+          } catch (err) {
+            console.warn('Error importing authService', err);
+          }
+        }
+      } catch (authError: any) {
+        logger.warn('Failed to get auth token for API request', { error: authError?.message });
       }
 
       // Prepare headers with authentication if available

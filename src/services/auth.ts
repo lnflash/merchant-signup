@@ -3,6 +3,7 @@ import { logger } from '../utils/logger';
 import { apiService } from './api';
 import { config } from '../config';
 import { csrfService } from './csrf';
+import { User, Session } from '@supabase/supabase-js';
 
 /**
  * Types for authentication
@@ -35,7 +36,7 @@ export const authService = {
       // Try to get the session from Supabase
       const { data } = await supabase.auth.getSession();
 
-      if (data.session?.user) {
+      if (data?.session?.user) {
         this.currentUser = data.session.user;
         return data.session.user;
       }
@@ -91,13 +92,13 @@ export const authService = {
           }
 
           // Store the API auth result
-          this.currentUser = apiResult.data.user;
+          this.currentUser = apiResult.data?.user;
 
           return {
             success: true,
             message: 'Sign in successful',
-            user: apiResult.data.user,
-            token: apiResult.data.token,
+            user: apiResult.data?.user,
+            token: apiResult.data?.token,
           };
         } catch (apiError) {
           logger.error('API sign in error', apiError);
@@ -109,16 +110,24 @@ export const authService = {
       }
 
       // Success with Supabase
-      this.currentUser = data.user;
+      if (data.user) {
+        this.currentUser = data.user;
 
+        return {
+          success: true,
+          message: 'Sign in successful',
+          user: {
+            id: data.user.id,
+            email: data.user.email || '',
+          },
+          token: data.session?.access_token,
+        };
+      }
+
+      // User is null (shouldn't happen on successful sign in)
       return {
-        success: true,
-        message: 'Sign in successful',
-        user: {
-          id: data.user.id,
-          email: data.user.email || '',
-        },
-        token: data.session?.access_token,
+        success: false,
+        error: 'Authentication failed: User not found',
       };
     } catch (error) {
       logger.error('Sign in error', error);
@@ -173,15 +182,17 @@ export const authService = {
           }
 
           // Store the API auth result
-          this.currentUser = apiResult.data.user;
+          if (apiResult.data?.user) {
+            this.currentUser = apiResult.data.user;
+          }
 
           return {
             success: true,
-            message: apiResult.data.emailConfirmationRequired
+            message: apiResult.data?.emailConfirmationRequired
               ? 'Registration successful. Please check your email to confirm your account.'
               : 'Registration successful',
-            user: apiResult.data.user,
-            token: apiResult.data.token,
+            user: apiResult.data?.user,
+            token: apiResult.data?.token,
           };
         } catch (apiError) {
           logger.error('API sign up error', apiError);
@@ -193,21 +204,29 @@ export const authService = {
       }
 
       // Success with Supabase
-      this.currentUser = data.user;
+      if (data.user) {
+        this.currentUser = data.user;
 
-      // Check if email confirmation is required
-      const requiresEmailConfirmation = !data.session;
+        // Check if email confirmation is required
+        const requiresEmailConfirmation = !data.session;
 
+        return {
+          success: true,
+          message: requiresEmailConfirmation
+            ? 'Registration successful. Please check your email to confirm your account.'
+            : 'Registration successful',
+          user: {
+            id: data.user.id,
+            email: data.user.email || '',
+          },
+          token: data.session?.access_token,
+        };
+      }
+
+      // User is null (shouldn't normally happen)
       return {
-        success: true,
-        message: requiresEmailConfirmation
-          ? 'Registration successful. Please check your email to confirm your account.'
-          : 'Registration successful',
-        user: {
-          id: data.user.id,
-          email: data.user.email || '',
-        },
-        token: data.session?.access_token,
+        success: false,
+        error: 'Registration failed: User not created',
       };
     } catch (error) {
       logger.error('Sign up error', error);
