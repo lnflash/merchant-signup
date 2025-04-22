@@ -12,6 +12,13 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'on-first-retry',
+
+    // Handle JS dialog automatically for the verification code alert
+    // This is used in the PhoneAuth component
+    javaScriptEnabled: true,
+    launchOptions: {
+      args: ['--enable-javascript'],
+    },
   },
   projects: [
     {

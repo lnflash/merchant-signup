@@ -12,7 +12,9 @@ This application provides a streamlined signup flow for merchants looking to acc
 - Different flows for Personal, Professional, and Merchant accounts
 - ID document upload for merchant verification
 - Comprehensive form validation
+- Multiple authentication methods (email + password or phone verification)
 - Integration with Supabase for data storage
+- Enhanced security with CSRF protection
 - Mobile-friendly responsive design
 - Flash-branded UI aligned with the design system
 
@@ -168,5 +170,6 @@ This application is designed to integrate with the Flash API. Merchant data is c
 
 ## Version History
 
+- **0.3.0** - Added phone-based authentication, improved security with CSRF protection
 - **0.2.0** - Enhanced UI with Flash design system, improved UX, and better code organization
 - **0.1.0** - Initial release with basic signup functionality

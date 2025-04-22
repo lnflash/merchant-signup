@@ -28,6 +28,7 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     const bankAccountType = watch('bank_account_type');
     const accountCurrency = watch('account_currency');
     const bankAccountNumber = watch('bank_account_number');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Used for validation
     const idImageUrl = watch('id_image_url');
 
     let isValid = true;

@@ -2,11 +2,14 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Merchant Signup Form', () => {
   test.beforeEach(async ({ page }) => {
-    // Go to the form page
+    // Go to the form page - authentication will be automatically bypassed in test mode
     await page.goto('/form');
+
+    // Wait for the Personal Information step to be visible
+    await expect(page.getByText('Personal Information')).toBeVisible({ timeout: 10000 });
   });
 
-  test('should display the first step initially', async ({ page }) => {
+  test('should display the personal information step after authentication', async ({ page }) => {
     await expect(page.getByText('Personal Information')).toBeVisible();
     await expect(page.getByLabel('Full Name')).toBeVisible();
     await expect(page.getByLabel('Phone Number')).toBeVisible();
