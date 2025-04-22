@@ -12,22 +12,22 @@ export default function FormPage() {
   useEffect(() => {
     try {
       console.log('Form page mounted');
-      
+
       // Debug environment
       const debug = debugEnvironment();
       console.log('Environment debug results:', debug);
-      
+
       // Check if we're in a static build
       const isStaticBuild = typeof window !== 'undefined' && window.ENV && window.ENV.BUILD_TIME;
       console.log('Is static build:', isStaticBuild);
-      
+
       // Initialize any required globals for static build
       if (isStaticBuild) {
         console.log('Initializing static build environment');
         // Ensure window.ENV is available to child components
         window.ENV = window.ENV || {};
       }
-      
+
       // Mark loading complete
       setIsLoading(false);
     } catch (err) {
@@ -58,7 +58,7 @@ export default function FormPage() {
             <p className="font-bold">Error loading form</p>
             <p>{error}</p>
           </div>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
@@ -72,10 +72,7 @@ export default function FormPage() {
   // Show the form
   return (
     <div className="max-w-xl mx-auto bg-white p-8 rounded-xl shadow-md">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">Create your account</h2>
-        <p className="text-gray-500 text-sm">Complete the form below to get started with Flash</p>
-      </div>
+      {/* Removed header labels */}
       <SignupForm />
     </div>
   );

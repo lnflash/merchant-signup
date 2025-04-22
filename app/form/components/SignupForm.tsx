@@ -306,10 +306,7 @@ export default function SignupForm() {
   if (!isAuthenticated) {
     return (
       <div className="max-w-md mx-auto">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-800">Merchant Signup</h1>
-          <p className="text-gray-600">Please sign in or create an account to continue</p>
-        </div>
+        {/* Removed header labels */}
 
         <AuthSelector onAuthenticated={handleAuthenticated} />
 
