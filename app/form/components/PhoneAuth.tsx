@@ -87,6 +87,7 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
       // In test environments, don't show the alert to avoid blocking tests
       if (!isTestEnvironment) {
         alert(`For demo purposes, your verification code is: ${verificationCode}`);
+        console.log(`Development mode: Verification code is ${verificationCode}`);
       } else {
         console.log('TEST MODE: Verification code is 123456');
       }
@@ -127,6 +128,11 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
       }
 
       // Verify the code matches and phone number matches
+      if (!data.verificationCode) {
+        setError('Please enter the verification code.');
+        return;
+      }
+
       if (data.verificationCode !== storedData.verificationCode) {
         setError('Invalid verification code. Please try again.');
         return;
@@ -250,6 +256,7 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               placeholder="123456"
               disabled={isSubmitting}
+              autoComplete="one-time-code"
               required
             />
             {errors.verificationCode && (
