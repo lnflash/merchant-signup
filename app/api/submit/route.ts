@@ -107,11 +107,15 @@ export async function POST(request: Request) {
         created_at: new Date().toISOString(),
       };
 
-      // Create loggable object with limited sensitive data
+      // Create loggable object with properly redacted sensitive data
       const loggableData = {
-        businessName: dataToInsert.business_name,
-        email: dataToInsert.email,
+        accountType: dataToInsert.account_type,
+        hasBusinessName: !!dataToInsert.business_name,
+        hasEmail: !!dataToInsert.email,
+        hasIdImage: !!dataToInsert.id_image_url,
         timestamp: dataToInsert.created_at,
+        // Generate a reference ID for the submission that doesn't contain PII
+        referenceId: `sub_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 7)}`,
       };
 
       logger.info('Processing merchant signup form submission', loggableData);
@@ -122,10 +126,19 @@ export async function POST(request: Request) {
 
       if (error) {
         logger.error('Supabase insertion error in API route', error);
+        // Log the actual error for debugging but return a generic message to the client
+        logger.error('Detailed database error:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
+
         return NextResponse.json(
           {
             success: false,
-            error: `Database error: ${error.message || 'Failed to save data'}`,
+            error: 'An error occurred while saving your information. Please try again later.',
+            referenceId: `err_${Date.now().toString(36)}`,
           },
           {
             status: 500,
@@ -156,10 +169,18 @@ export async function POST(request: Request) {
       );
     } catch (dbError: any) {
       console.error('Database operation error:', dbError);
+      // Log detailed error but return a generic message
+      logger.error('Database operation detailed error:', {
+        message: getErrorMessage(dbError),
+        stack: dbError?.stack,
+        code: dbError?.code,
+      });
+
       return NextResponse.json(
         {
           success: false,
-          error: `Database operation failed: ${getErrorMessage(dbError)}`,
+          error: 'An error occurred while processing your request. Please try again later.',
+          referenceId: `err_${Date.now().toString(36)}`,
         },
         {
           status: 500,
@@ -182,10 +203,18 @@ export async function POST(request: Request) {
       );
     }
 
+    // Log the full error details for debugging
+    logger.error('Unexpected API error:', {
+      message: getErrorMessage(error),
+      stack: error?.stack,
+      code: error?.code,
+    });
+
     return NextResponse.json(
       {
         success: false,
-        error: `Unexpected error: ${getErrorMessage(error)}`,
+        error: 'An unexpected error occurred. Please try again later.',
+        referenceId: `err_${Date.now().toString(36)}`,
       },
       {
         status: 500,

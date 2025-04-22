@@ -33,33 +33,33 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('id-uploads', 'ID Document Uploads', false)
 ON CONFLICT (id) DO NOTHING;
 
--- Create a public storage bucket for form submissions
+-- Create a private storage bucket for form submissions
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('formdata', 'Form Submissions', true)
+VALUES ('formdata', 'Form Submissions', false)
 ON CONFLICT (id) DO NOTHING;
 
--- Allow ANONYMOUS uploads to formdata bucket
-CREATE POLICY "Allow anonymous uploads to formdata" ON storage.objects
-  FOR INSERT TO anon, authenticated WITH CHECK (
+-- Allow only authenticated uploads to formdata bucket
+CREATE POLICY "Allow authenticated uploads to formdata" ON storage.objects
+  FOR INSERT TO authenticated WITH CHECK (
     bucket_id = 'formdata'
   );
 
--- Allow anyone to read from formdata bucket
-CREATE POLICY "Allow public access to formdata" ON storage.objects
-  FOR SELECT TO anon, authenticated USING (
+-- Allow only authenticated users to read from formdata bucket
+CREATE POLICY "Allow authenticated access to formdata" ON storage.objects
+  FOR SELECT TO authenticated USING (
     bucket_id = 'formdata'
   );
 
--- Modified policy to allow authenticated uploads to id-uploads - relax the owner condition
+-- Modified policy to allow authenticated uploads to id-uploads - enforce owner check
 CREATE POLICY "Allow authenticated uploads" ON storage.objects 
   FOR INSERT TO authenticated WITH CHECK (
-    bucket_id = 'id-uploads'
+    bucket_id = 'id-uploads' AND auth.uid() = owner
   );
 
--- Modified policy to allow authenticated users to read all uploads in id-uploads
+-- Modified policy to allow authenticated users to read only their own uploads in id-uploads
 CREATE POLICY "Allow authenticated downloads" ON storage.objects 
   FOR SELECT TO authenticated USING (
-    bucket_id = 'id-uploads'
+    bucket_id = 'id-uploads' AND auth.uid() = owner
   );
 
 -- Create indices for better performance

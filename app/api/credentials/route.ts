@@ -112,19 +112,18 @@ export async function GET(request: Request) {
     supabaseUrl: finalUrl,
     supabaseKey: finalKey,
     bucket: config.supabase.storageBucket || 'id_uploads',
-    environment: process.env.NODE_ENV,
+    environment: process.env.NODE_ENV === 'development' ? 'development' : 'production',
     buildTime: process.env.IS_BUILD_TIME === 'true',
-    platform: isDigitalOcean ? 'DigitalOcean' : 'Other',
     traceId, // Include trace ID for client-side logging correlation
     serverTime: new Date().toISOString(),
-    debug: {
-      envKeys: allEnvVarNames.filter(k => k.startsWith('NEXT_PUBLIC_')),
-      isDigitalOcean: !!isDigitalOcean,
-      isSupabaseConfigured: !!(finalUrl && finalKey),
-      doNamespace: process.env.DO_NAMESPACE,
-      doAppId: process.env.DO_APP_ID ? true : false,
-      envInspection: credentialInspection,
-    },
+    // Only include minimal debug info and only in development
+    ...(process.env.NODE_ENV === 'development'
+      ? {
+          debug: {
+            isSupabaseConfigured: !!(finalUrl && finalKey),
+          },
+        }
+      : {}),
   };
 
   // Log detailed credential inspection

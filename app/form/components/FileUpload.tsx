@@ -95,9 +95,24 @@ export default function FileUpload() {
         };
         reader.readAsDataURL(file);
 
-        // Create a unique file name
+        // Create a cryptographically secure unique file name using UUID v4 pattern
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        // Generate a UUID-like string with timestamp for better security
+        const timestamp = Date.now().toString(36);
+        const random1 = crypto
+          .getRandomValues(new Uint8Array(8))
+          .reduce((acc, val) => acc + val.toString(16).padStart(2, '0'), '');
+        const random2 = crypto
+          .getRandomValues(new Uint8Array(4))
+          .reduce((acc, val) => acc + val.toString(16).padStart(2, '0'), '');
+        const random3 = crypto
+          .getRandomValues(new Uint8Array(4))
+          .reduce((acc, val) => acc + val.toString(16).padStart(2, '0'), '');
+        const random4 = crypto
+          .getRandomValues(new Uint8Array(12))
+          .reduce((acc, val) => acc + val.toString(16).padStart(2, '0'), '');
+        const secureFileName = `${random1}-${random2}-${random3}-${random4}-${timestamp}`;
+        const fileName = `${secureFileName}.${fileExt}`;
         const filePath = `${fileName}`;
 
         console.info(`[📤] [${uploadId}] Generated file path: ${filePath}`);
@@ -416,16 +431,16 @@ export default function FileUpload() {
             const bucket = credentials?.bucket || config.supabase.storageBucket;
             fileUrl = `https://example.com/${bucket}/${filePath}`;
           } else {
-            // In production, show error but allow form submission with mock URL
-            fileUrl = `https://example.com/${config.supabase.storageBucket}/${filePath}`;
-            console.error(
-              `[📤] [${uploadId}] 🚨 CRITICAL: Using mock URL in PRODUCTION due to upload failure!`,
-              {
-                url: fileUrl.substring(0, 30) + '...',
-                formSubmitWill: 'continue with mock URL',
-                recommendation: 'Fix credentials on server',
-              }
+            // In production, do not allow form submission with mock URL
+            console.error(`[📤] [${uploadId}] 🚨 CRITICAL: Upload failure in PRODUCTION!`, {
+              recommendation: 'Fix credentials on server',
+            });
+            // Set explicit error message and prevent form submission
+            setErrorMessage(
+              'File upload failed. Please contact support with reference code: ' + uploadId
             );
+            // Ensure file URL is empty to prevent form submission with invalid data
+            fileUrl = '';
           }
         }
 
