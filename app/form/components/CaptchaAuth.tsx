@@ -21,6 +21,7 @@ export default function CaptchaAuth({ onAuthenticated }: CaptchaAuthProps) {
   const [userAnswer, setUserAnswer] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +58,8 @@ export default function CaptchaAuth({ onAuthenticated }: CaptchaAuthProps) {
         })
       );
 
-      // Notify parent component
+      // Mark as complete and notify parent component
+      setIsComplete(true);
       onAuthenticated(userId);
 
       logger.info('Captcha authentication successful', { userId });
@@ -79,6 +81,15 @@ export default function CaptchaAuth({ onAuthenticated }: CaptchaAuthProps) {
         </div>
       )}
 
+      {isComplete && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4 flex items-center">
+          <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          Verification successful! You can proceed with your submission.
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="captcha" className="block text-sm font-medium text-gray-700 mb-1">
@@ -94,9 +105,9 @@ export default function CaptchaAuth({ onAuthenticated }: CaptchaAuthProps) {
             type="number"
             value={userAnswer}
             onChange={e => setUserAnswer(e.target.value)}
+            disabled={isSubmitting || isComplete}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             placeholder="Your answer"
-            disabled={isSubmitting}
             required
           />
         </div>
@@ -104,12 +115,12 @@ export default function CaptchaAuth({ onAuthenticated }: CaptchaAuthProps) {
         <div>
           <button
             type="submit"
-            disabled={isSubmitting || !userAnswer}
+            disabled={isSubmitting || !userAnswer || isComplete}
             className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-              isSubmitting || !userAnswer ? 'opacity-70 cursor-not-allowed' : ''
+              isSubmitting || !userAnswer || isComplete ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >
-            {isSubmitting ? 'Verifying...' : 'Verify & Continue'}
+            {isSubmitting ? 'Verifying...' : isComplete ? 'Verified ✓' : 'Verify & Continue'}
           </button>
         </div>
       </form>

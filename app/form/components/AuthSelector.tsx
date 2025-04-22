@@ -9,7 +9,7 @@ interface AuthSelectorProps {
 }
 
 export default function AuthSelector({ onAuthenticated }: AuthSelectorProps) {
-  const [method, setMethod] = useState<AuthMethod>('email');
+  const [method, setMethod] = useState<AuthMethod>('captcha');
 
   // Handle authentication from email method
   const handleEmailAuth = () => {
@@ -25,36 +25,6 @@ export default function AuthSelector({ onAuthenticated }: AuthSelectorProps) {
     <div className="bg-white rounded-lg shadow-md">
       {/* Auth method tabs */}
       <div className="flex border-b border-gray-200">
-        <button
-          onClick={() => setMethod('email')}
-          className={`flex-1 py-3 text-center font-medium transition-all duration-200 ${
-            method === 'email'
-              ? 'text-blue-600 border-b-2 border-blue-600'
-              : 'text-gray-500 hover:text-gray-700'
-          }`}
-          // Using aria-selected for styling purposes
-          data-selected={method === 'email'}
-          aria-controls="email-auth-panel"
-          id="email-auth-tab"
-        >
-          <div className="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-            Email
-          </div>
-        </button>
         <button
           onClick={() => setMethod('captcha')}
           className={`flex-1 py-3 text-center font-medium transition-all duration-200 ${
@@ -83,6 +53,36 @@ export default function AuthSelector({ onAuthenticated }: AuthSelectorProps) {
               />
             </svg>
             Quick Verify
+          </div>
+        </button>
+        <button
+          onClick={() => setMethod('email')}
+          className={`flex-1 py-3 text-center font-medium transition-all duration-200 ${
+            method === 'email'
+              ? 'text-blue-600 border-b-2 border-blue-600'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          // Using aria-selected for styling purposes
+          data-selected={method === 'email'}
+          aria-controls="email-auth-panel"
+          id="email-auth-tab"
+        >
+          <div className="flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            Email
           </div>
         </button>
       </div>
@@ -122,10 +122,10 @@ export default function AuthSelector({ onAuthenticated }: AuthSelectorProps) {
 
       <div className="text-center pb-4 px-4">
         <p className="text-sm text-gray-500">
-          Choose the authentication method that works best for you.
-          {method === 'email'
-            ? ' No email address? Try the quick verification option.'
-            : ' Prefer using email? Switch to email authentication.'}
+          Quick verification is the fastest way to continue.
+          {method === 'captcha'
+            ? ' Have an account? Switch to email authentication.'
+            : ' New user? Switch to quick verification.'}
         </p>
       </div>
     </div>
