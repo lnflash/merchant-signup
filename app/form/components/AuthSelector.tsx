@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import AuthForm from './AuthForm';
-import PhoneAuth from './PhoneAuth';
+import CaptchaAuth from './CaptchaAuth';
 
-export type AuthMethod = 'email' | 'phone';
+export type AuthMethod = 'email' | 'captcha';
 
 interface AuthSelectorProps {
   onAuthenticated: (userId?: string, identifier?: string) => void;
@@ -16,9 +16,9 @@ export default function AuthSelector({ onAuthenticated }: AuthSelectorProps) {
     onAuthenticated();
   };
 
-  // Handle authentication from phone method
-  const handlePhoneAuth = (userId: string, phoneNumber: string) => {
-    onAuthenticated(userId, phoneNumber);
+  // Handle authentication from captcha method
+  const handleCaptchaAuth = (userId: string) => {
+    onAuthenticated(userId);
   };
 
   return (
@@ -56,16 +56,16 @@ export default function AuthSelector({ onAuthenticated }: AuthSelectorProps) {
           </div>
         </button>
         <button
-          onClick={() => setMethod('phone')}
+          onClick={() => setMethod('captcha')}
           className={`flex-1 py-3 text-center font-medium transition-all duration-200 ${
-            method === 'phone'
+            method === 'captcha'
               ? 'text-blue-600 border-b-2 border-blue-600'
               : 'text-gray-500 hover:text-gray-700'
           }`}
           // Using data-selected for styling purposes
-          data-selected={method === 'phone'}
-          aria-controls="phone-auth-panel"
-          id="phone-auth-tab"
+          data-selected={method === 'captcha'}
+          aria-controls="captcha-auth-panel"
+          id="captcha-auth-tab"
         >
           <div className="flex items-center justify-center">
             <svg
@@ -79,10 +79,10 @@ export default function AuthSelector({ onAuthenticated }: AuthSelectorProps) {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-9.618 5.04 11.946 11.946 0 019.618 5.04 11.955 11.955 0 019.618-5.04"
               />
             </svg>
-            Phone
+            Quick Verify
           </div>
         </button>
       </div>
@@ -107,14 +107,14 @@ export default function AuthSelector({ onAuthenticated }: AuthSelectorProps) {
         <div
           className="transition-all duration-300 transform"
           style={{
-            opacity: method === 'phone' ? 1 : 0,
-            height: method === 'phone' ? 'auto' : 0,
-            position: method === 'phone' ? 'relative' : 'absolute',
+            opacity: method === 'captcha' ? 1 : 0,
+            height: method === 'captcha' ? 'auto' : 0,
+            position: method === 'captcha' ? 'relative' : 'absolute',
           }}
         >
-          {method === 'phone' && (
-            <div id="phone-auth-panel" role="tabpanel" aria-labelledby="phone-auth-tab">
-              <PhoneAuth onAuthenticated={handlePhoneAuth} />
+          {method === 'captcha' && (
+            <div id="captcha-auth-panel" role="tabpanel" aria-labelledby="captcha-auth-tab">
+              <CaptchaAuth onAuthenticated={handleCaptchaAuth} />
             </div>
           )}
         </div>
@@ -124,7 +124,7 @@ export default function AuthSelector({ onAuthenticated }: AuthSelectorProps) {
         <p className="text-sm text-gray-500">
           Choose the authentication method that works best for you.
           {method === 'email'
-            ? ' No email address? Switch to phone authentication.'
+            ? ' No email address? Try the quick verification option.'
             : ' Prefer using email? Switch to email authentication.'}
         </p>
       </div>
