@@ -18,8 +18,7 @@ const phoneAuthSchema = z.object({
   verificationCode: z
     .string()
     .length(6, 'Verification code must be 6 digits')
-    .regex(/^[0-9]{6}$/, 'Verification code must be 6 digits')
-    .optional(),
+    .regex(/^[0-9]{6}$/, 'Verification code must be 6 digits'),
 });
 
 type PhoneAuthInputs = z.infer<typeof phoneAuthSchema>;
@@ -35,6 +34,7 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<PhoneAuthInputs>({
     resolver: zodResolver(phoneAuthSchema),
@@ -42,6 +42,7 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
       phoneNumber: '',
       verificationCode: '',
     },
+    mode: 'onChange',
   });
 
   const phoneNumber = watch('phoneNumber');
@@ -94,6 +95,9 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
 
       // Move to verification step
       setStep('verification');
+
+      // Reset the verification code field to ensure clean state
+      setValue('verificationCode', '');
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError('Failed to send verification code: ' + errorMessage);
@@ -108,6 +112,13 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
     setIsSubmitting(true);
     setError(null);
 
+    // Debug information
+    console.log('Verification submission with data:', {
+      phoneNumber: data.phoneNumber,
+      verificationCodeEntered: data.verificationCode,
+      verificationCodeLength: data.verificationCode?.length,
+    });
+
     try {
       // Retrieve stored verification info
       const storedDataJson = localStorage.getItem('pendingVerification');
@@ -118,6 +129,14 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
       }
 
       const storedData = JSON.parse(storedDataJson);
+
+      // Debug log to help troubleshooting
+      console.log('Retrieved verification data:', {
+        storedPhoneNumber: storedData.phoneNumber,
+        storedCode: storedData.verificationCode,
+        expires: new Date(storedData.expires).toLocaleTimeString(),
+        isExpired: storedData.expires < Date.now(),
+      });
 
       // Check if verification has expired
       if (storedData.expires < Date.now()) {
@@ -203,6 +222,9 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
     }
   }, [onAuthenticated]);
 
+  // Watch verification code to enable/disable submit button
+  const verificationCode = watch('verificationCode');
+
   // Determine which form to show based on step
   const currentSubmitHandler = step === 'phone' ? handlePhoneSubmit : handleVerificationSubmit;
 
@@ -252,9 +274,11 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
               id="verificationCode"
               type="text"
               inputMode="numeric"
-              {...register('verificationCode')}
+              {...register('verificationCode', { required: 'Verification code is required' })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               placeholder="123456"
+              maxLength={6}
+              pattern="[0-9]{6}"
               disabled={isSubmitting}
               autoComplete="one-time-code"
               required
@@ -271,9 +295,15 @@ export default function PhoneAuth({ onAuthenticated }: PhoneAuthProps) {
         <div>
           <button
             type="submit"
-            disabled={isSubmitting || (step === 'phone' && !phoneNumber)}
+            disabled={
+              isSubmitting ||
+              (step === 'phone' && !phoneNumber) ||
+              (step === 'verification' && (!verificationCode || verificationCode.length !== 6))
+            }
             className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-              isSubmitting || (step === 'phone' && !phoneNumber)
+              isSubmitting ||
+              (step === 'phone' && !phoneNumber) ||
+              (step === 'verification' && (!verificationCode || verificationCode.length !== 6))
                 ? 'opacity-70 cursor-not-allowed'
                 : ''
             }`}
