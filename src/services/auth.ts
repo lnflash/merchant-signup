@@ -2,6 +2,7 @@ import { supabase } from '../../lib/supabase';
 import { logger } from '../utils/logger';
 import { apiService } from './api';
 import { config } from '../config';
+import { csrfService } from './csrf';
 
 /**
  * Types for authentication
@@ -64,12 +65,20 @@ export const authService = {
 
         // Try API fallback
         try {
+          // Get CSRF token
+          const csrfToken = await csrfService.getToken();
+
           const response = await fetch(`${config.api.baseUrl || ''}/api/auth`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ email, password }),
+            credentials: 'include', // Important to include cookies
+            body: JSON.stringify({
+              email,
+              password,
+              csrf_token: csrfToken,
+            }),
           });
 
           const apiResult = await response.json();
@@ -138,12 +147,20 @@ export const authService = {
 
         // Try API fallback
         try {
+          // Get CSRF token
+          const csrfToken = await csrfService.getToken();
+
           const response = await fetch(`${config.api.baseUrl || ''}/api/auth`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ email, password }),
+            credentials: 'include', // Important to include cookies
+            body: JSON.stringify({
+              email,
+              password,
+              csrf_token: csrfToken,
+            }),
           });
 
           const apiResult = await response.json();

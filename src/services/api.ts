@@ -2,6 +2,7 @@ import { config } from '../config';
 import { ApiResponse, SignupFormData } from '../types';
 import { logger } from '../utils/logger';
 import { createClient } from '@supabase/supabase-js';
+import { csrfService } from './csrf';
 
 /**
  * API service for interacting with the backend
@@ -88,10 +89,20 @@ export const apiService = {
         logger.warn('No authentication token available for API request');
       }
 
+      // Get CSRF token and add it to the request
+      const csrfToken = await csrfService.getToken();
+
+      // Add the CSRF token to the form data
+      const dataWithCSRF = {
+        ...data,
+        csrf_token: csrfToken,
+      };
+
       const response = await fetch(submitUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify(data),
+        credentials: 'include', // Important to include cookies for CSRF validation
+        body: JSON.stringify(dataWithCSRF),
       });
 
       const status = response.status;

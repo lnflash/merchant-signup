@@ -5,15 +5,19 @@ import { serverCredentials } from '../../../lib/server-credentials';
 import { getErrorMessage } from '../../../src/utils/validation';
 import { logger } from '../../../src/utils/logger';
 import { requireAuth, AuthenticatedRequest } from '../../../lib/auth-middleware';
+import { withCSRF } from '../../../lib/csrf';
 
 /**
  * Form submission endpoint
  * Validates and saves signup data to Supabase
- * Requires authentication
+ * Requires authentication and CSRF protection
  */
 export async function POST(request: Request) {
-  // Use the authentication middleware
-  return requireAuth(request, handleSubmission);
+  // Apply CSRF protection first
+  return withCSRF(async csrfValidatedRequest => {
+    // Then apply authentication middleware
+    return requireAuth(csrfValidatedRequest, handleSubmission);
+  })(request);
 }
 
 /**

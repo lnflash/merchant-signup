@@ -2,17 +2,25 @@ import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '../../../lib/supabase-singleton';
 import { logger } from '../../../src/utils/logger';
 import { z } from 'zod';
+import { withCSRF } from '../../../lib/csrf';
 
 // Authentication request validation schema
 const authRequestSchema = z.object({
   email: z.string().email('Valid email is required'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
+  csrf_token: z.string().min(1, 'CSRF token is required'),
 });
 
 /**
  * Sign in endpoint - handles authentication for the application
+ * Protected by CSRF
  */
 export async function POST(request: Request) {
+  return withCSRF(handleSignIn)(request);
+}
+
+// Handle the sign in request with CSRF protection
+async function handleSignIn(request: Request) {
   try {
     // Parse request body
     const body = await request.json();
@@ -83,8 +91,14 @@ export async function POST(request: Request) {
 
 /**
  * Sign up endpoint - creates a new user account
+ * Protected by CSRF
  */
 export async function PUT(request: Request) {
+  return withCSRF(handleSignUp)(request);
+}
+
+// Handle the sign up request with CSRF protection
+async function handleSignUp(request: Request) {
   try {
     // Parse request body
     const body = await request.json();
