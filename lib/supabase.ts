@@ -110,10 +110,8 @@ export const supabase = hasValidCredentials
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        // Use proper site URL to prevent localhost appearing in redirect URLs
-        site_url: siteUrl || undefined,
         // For OAuth and email confirmations
-        redirectTo: siteUrl || undefined,
+        ...(siteUrl ? { redirectTo: siteUrl } : {}),
       },
     })
   : createMockClient();

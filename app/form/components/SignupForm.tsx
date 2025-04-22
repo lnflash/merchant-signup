@@ -3,12 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  signupFormSchema,
-  personInfoSchema,
-  businessInfoSchema,
-  merchantInfoSchema,
-} from '../../../lib/validators';
+import { signupFormSchema } from '../../../lib/validators';
 import { SignupFormData } from '../../../src/types';
 import { apiService } from '../../../src/services/api';
 import { PersonalInfoStep, AccountTypeStep, TermsStep } from './Steps';
@@ -19,8 +14,7 @@ import FlashIcon from '../../../public/images/logos/flash_icon_transp.png';
 import { logger } from '../../../src/utils/logger';
 import TestSubmit from './TestSubmit';
 
-// Import authentication components
-import AuthForm from './AuthForm';
+// Import authentication component
 import AuthSelector from './AuthSelector';
 import { authService } from '../../../src/services/auth';
 
