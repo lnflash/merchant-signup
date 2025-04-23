@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { SignupFormData } from '../../../src/types';
 
@@ -94,6 +94,20 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   // Register the input with react-hook-form
   const { ref, ...rest } = register('business_address');
 
+  // Create a callback ref that combines the RHF ref and our local ref
+  const setInputRef = useCallback(
+    (element: HTMLInputElement | null) => {
+      // Call the react-hook-form ref function
+      ref(element);
+
+      // Store the element in our local ref (safe approach)
+      if (element) {
+        inputRef.current = element;
+      }
+    },
+    [ref]
+  );
+
   return (
     <div className="relative">
       <div className="absolute top-3 left-3 pointer-events-none">
@@ -123,10 +137,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         placeholder={isRequired ? 'Enter your business address' : 'Optional for merchants'}
         aria-required={isRequired}
         aria-invalid={errors.business_address ? 'true' : 'false'}
-        ref={e => {
-          ref(e);
-          inputRef.current = e;
-        }}
+        ref={setInputRef}
         {...rest}
       />
     </div>
