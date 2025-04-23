@@ -16,7 +16,11 @@ try {
 process.env.IS_BUILD_TIME = 'true';
 
 // Check if we have required environment variables
-const requiredVars = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'];
+const requiredVars = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY',
+];
 
 let missingVars = false;
 requiredVars.forEach(varName => {
@@ -95,6 +99,7 @@ try {
   </style>
   <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
   <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <meta name="google-maps-api-key" content="${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}">
   <script src="/env-config.js"></script>
 </head>
 <body>
@@ -143,6 +148,7 @@ try {
   </style>
   <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
   <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <meta name="google-maps-api-key" content="${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}">
   <script src="/env-config.js"></script>
 </head>
 <body>
@@ -180,6 +186,7 @@ try {
   </style>
   <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
   <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <meta name="google-maps-api-key" content="${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}">
   <script src="/env-config.js"></script>
 </head>
 <body>
@@ -197,6 +204,7 @@ try {
         "<ul>" +
         "<li>Supabase URL: " + (env.SUPABASE_URL ? "✅ Available" : "❌ Missing") + "</li>" +
         "<li>Supabase Key: " + (env.SUPABASE_KEY ? "✅ Available" : "❌ Missing") + "</li>" +
+        "<li>Google Maps API Key: " + (env.GOOGLE_MAPS_API_KEY ? "✅ Available" : "❌ Missing") + "</li>" +
         "<li>Built with embedded variables: " + (env.BUILD_TIME ? "✅ Yes" : "❌ No") + "</li>" +
         "</ul>";
     });
@@ -218,27 +226,27 @@ try {
 
   // Check if the form index.html exists or create an enhanced fallback
   console.log('📦 Creating enhanced form/index.html fallback...');
-  
+
   // Check if we have a debug fallback template
   let enhancedFormHtml = formHtml; // Default to simple version
-  
+
   if (fs.existsSync('debug/form-fallback.html')) {
     console.log('📦 Using enhanced form fallback from debug/form-fallback.html');
     try {
       enhancedFormHtml = fs.readFileSync('debug/form-fallback.html', 'utf8');
-      
+
       // Replace placeholders with actual Supabase credentials
       enhancedFormHtml = enhancedFormHtml
         .replace(/SUPABASE_URL_PLACEHOLDER/g, process.env.NEXT_PUBLIC_SUPABASE_URL || '')
         .replace(/SUPABASE_KEY_PLACEHOLDER/g, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '');
-        
+
       console.log('📦 Successfully processed enhanced form fallback');
     } catch (error) {
       console.error('Error reading enhanced fallback:', error);
       console.log('📦 Falling back to simple form template');
     }
   }
-  
+
   fs.writeFileSync('out/form/index.html', enhancedFormHtml);
 
   // Create fake API endpoint to prevent redirects to non-existent API endpoints
@@ -247,6 +255,7 @@ try {
   const credentialsApi = `{
     "supabaseUrl": "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
     "supabaseKey": "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
+    "googleMapsApiKey": "${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}",
     "bucket": "id_uploads",
     "environment": "${process.env.NODE_ENV || 'production'}",
     "buildTime": true,
@@ -268,7 +277,7 @@ try {
   // Create a public directory and copy some basic assets
   console.log('📦 Creating public directory...');
   execSync('mkdir -p out/public', { stdio: 'inherit' });
-  
+
   // Create debug-nav.html for navigation testing
   console.log('📦 Creating debug navigation test page...');
   if (fs.existsSync('debug/index.html')) {
@@ -283,6 +292,7 @@ try {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
   <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <meta name="google-maps-api-key" content="${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}">
   <script src="/env-config.js"></script>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
@@ -323,6 +333,7 @@ try {
         '<p>window.ENV: ' + (window.ENV ? 'Available' : 'Not Available') + '</p>' +
         '<p>Supabase URL: ' + (env.SUPABASE_URL ? 'Set' : 'Not Set') + '</p>' +
         '<p>Supabase Key: ' + (env.SUPABASE_KEY ? 'Set' : 'Not Set') + '</p>' + 
+        '<p>Google Maps API Key: ' + (env.GOOGLE_MAPS_API_KEY ? 'Set' : 'Not Set') + '</p>' + 
         '<p>Build Time: ' + (env.BUILD_TIME ? 'Yes' : 'No') + '</p>';
       
       // Location info
@@ -335,7 +346,7 @@ try {
   </script>
 </body>
 </html>`;
-    
+
     fs.writeFileSync('out/debug-nav.html', debugNavHtml);
   }
 
@@ -346,6 +357,7 @@ try {
 window.ENV = {
   SUPABASE_URL: "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
   SUPABASE_KEY: "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
+  GOOGLE_MAPS_API_KEY: "${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}",
   BUILD_TIME: true,
   BUILD_DATE: "${new Date().toISOString()}"
 };
@@ -354,36 +366,37 @@ window.ENV = {
 console.log('Static build environment variables loaded:', {
   hasUrl: !!window.ENV.SUPABASE_URL,
   hasKey: !!window.ENV.SUPABASE_KEY,
+  hasGoogleMapsKey: !!window.ENV.GOOGLE_MAPS_API_KEY,
   buildTime: window.ENV.BUILD_TIME,
   buildDate: window.ENV.BUILD_DATE
 });`;
 
   fs.writeFileSync('out/env-config.js', envConfig);
-  
+
   // Create routes.json for DigitalOcean App Platform
   console.log('📦 Creating routes.json for DigitalOcean App Platform...');
-  
+
   try {
     // Try to use the create-routes-config script
     const createRoutesConfig = require('./create-routes-config');
     createRoutesConfig();
   } catch (error) {
     console.error('❌ Error creating routes.json:', error.message);
-    
+
     // Fallback: Create routes.json manually
     console.log('📦 Creating routes.json manually...');
-    
+
     const routesConfig = {
       routes: [
-        { handle: "filesystem" },
-        { src: "/form", dest: "/form/index.html", status: 200 },
-        { src: "/form/", dest: "/form/index.html", status: 200 },
-        { src: "/api/credentials", dest: "/api/credentials/index.json", status: 200 },
-        { src: "/api/(.*)", dest: "/api/$1/index.json", status: 200 },
-        { src: "/(.*)", dest: "/index.html", status: 200 }
-      ]
+        { handle: 'filesystem' },
+        { src: '/form', dest: '/form/index.html', status: 200 },
+        { src: '/form/', dest: '/form/index.html', status: 200 },
+        { src: '/api/credentials', dest: '/api/credentials/index.json', status: 200 },
+        { src: '/api/(.*)', dest: '/api/$1/index.json', status: 200 },
+        { src: '/(.*)', dest: '/index.html', status: 200 },
+      ],
     };
-    
+
     fs.writeFileSync('out/routes.json', JSON.stringify(routesConfig, null, 2));
   }
 

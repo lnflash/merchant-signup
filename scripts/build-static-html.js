@@ -51,6 +51,7 @@ const indexHtml = `<!DOCTYPE html>
   </style>
   <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
   <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <meta name="google-maps-api-key" content="${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}">
   <script src="/env-config.js"></script>
 </head>
 <body>
@@ -99,6 +100,7 @@ const notFoundHtml = `<!DOCTYPE html>
   </style>
   <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
   <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <meta name="google-maps-api-key" content="${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}">
   <script src="/env-config.js"></script>
 </head>
 <body>
@@ -118,6 +120,7 @@ const envConfig = `// Static build environment configuration
 window.ENV = {
   SUPABASE_URL: "${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}",
   SUPABASE_KEY: "${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}",
+  GOOGLE_MAPS_API_KEY: "${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}",
   BUILD_TIME: true,
   BUILD_DATE: "${new Date().toISOString()}"
 };
@@ -126,6 +129,7 @@ window.ENV = {
 console.log('Static build environment variables loaded:', {
   hasUrl: !!window.ENV.SUPABASE_URL,
   hasKey: !!window.ENV.SUPABASE_KEY,
+  hasGoogleMapsKey: !!window.ENV.GOOGLE_MAPS_API_KEY,
   buildTime: window.ENV.BUILD_TIME,
   buildDate: window.ENV.BUILD_DATE
 });`;
@@ -196,6 +200,7 @@ const formHtml = `<!DOCTYPE html>
   </style>
   <meta name="supabase-url" content="${process.env.NEXT_PUBLIC_SUPABASE_URL || ''}">
   <meta name="supabase-anon-key" content="${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}">
+  <meta name="google-maps-api-key" content="${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}">
   <script src="/env-config.js"></script>
 </head>
 <body>
@@ -242,6 +247,7 @@ const formHtml = `<!DOCTYPE html>
         "<ul style='list-style-type: none; padding: 0;'>" +
         "<li>Supabase URL: " + (env.SUPABASE_URL ? "✅ Available" : "❌ Missing") + "</li>" +
         "<li>Supabase Key: " + (env.SUPABASE_KEY ? "✅ Available" : "❌ Missing") + "</li>" +
+        "<li>Google Maps API Key: " + (env.GOOGLE_MAPS_API_KEY ? "✅ Available" : "❌ Missing") + "</li>" +
         "<li>Built with embedded variables: " + (env.BUILD_TIME ? "✅ Yes" : "❌ No") + "</li>" +
         "</ul>";
       
