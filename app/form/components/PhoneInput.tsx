@@ -664,10 +664,10 @@ export default function PhoneInput({
       <div className="relative">
         {/* Single integrated input field appearance */}
         <div className="flex rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 overflow-hidden transition-colors">
-          {/* Country code dropdown */}
+          {/* Country code dropdown - more compact for mobile */}
           <div className="flex-shrink-0 bg-gray-50 border-r border-gray-300 flex items-center relative">
             <select
-              className="bg-transparent appearance-none pl-2 pr-8 py-3 text-sm font-medium focus:outline-none"
+              className="bg-transparent appearance-none pl-2 pr-6 py-3 text-sm font-medium focus:outline-none max-w-[100px] sm:max-w-none"
               value={countryCode}
               onChange={handleCountryChange}
               aria-label="Country code"
@@ -676,7 +676,7 @@ export default function PhoneInput({
               <optgroup label="Most Common">
                 {COUNTRY_CODES.common.map(country => (
                   <option key={country.code} value={country.code}>
-                    {country.flag} {country.code} ({country.label})
+                    {country.flag} {country.code}
                   </option>
                 ))}
               </optgroup>
@@ -685,7 +685,7 @@ export default function PhoneInput({
               <optgroup label="Caribbean">
                 {COUNTRY_CODES.caribbean.map(country => (
                   <option key={country.code} value={country.code}>
-                    {country.flag} {country.code} ({country.label})
+                    {country.flag} {country.code}
                   </option>
                 ))}
               </optgroup>
@@ -694,7 +694,7 @@ export default function PhoneInput({
               <optgroup label="Central & South America">
                 {COUNTRY_CODES.latinAmerica.map(country => (
                   <option key={country.code} value={country.code}>
-                    {country.flag} {country.code} ({country.label})
+                    {country.flag} {country.code}
                   </option>
                 ))}
               </optgroup>
@@ -703,14 +703,14 @@ export default function PhoneInput({
               <optgroup label="Africa">
                 {COUNTRY_CODES.africa.map(country => (
                   <option key={country.code} value={country.code}>
-                    {country.flag} {country.code} ({country.label})
+                    {country.flag} {country.code}
                   </option>
                 ))}
               </optgroup>
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-0.5">
               <svg
-                className="h-4 w-4 text-gray-500"
+                className="h-3 w-3 text-gray-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
