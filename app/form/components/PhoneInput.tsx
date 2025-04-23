@@ -245,53 +245,50 @@ export default function PhoneInput({
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
 
-      <div className="flex">
-        {/* Country code selector - reduced width */}
-        <div className="w-1/4 mr-1">
-          <select
-            className="form-select w-full h-full rounded-lg border-gray-300 shadow-sm text-sm"
-            value={countryCode}
-            onChange={handleCountryChange}
-            aria-label="Country code"
-          >
-            {COMMON_COUNTRY_CODES.map(country => (
-              <option key={country.code} value={country.code}>
-                {country.code} {country.label.split(' ')[0]}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Phone number input - increased width */}
-        <div className="relative w-3/4">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+      <div className="relative">
+        {/* Single integrated input field appearance */}
+        <div className="flex rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 overflow-hidden transition-colors">
+          {/* Country code */}
+          <div className="flex-shrink-0 bg-gray-50 border-r border-gray-300 flex items-center relative">
+            <select
+              className="bg-transparent appearance-none px-3 py-3 pr-6 text-sm font-medium focus:outline-none"
+              value={countryCode}
+              onChange={handleCountryChange}
+              aria-label="Country code"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-              />
-            </svg>
+              {COMMON_COUNTRY_CODES.map(country => (
+                <option key={country.code} value={country.code}>
+                  {country.code}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
+              <svg
+                className="h-4 w-4 text-gray-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </div>
           </div>
 
+          {/* Phone number field with auto-format */}
           <input
             id={name}
             type="tel"
-            className={`form-input input-with-icon w-full ${nationalNumber && validatePhoneNumber(`${countryCode}${nationalNumber}`) ? 'pr-10 border-green-300' : ''}`}
-            placeholder={
-              isFocused ? getExample().substring(countryCode.length + 1) : 'Enter phone number'
-            }
+            className="block w-full px-4 py-3 focus:outline-none border-0 shadow-none bg-white"
+            placeholder="(555) 123-4567"
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             value={formatNationalNumberForDisplay(nationalNumber)}
             onChange={e => {
-              // Only update the national number part (digits only)
               const digits = e.target.value.replace(/\D/g, '');
               setNationalNumber(digits);
             }}
@@ -299,9 +296,9 @@ export default function PhoneInput({
             aria-invalid={errors[name] ? 'true' : 'false'}
           />
 
-          {/* Validation icon with improved visibility */}
+          {/* Simple checkmark for valid input - appears only when valid */}
           {nationalNumber && validatePhoneNumber(`${countryCode}${nationalNumber}`) && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <div className="flex-shrink-0 flex items-center pr-3">
               <svg
                 className="h-5 w-5 text-green-500"
                 fill="none"
@@ -320,34 +317,22 @@ export default function PhoneInput({
         </div>
       </div>
 
-      {/* Hidden field for React Hook Form - handled by useEffect */}
+      {/* Hidden field for React Hook Form */}
       <Controller
         name={name}
         control={control}
         render={({ field }) => <input type="hidden" {...field} />}
       />
 
-      {/* Conditional help text with improved prioritization and feedback */}
+      {/* Minimalist feedback - only show errors or very simple help when focused */}
       {errors[name] ? (
         <p className="form-error mt-1" role="alert" id={`${name}-error`}>
           {errors[name]?.message?.toString()}
         </p>
-      ) : nationalNumber &&
-        !validatePhoneNumber(`${countryCode}${nationalNumber}`) &&
-        nationalNumber.length > 3 ? (
-        <p className="mt-1 text-xs text-amber-600">
-          {nationalNumber.length < 8
-            ? 'Number too short - enter complete number with area code'
-            : 'Enter a valid number for the selected country code'}
-        </p>
-      ) : isFocused ? (
+      ) : isFocused && !nationalNumber ? (
         <p className="mt-1 text-xs text-gray-500">
-          {nationalNumber
-            ? 'Continue typing to complete the number'
-            : `Example: ${getExample().substring(countryCode.length + 1)}`}
+          Example: {getExample().substring(countryCode.length + 1)}
         </p>
-      ) : validatePhoneNumber(`${countryCode}${nationalNumber}`) && nationalNumber ? (
-        <p className="mt-1 text-xs text-green-600">✓ Valid number</p>
       ) : null}
     </div>
   );
