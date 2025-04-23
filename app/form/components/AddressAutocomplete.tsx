@@ -174,23 +174,25 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         try {
           const place = autocompleteInstance.getPlace();
           const hasGeometry = !!(place && place.geometry && place.geometry.location);
-          const hasAddress = !!place.formatted_address;
+          const hasAddress = !!(place && place.formatted_address);
+          const formattedAddress = place && place.formatted_address ? place.formatted_address : '';
+          const placeId = place && place.place_id ? place.place_id : '';
 
           // Log the place selection with enough info for debugging
-          mapsLogger.logPlaceSelection(place.place_id, place.formatted_address, hasGeometry);
+          mapsLogger.logPlaceSelection(placeId, formattedAddress, hasGeometry);
 
-          if (hasGeometry && hasAddress) {
+          if (hasGeometry && hasAddress && place.geometry && place.geometry.location) {
             // Update form values
-            setValue('business_address', place.formatted_address, { shouldValidate: true });
-            setValue('latitude', place.geometry.location?.lat() || 0, { shouldValidate: true });
-            setValue('longitude', place.geometry.location?.lng() || 0, { shouldValidate: true });
+            setValue('business_address', formattedAddress, { shouldValidate: true });
+            setValue('latitude', place.geometry.location.lat() || 0, { shouldValidate: true });
+            setValue('longitude', place.geometry.location.lng() || 0, { shouldValidate: true });
 
             // Call the callback if provided
             if (onAddressSelect) {
               onAddressSelect(
-                place.formatted_address,
-                place.geometry.location?.lat() || 0,
-                place.geometry.location?.lng() || 0
+                formattedAddress,
+                place.geometry.location.lat() || 0,
+                place.geometry.location.lng() || 0
               );
             }
           } else {

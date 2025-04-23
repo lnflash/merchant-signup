@@ -32,7 +32,7 @@ class GoogleMapsLogger {
     const buildTime = process.env.IS_BUILD_TIME === 'true';
 
     // Determine if we're running in a client or server context
-    const context = typeof window !== 'undefined' ? 'client' : 'server';
+    const runtimeContext = typeof window !== 'undefined' ? 'client' : 'server';
 
     // Mask the API key for security
     let keyStatus = 'not set';
@@ -58,20 +58,20 @@ class GoogleMapsLogger {
     const message = `Google Maps API key status: ${keyStatus}`;
 
     // Include context information
-    const context = {
+    const contextInfo = {
       buildTime,
       environment: process.env.NODE_ENV,
-      context,
+      context: runtimeContext,
       keyPresent: !!apiKey,
       keyLength: apiKey ? apiKey.length : 0,
       ...(partial ? { partialKey: partial } : {}),
     };
 
-    logger.info(message, context);
+    logger.info(message, contextInfo);
 
     // If in development and verbose, log to console directly for easier debugging
     if (process.env.NODE_ENV === 'development' && this.options.verbose) {
-      console.info(`🗺️ ${message}`, context);
+      console.info(`🗺️ ${message}`, contextInfo);
     }
   }
 
