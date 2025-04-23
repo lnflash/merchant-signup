@@ -19,8 +19,17 @@ const loadGoogleMapsScript = (callback: () => void) => {
   // Get API key from environment variable
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-  if (!apiKey) {
-    // Using silent failure to avoid console errors
+  // The API key is required for production
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  if (!apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
+    if (isDevelopment) {
+      console.warn(
+        'Google Maps API Key not set or invalid in .env.local. Map functionality will not work properly. Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key to .env.local'
+      );
+      // In development, load without key to at least show the input field
+      loadScriptWithoutKey();
+    }
     return;
   }
 
@@ -29,9 +38,22 @@ const loadGoogleMapsScript = (callback: () => void) => {
   script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
   script.async = true;
   script.defer = true;
+  script.crossOrigin = 'anonymous'; // Add CORS attribute
   script.onload = callback;
 
   // Add script to document
+  document.head.appendChild(script);
+};
+
+// Function to load without API key (development only)
+const loadScriptWithoutKey = () => {
+  const script = document.createElement('script');
+  script.src = 'https://maps.googleapis.com/maps/api/js?libraries=places';
+  script.async = true;
+  script.defer = true;
+  script.crossOrigin = 'anonymous'; // Add CORS attribute
+
+  // No callback here as we're just showing the input without full functionality
   document.head.appendChild(script);
 };
 
@@ -59,32 +81,54 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   useEffect(() => {
     if (!isScriptLoaded || !inputElement) return;
 
-    const options: google.maps.places.AutocompleteOptions = {
-      types: ['address'],
-      fields: ['address_components', 'formatted_address', 'geometry'],
-    };
+    // Check if Google Maps and Places API is available
+    if (!window.google || !window.google.maps || !window.google.maps.places) {
+      console.warn('Google Maps Places API not loaded properly');
+      return;
+    }
 
-    const autocompleteInstance = new google.maps.places.Autocomplete(inputElement, options);
+    try {
+      const options: google.maps.places.AutocompleteOptions = {
+        types: ['address'],
+        fields: ['address_components', 'formatted_address', 'geometry'],
+      };
 
-    autocompleteInstance.addListener('place_changed', () => {
-      const place = autocompleteInstance.getPlace();
+      const autocompleteInstance = new google.maps.places.Autocomplete(inputElement, options);
 
-      if (place.geometry && place.formatted_address) {
-        // Update form values
-        setValue('business_address', place.formatted_address, { shouldValidate: true });
-        setValue('latitude', place.geometry.location?.lat() || 0, { shouldValidate: true });
-        setValue('longitude', place.geometry.location?.lng() || 0, { shouldValidate: true });
+      autocompleteInstance.addListener('place_changed', () => {
+        try {
+          const place = autocompleteInstance.getPlace();
 
-        // Call the callback if provided
-        if (onAddressSelect) {
-          onAddressSelect(
-            place.formatted_address,
-            place.geometry.location?.lat() || 0,
-            place.geometry.location?.lng() || 0
-          );
+          if (place && place.geometry && place.formatted_address) {
+            // Update form values
+            setValue('business_address', place.formatted_address, { shouldValidate: true });
+            setValue('latitude', place.geometry.location?.lat() || 0, { shouldValidate: true });
+            setValue('longitude', place.geometry.location?.lng() || 0, { shouldValidate: true });
+
+            // Call the callback if provided
+            if (onAddressSelect) {
+              onAddressSelect(
+                place.formatted_address,
+                place.geometry.location?.lat() || 0,
+                place.geometry.location?.lng() || 0
+              );
+            }
+          } else {
+            // Handle case where place doesn't have geometry or formatted address
+            console.warn('Selected place missing geometry or formatted address');
+            // Still update the address field with what the user entered
+            const manualAddress = inputElement.value;
+            if (manualAddress) {
+              setValue('business_address', manualAddress, { shouldValidate: true });
+            }
+          }
+        } catch (error) {
+          console.error('Error handling place selection:', error);
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.error('Error initializing Google Places Autocomplete:', error);
+    }
 
     // Cleanup
     return () => {

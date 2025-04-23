@@ -30,7 +30,7 @@ const nextConfig = {
   },
   images: {
     unoptimized: true, // Required for static export
-    domains: ['example.com'],
+    domains: ['example.com', 'maps.googleapis.com', 'maps.gstatic.com'],
     formats: ['image/avif', 'image/webp'],
   },
   // Headers not used with static export, but keep the config for non-static builds
@@ -45,7 +45,7 @@ const nextConfig = {
                 {
                   key: 'Content-Security-Policy',
                   value:
-                    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://challenges.cloudflare.com https://*.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.googleapis.com https://*.gstatic.com; connect-src 'self' https://*.ondigitalocean.app https://*.cloudflare.com https://*.supabase.co https://*.supabase.in https://*.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://*.cloudflare.com https://*.google.com; report-uri https://flash-merchant-signup-ov4yh.ondigitalocean.app/api/csp-report;",
+                    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://challenges.cloudflare.com https://*.googleapis.com https://*.gstatic.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://*.googleapis.com; img-src 'self' data: blob: https://*.googleapis.com https://*.gstatic.com; connect-src 'self' https://*.ondigitalocean.app https://*.cloudflare.com https://*.supabase.co https://*.supabase.in https://*.googleapis.com https://maps.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://*.cloudflare.com https://*.google.com; report-uri https://flash-merchant-signup-ov4yh.ondigitalocean.app/api/csp-report;",
                 },
                 {
                   key: 'X-Content-Type-Options',

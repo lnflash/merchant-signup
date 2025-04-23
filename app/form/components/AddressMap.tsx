@@ -25,10 +25,22 @@ export const AddressMap: React.FC<AddressMapProps> = ({
   toggleExpand,
 }) => {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const invalidApiKey = !apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
+
+  // Show warnings only in development
+  if (process.env.NODE_ENV === 'development' && invalidApiKey) {
+    console.warn(
+      'Google Maps API Key not set or invalid in .env.local. Map will not render properly. Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key to .env.local'
+    );
+  }
 
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: apiKey,
+    // Add CORS settings
+    googleMapsApiOptions: {
+      crossOrigin: 'anonymous',
+    },
   });
 
   // Map state is used in the callbacks
