@@ -2,6 +2,7 @@
 
 import { useFormContext } from 'react-hook-form';
 import { SignupFormData } from '../../../src/types';
+import PhoneInput from './PhoneInput';
 
 type StepProps = {
   currentStep: number;
@@ -95,44 +96,14 @@ export const PersonalInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
         )}
       </div>
 
-      <div className="form-group">
-        <label htmlFor="phone" className="form-label">
-          Phone Number
-          <span className="text-red-500 ml-1">*</span>
-        </label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-              />
-            </svg>
-          </div>
-          <input
-            id="phone"
-            type="tel"
-            {...register('phone')}
-            className="form-input input-with-icon"
-            placeholder="+1 (555) 123-4567"
-            aria-required="true"
-            aria-invalid={errors.phone ? 'true' : 'false'}
-          />
-        </div>
-        {errors.phone && (
-          <p className="form-error" role="alert" id="phone-error">
-            {errors.phone.message?.toString()}
-          </p>
-        )}
-        <p className="mt-1 text-xs text-gray-500">Enter your phone number with country code</p>
-      </div>
+      {/* Enhanced Phone Input component with international formatting */}
+      <PhoneInput
+        name="phone"
+        label="Phone Number"
+        required={true}
+        placeholder="+1 (555) 123-4567"
+        helpText="Enter your phone number with country code"
+      />
 
       <div className="form-group">
         <label htmlFor="email" className="form-label">

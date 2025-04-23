@@ -1,11 +1,29 @@
 import { z } from 'zod';
+import { parsePhoneNumberFromString, isValidPhoneNumber } from 'libphonenumber-js';
 
+// Advanced phone validation using libphonenumber-js
+const phoneNumberSchema = z.string().refine(value => {
+  // Allow empty string during form entry - other validation will catch this
+  if (!value) return false;
+
+  try {
+    // Try to validate the phone number
+    return isValidPhoneNumber(value) || false;
+  } catch (e) {
+    return false;
+  }
+}, 'Please enter a valid phone number');
+
+// Fallback regex pattern for environments where libphonenumber might not work
 const phoneRegex = /^\+?[0-9]{10,15}$/;
 
 // Common fields that all account types share
 const commonFields = {
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: z.string().regex(phoneRegex, 'Please enter a valid phone number'),
+  phone: z.union([
+    phoneNumberSchema,
+    z.string().regex(phoneRegex, 'Please enter a valid phone number with country code'),
+  ]),
   email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
   terms_accepted: z.literal(true, {
     errorMap: () => ({ message: 'You must accept the terms and conditions' }),
@@ -92,7 +110,10 @@ export const signupFormSchema = z.discriminatedUnion('account_type', [
 // For backward compatibility - these are used elsewhere in the codebase
 export const personInfoSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  phone: z.string().regex(phoneRegex, 'Please enter a valid phone number'),
+  phone: z.union([
+    phoneNumberSchema,
+    z.string().regex(phoneRegex, 'Please enter a valid phone number with country code'),
+  ]),
   email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
 });
 

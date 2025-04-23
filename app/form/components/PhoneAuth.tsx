@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { logger } from '../../../src/utils/logger';
+import { parsePhoneNumberFromString, isValidPhoneNumber } from 'libphonenumber-js';
 
 interface PhoneAuthProps {
   onAuthenticated: (userId: string, phoneNumber: string) => void;
@@ -13,8 +14,26 @@ const phoneAuthSchema = z.object({
   phoneNumber: z
     .string()
     .min(10, 'Phone number is too short')
-    .regex(/^\+?[0-9]{10,15}$/, 'Phone number must be valid format')
-    .transform(val => val.replace(/\s+/g, '')), // Remove spaces
+    .refine(value => {
+      // Try to validate with libphonenumber-js
+      try {
+        // First check if it's a valid phone number
+        return isValidPhoneNumber(value) || false;
+      } catch (e) {
+        // Fallback to regex if the library fails
+        return /^\+?[0-9]{10,15}$/.test(value);
+      }
+    }, 'Phone number must be in valid international format with country code')
+    .transform(val => {
+      // Format the phone number if possible
+      try {
+        const phoneNumber = parsePhoneNumberFromString(val);
+        return phoneNumber ? phoneNumber.formatInternational() : val.replace(/\s+/g, '');
+      } catch (e) {
+        // Just remove spaces if formatting fails
+        return val.replace(/\s+/g, '');
+      }
+    }),
   verificationCode: z
     .string()
     .length(6, 'Verification code must be 6 digits')

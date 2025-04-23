@@ -56,11 +56,48 @@ export default function SignupForm() {
         return;
       }
 
-      if (!values.phone || !/^\+?[0-9]{10,15}$/.test(values.phone)) {
-        methods.setError('phone', { message: 'Valid phone number is required' });
+      // Validate phone number using libphonenumber-js
+      if (!values.phone) {
+        methods.setError('phone', { message: 'Phone number is required' });
         setCurrentStep(1);
         isValid = false;
         return;
+      }
+
+      try {
+        // Use dynamically imported module to avoid SSR issues
+        import('libphonenumber-js')
+          .then(({ parsePhoneNumberFromString }) => {
+            const phoneNumber = parsePhoneNumberFromString(values.phone);
+
+            if (!phoneNumber || !phoneNumber.isValid()) {
+              methods.setError('phone', {
+                message: 'Valid phone number with country code is required',
+              });
+              setCurrentStep(1);
+              isValid = false;
+            }
+          })
+          .catch(() => {
+            // Fallback if import fails
+            if (!/^\+?[0-9]{10,15}$/.test(values.phone)) {
+              methods.setError('phone', {
+                message: 'Valid phone number with country code is required',
+              });
+              setCurrentStep(1);
+              isValid = false;
+            }
+          });
+      } catch (e) {
+        // Fallback validation if libphonenumber-js fails
+        if (!/^\+?[0-9]{10,15}$/.test(values.phone)) {
+          methods.setError('phone', {
+            message: 'Valid phone number with country code is required',
+          });
+          setCurrentStep(1);
+          isValid = false;
+          return;
+        }
       }
 
       // Business fields validation for Professional accounts (required)
