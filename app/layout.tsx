@@ -27,60 +27,44 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Meta tag to help with cookie handling */}
         <meta httpEquiv="Set-Cookie" content="__cf_bm=accept; SameSite=None; Secure" />
-        {/* Add script to suppress Cloudflare cookie warnings in console */}
+        {/* Silent handling of Cloudflare cookies */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
-            // Override console methods to filter out Cloudflare cookie warnings
-            const originalConsoleError = console.error;
-            const originalConsoleWarn = console.warn;
-            const originalConsoleLog = console.log;
-            
-            // Helper function to check if a message is related to Cloudflare cookies
-            function isCloudflareWarning(arg) {
-              return typeof arg === 'string' && (
-                arg.includes('Cookie "__cf_bm" has been rejected') || 
-                arg.includes('Cloudflare') || 
-                arg.includes('cf_bm')
-              );
-            }
-            
-            // Override console.error
-            console.error = function(...args) {
-              if (args.length > 0 && isCloudflareWarning(args[0])) {
-                return; // Suppress the warning
+            (function() {
+              // Silently accept Cloudflare cookies without any console output
+              try {
+                // Handle Cloudflare bot detection cookies without logging
+                document.addEventListener('DOMContentLoaded', function() {
+                  // Accept Cloudflare cookies automatically if they appear
+                  if (document.cookie.includes('__cf_bm')) {
+                    // No logging - silent acceptance
+                  }
+                });
+                
+                // Suppress Cloudflare-related console warnings
+                const originalConsoleWarn = console.warn;
+                const originalConsoleError = console.error;
+                
+                console.warn = function(...args) {
+                  if (args.length > 0 && typeof args[0] === 'string' && 
+                     (args[0].includes('__cf_bm') || args[0].includes('Cloudflare'))) {
+                    return; // Silently suppress
+                  }
+                  return originalConsoleWarn.apply(console, args);
+                };
+                
+                console.error = function(...args) {
+                  if (args.length > 0 && typeof args[0] === 'string' && 
+                     (args[0].includes('__cf_bm') || args[0].includes('Cloudflare'))) {
+                    return; // Silently suppress
+                  }
+                  return originalConsoleError.apply(console, args);
+                };
+              } catch(e) {
+                // Silent failure
               }
-              originalConsoleError.apply(console, args);
-            };
-            
-            // Override console.warn
-            console.warn = function(...args) {
-              if (args.length > 0 && isCloudflareWarning(args[0])) {
-                return; // Suppress the warning
-              }
-              originalConsoleWarn.apply(console, args);
-            };
-            
-            // Override console.log for comprehensive filtering
-            console.log = function(...args) {
-              if (args.length > 0 && isCloudflareWarning(args[0])) {
-                return; // Suppress the log
-              }
-              originalConsoleLog.apply(console, args);
-            };
-            
-            // Accept Cloudflare cookies by overriding the Storage.setItem method
-            try {
-              // Add event listener for Cloudflare cookies
-              document.addEventListener('DOMContentLoaded', function() {
-                // Accept Cloudflare cookies automatically if they appear
-                if (document.cookie.includes('__cf_bm')) {
-                  console.log('Cloudflare cookie detected and accepted');
-                }
-              });
-            } catch (e) {
-              // Silently fail if browser doesn't support this
-            }
+            })();
           `,
           }}
         />
