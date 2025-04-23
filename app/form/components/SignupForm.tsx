@@ -447,8 +447,8 @@ export default function SignupForm() {
 
         {/* Each step component handles its own next/back buttons now */}
 
-        {/* Add Test Submit button for debugging */}
-        <TestSubmit />
+        {/* Add Test Submit button for admin user only */}
+        {authService.currentUser?.email === 'admin@bobodread.com' && <TestSubmit />}
       </form>
     </FormProvider>
   );

@@ -2,6 +2,10 @@
 
 import { useState } from 'react';
 
+/**
+ * Admin-only component for testing API endpoints
+ * @see This component is conditionally rendered only for admin@bobodread.com
+ */
 export default function TestSubmit() {
   const [response, setResponse] = useState(null);
   const [error, setError] = useState(null);
