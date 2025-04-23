@@ -10,7 +10,7 @@ import {
 } from 'libphonenumber-js';
 import examples from 'libphonenumber-js/examples.mobile.json';
 
-// A list of common country codes for the dropdown, with Caribbean focus
+// Country codes for the phone number dropdown
 const COMMON_COUNTRY_CODES = [
   // Most common codes first
   {
@@ -20,7 +20,8 @@ const COMMON_COUNTRY_CODES = [
     example: '(201) 555-0123',
     format: '(XXX) XXX-XXXX',
   },
-  // Caribbean codes grouped together
+
+  // Caribbean codes
   {
     code: '+1242',
     label: 'Bahamas',
@@ -63,7 +64,371 @@ const COMMON_COUNTRY_CODES = [
     example: '291-1234',
     format: 'XXX-XXXX',
   },
-  // Other international
+
+  // Requested additions: Italy and Uzbekistan
+  {
+    code: '+39',
+    label: 'Italy',
+    flag: '🇮🇹',
+    example: '312 345 6789',
+    format: 'XXX XXX XXXX',
+  },
+  {
+    code: '+998',
+    label: 'Uzbekistan',
+    flag: '🇺🇿',
+    example: '90 123 45 67',
+    format: 'XX XXX XX XX',
+  },
+
+  // Central & South American countries
+  {
+    code: '+52',
+    label: 'Mexico',
+    flag: '🇲🇽',
+    example: '222 123 4567',
+    format: 'XXX XXX XXXX',
+  },
+  {
+    code: '+501',
+    label: 'Belize',
+    flag: '🇧🇿',
+    example: '610 1234',
+    format: 'XXX XXXX',
+  },
+  {
+    code: '+502',
+    label: 'Guatemala',
+    flag: '🇬🇹',
+    example: '5123 4567',
+    format: 'XXXX XXXX',
+  },
+  {
+    code: '+503',
+    label: 'El Salvador',
+    flag: '🇸🇻',
+    example: '7123 4567',
+    format: 'XXXX XXXX',
+  },
+  {
+    code: '+504',
+    label: 'Honduras',
+    flag: '🇭🇳',
+    example: '9123 4567',
+    format: 'XXXX XXXX',
+  },
+  {
+    code: '+505',
+    label: 'Nicaragua',
+    flag: '🇳🇮',
+    example: '8123 4567',
+    format: 'XXXX XXXX',
+  },
+  {
+    code: '+506',
+    label: 'Costa Rica',
+    flag: '🇨🇷',
+    example: '8123 4567',
+    format: 'XXXX XXXX',
+  },
+  {
+    code: '+507',
+    label: 'Panama',
+    flag: '🇵🇦',
+    example: '6123 4567',
+    format: 'XXXX XXXX',
+  },
+  {
+    code: '+54',
+    label: 'Argentina',
+    flag: '🇦🇷',
+    example: '11 1234 5678',
+    format: 'XX XXXX XXXX',
+  },
+  {
+    code: '+55',
+    label: 'Brazil',
+    flag: '🇧🇷',
+    example: '11 91234 5678',
+    format: 'XX XXXXX XXXX',
+  },
+  {
+    code: '+56',
+    label: 'Chile',
+    flag: '🇨🇱',
+    example: '9 1234 5678',
+    format: 'X XXXX XXXX',
+  },
+  {
+    code: '+57',
+    label: 'Colombia',
+    flag: '🇨🇴',
+    example: '321 123 4567',
+    format: 'XXX XXX XXXX',
+  },
+  {
+    code: '+58',
+    label: 'Venezuela',
+    flag: '🇻🇪',
+    example: '412 123 4567',
+    format: 'XXX XXX XXXX',
+  },
+  {
+    code: '+591',
+    label: 'Bolivia',
+    flag: '🇧🇴',
+    example: '7123 4567',
+    format: 'XXXX XXXX',
+  },
+  {
+    code: '+593',
+    label: 'Ecuador',
+    flag: '🇪🇨',
+    example: '99 123 4567',
+    format: 'XX XXX XXXX',
+  },
+  {
+    code: '+595',
+    label: 'Paraguay',
+    flag: '🇵🇾',
+    example: '961 456 789',
+    format: 'XXX XXX XXX',
+  },
+  {
+    code: '+51',
+    label: 'Peru',
+    flag: '🇵🇪',
+    example: '912 345 678',
+    format: 'XXX XXX XXX',
+  },
+  {
+    code: '+598',
+    label: 'Uruguay',
+    flag: '🇺🇾',
+    example: '94 231 234',
+    format: 'XX XXX XXX',
+  },
+
+  // African countries
+  {
+    code: '+20',
+    label: 'Egypt',
+    flag: '🇪🇬',
+    example: '10 1234 5678',
+    format: 'XX XXXX XXXX',
+  },
+  {
+    code: '+212',
+    label: 'Morocco',
+    flag: '🇲🇦',
+    example: '61 234 5678',
+    format: 'XX XXX XXXX',
+  },
+  {
+    code: '+213',
+    label: 'Algeria',
+    flag: '🇩🇿',
+    example: '551 23 45 67',
+    format: 'XXX XX XX XX',
+  },
+  {
+    code: '+216',
+    label: 'Tunisia',
+    flag: '🇹🇳',
+    example: '20 123 456',
+    format: 'XX XXX XXX',
+  },
+  {
+    code: '+218',
+    label: 'Libya',
+    flag: '🇱🇾',
+    example: '91 234 5678',
+    format: 'XX XXX XXXX',
+  },
+  {
+    code: '+220',
+    label: 'Gambia',
+    flag: '🇬🇲',
+    example: '301 2345',
+    format: 'XXX XXXX',
+  },
+  {
+    code: '+221',
+    label: 'Senegal',
+    flag: '🇸🇳',
+    example: '70 123 45 67',
+    format: 'XX XXX XX XX',
+  },
+  {
+    code: '+223',
+    label: 'Mali',
+    flag: '🇲🇱',
+    example: '65 01 23 45',
+    format: 'XX XX XX XX',
+  },
+  {
+    code: '+225',
+    label: "Côte d'Ivoire",
+    flag: '🇨🇮',
+    example: '01 23 45 67',
+    format: 'XX XX XX XX',
+  },
+  {
+    code: '+227',
+    label: 'Niger',
+    flag: '🇳🇪',
+    example: '90 12 34 56',
+    format: 'XX XX XX XX',
+  },
+  {
+    code: '+229',
+    label: 'Benin',
+    flag: '🇧🇯',
+    example: '90 12 34 56',
+    format: 'XX XX XX XX',
+  },
+  {
+    code: '+231',
+    label: 'Liberia',
+    flag: '🇱🇷',
+    example: '4 123 4567',
+    format: 'X XXX XXXX',
+  },
+  {
+    code: '+233',
+    label: 'Ghana',
+    flag: '🇬🇭',
+    example: '23 123 4567',
+    format: 'XX XXX XXXX',
+  },
+  {
+    code: '+234',
+    label: 'Nigeria',
+    flag: '🇳🇬',
+    example: '701 234 5678',
+    format: 'XXX XXX XXXX',
+  },
+  {
+    code: '+237',
+    label: 'Cameroon',
+    flag: '🇨🇲',
+    example: '6 71 23 45 67',
+    format: 'X XX XX XX XX',
+  },
+  {
+    code: '+241',
+    label: 'Gabon',
+    flag: '🇬🇦',
+    example: '06 03 12 34',
+    format: 'XX XX XX XX',
+  },
+  {
+    code: '+243',
+    label: 'DR Congo',
+    flag: '🇨🇩',
+    example: '991 234 567',
+    format: 'XXX XXX XXX',
+  },
+  {
+    code: '+244',
+    label: 'Angola',
+    flag: '🇦🇴',
+    example: '923 123 456',
+    format: 'XXX XXX XXX',
+  },
+  {
+    code: '+250',
+    label: 'Rwanda',
+    flag: '🇷🇼',
+    example: '720 123 456',
+    format: 'XXX XXX XXX',
+  },
+  {
+    code: '+251',
+    label: 'Ethiopia',
+    flag: '🇪🇹',
+    example: '91 123 4567',
+    format: 'XX XXX XXXX',
+  },
+  {
+    code: '+254',
+    label: 'Kenya',
+    flag: '🇰🇪',
+    example: '712 345 678',
+    format: 'XXX XXX XXX',
+  },
+  {
+    code: '+255',
+    label: 'Tanzania',
+    flag: '🇹🇿',
+    example: '621 234 567',
+    format: 'XXX XXX XXX',
+  },
+  {
+    code: '+256',
+    label: 'Uganda',
+    flag: '🇺🇬',
+    example: '712 345 678',
+    format: 'XXX XXX XXX',
+  },
+  {
+    code: '+260',
+    label: 'Zambia',
+    flag: '🇿🇲',
+    example: '95 5123456',
+    format: 'XX XXXXXXX',
+  },
+  {
+    code: '+263',
+    label: 'Zimbabwe',
+    flag: '🇿🇼',
+    example: '71 234 5678',
+    format: 'XX XXX XXXX',
+  },
+  {
+    code: '+264',
+    label: 'Namibia',
+    flag: '🇳🇦',
+    example: '81 123 4567',
+    format: 'XX XXX XXXX',
+  },
+  {
+    code: '+265',
+    label: 'Malawi',
+    flag: '🇲🇼',
+    example: '991 234 567',
+    format: 'XXX XXX XXX',
+  },
+  {
+    code: '+266',
+    label: 'Lesotho',
+    flag: '🇱🇸',
+    example: '5012 3456',
+    format: 'XXXX XXXX',
+  },
+  {
+    code: '+267',
+    label: 'Botswana',
+    flag: '🇧🇼',
+    example: '71 123 456',
+    format: 'XX XXX XXX',
+  },
+  {
+    code: '+268',
+    label: 'Eswatini',
+    flag: '🇸🇿',
+    example: '7612 3456',
+    format: 'XXXX XXXX',
+  },
+  {
+    code: '+27',
+    label: 'South Africa',
+    flag: '🇿🇦',
+    example: '71 123 4567',
+    format: 'XX XXX XXXX',
+  },
+
+  // Other common international
   {
     code: '+44',
     label: 'UK',
@@ -292,19 +657,109 @@ export default function PhoneInput({
       <div className="relative">
         {/* Single integrated input field appearance */}
         <div className="flex rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 overflow-hidden transition-colors">
-          {/* Country code with flag */}
+          {/* Country code with flag - improved for larger country list */}
           <div className="flex-shrink-0 bg-gray-50 border-r border-gray-300 flex items-center relative">
             <select
               className="bg-transparent appearance-none pl-2 pr-8 py-3 text-sm font-medium focus:outline-none"
               value={countryCode}
               onChange={handleCountryChange}
               aria-label="Country code"
+              style={{ maxHeight: '300px' }}
             >
-              {COMMON_COUNTRY_CODES.map(country => (
-                <option key={country.code} value={country.code}>
-                  {country.flag} {country.code}
-                </option>
-              ))}
+              <optgroup label="Most Common">
+                <option value="+1">🇺🇸 +1 (US/Canada)</option>
+              </optgroup>
+
+              <optgroup label="Caribbean">
+                {COMMON_COUNTRY_CODES.filter(c =>
+                  ['+1242', '+1246', '+1284', '+1345', '+1876', '+1868'].includes(c.code)
+                ).map(country => (
+                  <option key={country.code} value={country.code}>
+                    {country.flag} {country.code} ({country.label})
+                  </option>
+                ))}
+              </optgroup>
+
+              <optgroup label="Central & South America">
+                {COMMON_COUNTRY_CODES.filter(c =>
+                  [
+                    '+52',
+                    '+501',
+                    '+502',
+                    '+503',
+                    '+504',
+                    '+505',
+                    '+506',
+                    '+507',
+                    '+54',
+                    '+55',
+                    '+56',
+                    '+57',
+                    '+58',
+                    '+591',
+                    '+593',
+                    '+595',
+                    '+51',
+                    '+598',
+                  ].includes(c.code)
+                ).map(country => (
+                  <option key={country.code} value={country.code}>
+                    {country.flag} {country.code} ({country.label})
+                  </option>
+                ))}
+              </optgroup>
+
+              <optgroup label="Africa">
+                {COMMON_COUNTRY_CODES.filter(c =>
+                  [
+                    '+20',
+                    '+212',
+                    '+213',
+                    '+216',
+                    '+218',
+                    '+220',
+                    '+221',
+                    '+223',
+                    '+225',
+                    '+227',
+                    '+229',
+                    '+231',
+                    '+233',
+                    '+234',
+                    '+237',
+                    '+241',
+                    '+243',
+                    '+244',
+                    '+250',
+                    '+251',
+                    '+254',
+                    '+255',
+                    '+256',
+                    '+260',
+                    '+263',
+                    '+264',
+                    '+265',
+                    '+266',
+                    '+267',
+                    '+268',
+                    '+27',
+                  ].includes(c.code)
+                ).map(country => (
+                  <option key={country.code} value={country.code}>
+                    {country.flag} {country.code} ({country.label})
+                  </option>
+                ))}
+              </optgroup>
+
+              <optgroup label="Other Countries">
+                {COMMON_COUNTRY_CODES.filter(c =>
+                  ['+39', '+998', '+44', '+61'].includes(c.code)
+                ).map(country => (
+                  <option key={country.code} value={country.code}>
+                    {country.flag} {country.code} ({country.label})
+                  </option>
+                ))}
+              </optgroup>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1">
               <svg
