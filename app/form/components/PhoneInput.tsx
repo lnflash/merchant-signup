@@ -10,16 +10,20 @@ import {
 } from 'libphonenumber-js';
 import examples from 'libphonenumber-js/examples.mobile.json';
 
-// A list of common country codes for the dropdown
+// A list of common country codes for the dropdown, with Caribbean focus
 const COMMON_COUNTRY_CODES = [
+  // Most common codes first
   { code: '+1', label: '🇺🇸 +1 (US/Canada)' },
-  { code: '+44', label: '🇬🇧 +44 (UK)' },
+  // Caribbean codes grouped together
   { code: '+1242', label: '🇧🇸 +1242 (Bahamas)' },
   { code: '+1246', label: '🇧🇧 +1246 (Barbados)' },
-  { code: '+1868', label: '🇹🇹 +1868 (Trinidad & Tobago)' },
+  { code: '+1284', label: '🇻🇬 +1284 (BVI)' },
+  { code: '+1345', label: '🇰🇾 +1345 (Cayman)' },
   { code: '+1876', label: '🇯🇲 +1876 (Jamaica)' },
-  { code: '+1284', label: '🇻🇬 +1284 (British Virgin Islands)' },
-  { code: '+1345', label: '🇰🇾 +1345 (Cayman Islands)' },
+  { code: '+1868', label: '🇹🇹 +1868 (Trinidad)' },
+  // Other international
+  { code: '+44', label: '🇬🇧 +44 (UK)' },
+  { code: '+61', label: '🇦🇺 +61 (Australia)' },
 ];
 
 interface PhoneInputProps {
@@ -34,8 +38,9 @@ export default function PhoneInput({
   name,
   label,
   required = false,
-  placeholder = '',
-  helpText = 'Enter your phone number with country code',
+  // These props are kept for API compatibility but not directly used
+  placeholder: _placeholder = '',
+  helpText: _helpText = 'Enter your phone number with country code',
 }: PhoneInputProps) {
   // Use React Hook Form context
   const {
@@ -188,27 +193,47 @@ export default function PhoneInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Format the national number for display
+  // Enhanced formatting for better readability
   const formatNationalNumberForDisplay = (number: string) => {
     if (!number) return '';
 
-    // Simple formatting: XXX-XXX-XXXX or XXX-XXXX depending on length
-    if (number.length <= 4) {
-      return number;
-    } else if (number.length <= 7) {
-      return `${number.substring(0, 3)}-${number.substring(3)}`;
-    } else {
-      // For number with 10 or more digits (standard US/CA)
-      const lastFour = number.substring(number.length - 4);
-      const middlePart = number.substring(Math.max(0, number.length - 7), number.length - 4);
-      const firstPart = number.substring(0, Math.max(0, number.length - 7));
+    try {
+      // Try to use AsYouType formatter for best formatting
+      const formatter = new AsYouType();
+      const formatted = formatter.input(`${countryCode}${number}`);
 
-      if (middlePart && firstPart) {
-        return `${firstPart}-${middlePart}-${lastFour}`;
-      } else if (middlePart) {
-        return `${middlePart}-${lastFour}`;
+      // Remove the country code part if present
+      if (formatted.startsWith(countryCode)) {
+        return formatted.substring(countryCode.length).trim();
+      }
+
+      return formatted;
+    } catch (e) {
+      // Fallback to simple formatting if AsYouType fails
+      if (number.length <= 4) {
+        return number;
+      } else if (number.length <= 7) {
+        return `${number.substring(0, 3)}-${number.substring(3)}`;
+      } else if (number.length === 10) {
+        // Format like (XXX) XXX-XXXX for 10 digit numbers (US/Canada style)
+        return `(${number.substring(0, 3)}) ${number.substring(3, 6)}-${number.substring(6)}`;
       } else {
-        return lastFour;
+        // For other numbers, use groups of 3-4 digits where possible
+        const groups = [];
+        let remaining = number;
+
+        // Handle groups of 3 or 4
+        while (remaining.length > 4) {
+          groups.push(remaining.substring(0, 3));
+          remaining = remaining.substring(3);
+        }
+
+        // Add the final group
+        if (remaining) {
+          groups.push(remaining);
+        }
+
+        return groups.join('-');
       }
     }
   };
@@ -221,24 +246,24 @@ export default function PhoneInput({
       </label>
 
       <div className="flex">
-        {/* Country code selector */}
-        <div className="w-1/3 mr-2">
+        {/* Country code selector - reduced width */}
+        <div className="w-1/4 mr-1">
           <select
-            className="form-select w-full h-full rounded-lg border-gray-300 shadow-sm"
+            className="form-select w-full h-full rounded-lg border-gray-300 shadow-sm text-sm"
             value={countryCode}
             onChange={handleCountryChange}
             aria-label="Country code"
           >
             {COMMON_COUNTRY_CODES.map(country => (
               <option key={country.code} value={country.code}>
-                {country.label}
+                {country.code} {country.label.split(' ')[0]}
               </option>
             ))}
           </select>
         </div>
 
-        {/* Phone number input - only for the national part */}
-        <div className="relative w-2/3">
+        {/* Phone number input - increased width */}
+        <div className="relative w-3/4">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg
               className="h-5 w-5 text-gray-400"
@@ -258,8 +283,10 @@ export default function PhoneInput({
           <input
             id={name}
             type="tel"
-            className="form-input input-with-icon w-full"
-            placeholder={placeholder || getExample().substring(countryCode.length + 1)} // +1 for space
+            className={`form-input input-with-icon w-full ${nationalNumber && validatePhoneNumber(`${countryCode}${nationalNumber}`) ? 'pr-10 border-green-300' : ''}`}
+            placeholder={
+              isFocused ? getExample().substring(countryCode.length + 1) : 'Enter phone number'
+            }
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             value={formatNationalNumberForDisplay(nationalNumber)}
@@ -271,6 +298,25 @@ export default function PhoneInput({
             aria-required={required}
             aria-invalid={errors[name] ? 'true' : 'false'}
           />
+
+          {/* Validation icon with improved visibility */}
+          {nationalNumber && validatePhoneNumber(`${countryCode}${nationalNumber}`) && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <svg
+                className="h-5 w-5 text-green-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          )}
         </div>
       </div>
 
@@ -281,58 +327,28 @@ export default function PhoneInput({
         render={({ field }) => <input type="hidden" {...field} />}
       />
 
-      {errors[name] && (
+      {/* Conditional help text with improved prioritization and feedback */}
+      {errors[name] ? (
         <p className="form-error mt-1" role="alert" id={`${name}-error`}>
           {errors[name]?.message?.toString()}
         </p>
-      )}
-
-      {/* Preview of full number */}
-      <div className="mt-1 text-xs text-gray-600">
-        Full number:{' '}
-        <span className="font-medium">
-          {countryCode} {formatNationalNumberForDisplay(nationalNumber)}
-        </span>
-      </div>
-
-      {/* Validation indicator */}
-      {nationalNumber && (
-        <div className="mt-1 text-xs flex items-center">
-          {validatePhoneNumber(`${countryCode}${nationalNumber}`) ? (
-            <span className="text-green-600 flex items-center">
-              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-              Valid phone number
-            </span>
-          ) : (
-            <span className="text-amber-600 flex items-center">
-              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              {nationalNumber.length < 6
-                ? 'Incomplete phone number'
-                : 'Invalid phone number format'}
-            </span>
-          )}
-        </div>
-      )}
-
-      {helpText && !isFocused && !nationalNumber && (
-        <p className="mt-1 text-xs text-gray-500">{helpText}</p>
-      )}
-
-      {isFocused && <p className="mt-1 text-xs text-gray-500">Example: {getExample()}</p>}
+      ) : nationalNumber &&
+        !validatePhoneNumber(`${countryCode}${nationalNumber}`) &&
+        nationalNumber.length > 3 ? (
+        <p className="mt-1 text-xs text-amber-600">
+          {nationalNumber.length < 8
+            ? 'Number too short - enter complete number with area code'
+            : 'Enter a valid number for the selected country code'}
+        </p>
+      ) : isFocused ? (
+        <p className="mt-1 text-xs text-gray-500">
+          {nationalNumber
+            ? 'Continue typing to complete the number'
+            : `Example: ${getExample().substring(countryCode.length + 1)}`}
+        </p>
+      ) : validatePhoneNumber(`${countryCode}${nationalNumber}`) && nationalNumber ? (
+        <p className="mt-1 text-xs text-green-600">✓ Valid number</p>
+      ) : null}
     </div>
   );
 }
