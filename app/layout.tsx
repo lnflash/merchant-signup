@@ -27,43 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Meta tag to help with cookie handling */}
         <meta httpEquiv="Set-Cookie" content="__cf_bm=accept; SameSite=None; Secure" />
-        {/* Silent handling of Cloudflare cookies - using regular script tag with type module */}
-        <script type="module" id="cf-handler" dangerouslySetInnerHTML={{ __html: '' }} />
-        <script
-          type="module"
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Hide the script immediately to prevent it from displaying
-              document.getElementById('cf-handler').style.display = 'none';
-              
-              // Cloudflare silent handler
-              (() => {
-                try {
-                  // Silent handling
-                  document.cookie = "__cf_bm=accept; SameSite=None; Secure";
-                  
-                  // Override console to suppress CF warnings
-                  const origWarn = console.warn;
-                  const origErr = console.error;
-                  
-                  console.warn = (...args) => {
-                    if (!args[0] || typeof args[0] !== 'string' || 
-                        !(args[0].includes('__cf_bm') || args[0].includes('Cloudflare'))) {
-                      origWarn.apply(console, args);
-                    }
-                  };
-                  
-                  console.error = (...args) => {
-                    if (!args[0] || typeof args[0] !== 'string' || 
-                        !(args[0].includes('__cf_bm') || args[0].includes('Cloudflare'))) {
-                      origErr.apply(console, args);
-                    }
-                  };
-                } catch(e) {}
-              })();
-            `,
-          }}
-        />
+
+        {/* External script for Cloudflare handling - no content will be displayed */}
+        <script src="/cf-handler.js" defer></script>
       </head>
       <body className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
         <div className="max-w-4xl mx-auto p-4">
