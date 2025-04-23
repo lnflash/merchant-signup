@@ -96,11 +96,48 @@ try {
   // This matches how Supabase credentials work in the static build
   window.googleMapsApiKey = envVars.GOOGLE_MAPS_API_KEY;
 
+  // HARDCODED FALLBACK MECHANISM - this is a temporary fix
+  // If the Google Maps API key is still not set, look for it directly in all possible places
+  if (!window.googleMapsApiKey || window.googleMapsApiKey === '') {
+    console.log('⚠️ Google Maps API key not found in primary sources, checking fallbacks...');
+
+    // Check if we have a meta tag
+    const metaTag = document.querySelector('meta[name="google-maps-api-key"]');
+    if (metaTag && metaTag.getAttribute('content')) {
+      const metaContent = metaTag.getAttribute('content');
+      console.log('✅ Found Google Maps API key in meta tag, setting globals');
+      window.googleMapsApiKey = metaContent;
+      window.ENV.GOOGLE_MAPS_API_KEY = metaContent;
+    }
+
+    // Last resort - inject a temporary key or set from inline script
+    const htmlContent = document.documentElement.innerHTML;
+    const keyMatches = [
+      ...htmlContent.matchAll(/google-maps-api-key["'][^>]+content=["']([^"']+)["']/g),
+      ...htmlContent.matchAll(/googleMapsApiKey\s*=\s*["']([^"']+)["']/g),
+      ...htmlContent.matchAll(/GOOGLE_MAPS_API_KEY["']\s*:\s*["']([^"']+)["']/g),
+    ];
+
+    if (keyMatches && keyMatches.length > 0) {
+      for (const match of keyMatches) {
+        if (match && match[1] && match[1].length > 5) {
+          console.log('✅ Found Google Maps API key in HTML content, setting globals');
+          window.googleMapsApiKey = match[1];
+          window.ENV.GOOGLE_MAPS_API_KEY = match[1];
+          break;
+        }
+      }
+    }
+  }
+
   // Log information about the environment
   console.log('Environment configuration:', {
     hasSupabaseUrl: !!window.ENV.SUPABASE_URL,
     hasSupabaseKey: !!window.ENV.SUPABASE_KEY,
     hasGoogleMapsKey: !!window.ENV.GOOGLE_MAPS_API_KEY,
+    hasGoogleMapsWindow: !!window.googleMapsApiKey,
+    googleMapsKeyLength: window.googleMapsApiKey ? window.googleMapsApiKey.length : 0,
+    metaTagPresent: !!document.querySelector('meta[name="google-maps-api-key"]'),
     buildTime: true,
     source: envVars.source,
     hostname: window.location.hostname,
