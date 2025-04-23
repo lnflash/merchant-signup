@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useCallback, useState, useEffect } from 'react';
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, Marker } from '@react-google-maps/api';
 import { mapsLogger } from '../../../src/utils/mapsLogger';
+import { useGoogleMapsApi } from '../../../src/hooks/useGoogleMapsApi';
 
 interface AddressMapProps {
   latitude: number | null;
@@ -19,76 +20,62 @@ const containerStyle = {
   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)',
 };
 
+/**
+ * Enhanced address map component with better API key detection
+ * and error handling
+ */
 export const AddressMap: React.FC<AddressMapProps> = ({
   latitude,
   longitude,
   isExpanded = true,
   toggleExpand,
 }) => {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-  const invalidApiKey = !apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
-  const buildTime = process.env.IS_BUILD_TIME === 'true';
+  // Use our custom hook for Google Maps API
+  const { status, isLoaded, hasValidKey, loadScript, error } = useGoogleMapsApi();
 
-  // Log API key status on mount and set up error listeners
+  // Map state
+  const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+
+  // Load the Google Maps API on component mount
   useEffect(() => {
-    mapsLogger.logApiKeyStatus();
+    loadScript();
+  }, [loadScript]);
 
-    // Additional console logging in development for easier debugging
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🗺️ AddressMap initialized with:', {
-        hasApiKey: !!apiKey && apiKey !== 'YOUR_GOOGLE_MAPS_API_KEY_HERE',
-        keyLength: apiKey ? apiKey.length : 0,
-        buildTime,
-        environment: process.env.NODE_ENV,
-        coordinates: {
-          lat: latitude,
-          lng: longitude,
-        },
-      });
-    }
-
-    // Set up a global error listener specifically for Maps API
-    const handleGlobalError = (event: ErrorEvent) => {
-      if (event.message && event.message.includes('google.maps')) {
-        mapsLogger.logCorsIssue(event);
-      }
-    };
-
-    window.addEventListener('error', handleGlobalError);
-
-    return () => {
-      window.removeEventListener('error', handleGlobalError);
-    };
-  }, [apiKey, latitude, longitude, buildTime]);
-
-  // Show warnings only in development
-  if (process.env.NODE_ENV === 'development' && invalidApiKey) {
-    console.warn(
-      'Google Maps API Key not set or invalid in .env.local. Map will not render properly. Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key to .env.local'
-    );
-  }
-
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: apiKey,
-    // No additional options needed here
-  });
-
-  // Log when the map loads or fails to load
+  // Set status messages based on API loading state
   useEffect(() => {
-    if (isLoaded) {
-      mapsLogger.logMapLoading(true);
+    switch (status) {
+      case 'loading':
+        setStatusMessage('Loading map...');
+        break;
+      case 'no-key':
+        setStatusMessage('Maps not available - API key not configured');
+        break;
+      case 'invalid-key':
+        setStatusMessage('Maps not available - Invalid API key');
+        break;
+      case 'error':
+        setStatusMessage(`Error loading map: ${error?.message || 'Unknown error'}`);
+        break;
+      case 'ready':
+        if (!latitude || !longitude) {
+          setStatusMessage('Select an address to see the location on map');
+        } else {
+          setStatusMessage(null);
+          // Log successful map loading
+          mapsLogger.logMapLoading(true);
+        }
+        break;
     }
-  }, [isLoaded]);
+  }, [status, error, latitude, longitude]);
 
-  // Map state is used in the callbacks
-  const [, setMap] = useState<google.maps.Map | null>(null);
-
+  // Center coordinates
   const center = {
     lat: latitude || 0,
     lng: longitude || 0,
   };
 
+  // Map loading and unloading callbacks
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
   }, []);
@@ -97,14 +84,7 @@ export const AddressMap: React.FC<AddressMapProps> = ({
     setMap(null);
   }, []);
 
-  if (!isLoaded || !latitude || !longitude) {
-    return (
-      <div className="w-full h-[200px] bg-gray-100 rounded-lg flex items-center justify-center">
-        <span className="text-gray-500">No location selected</span>
-      </div>
-    );
-  }
-
+  // Show a collapsed view if not expanded
   if (!isExpanded) {
     return (
       <div className="w-full text-center">
@@ -119,6 +99,45 @@ export const AddressMap: React.FC<AddressMapProps> = ({
     );
   }
 
+  // Show loading or error state
+  if (!isLoaded || !latitude || !longitude || !hasValidKey) {
+    return (
+      <div className="w-full h-[200px] bg-gray-100 rounded-lg flex flex-col items-center justify-center p-4">
+        {!hasValidKey ? (
+          <>
+            <svg
+              className="h-8 w-8 text-amber-500 mb-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+            <span className="text-gray-500 text-center">{statusMessage || 'Map unavailable'}</span>
+          </>
+        ) : (
+          <>
+            {status === 'loading' ? (
+              <div className="animate-pulse flex space-x-2">
+                <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+                <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+                <div className="h-2 w-2 bg-blue-400 rounded-full"></div>
+              </div>
+            ) : (
+              <span className="text-gray-500">{statusMessage || 'No location selected'}</span>
+            )}
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // Render the map when everything is ready
   return (
     <div className="relative">
       <GoogleMap
@@ -131,6 +150,8 @@ export const AddressMap: React.FC<AddressMapProps> = ({
           disableDefaultUI: true,
           zoomControl: true,
           fullscreenControl: true,
+          mapTypeControl: false,
+          streetViewControl: false,
         }}
       >
         <Marker position={center} />

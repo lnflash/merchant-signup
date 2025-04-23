@@ -1,110 +1,20 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { SignupFormData } from '../../../src/types';
 import { mapsLogger } from '../../../src/utils/mapsLogger';
+import { useGoogleMapsApi } from '../../../src/hooks/useGoogleMapsApi';
 
 interface AddressAutocompleteProps {
   isRequired: boolean;
   onAddressSelect?: (address: string, lat: number, lng: number) => void;
 }
 
-const loadGoogleMapsScript = (callback: () => void) => {
-  // Check if Google Maps API is already loaded
-  if (typeof window.google !== 'undefined' && window.google.maps) {
-    mapsLogger.logScriptLoading(true);
-    callback();
-    return;
-  }
-
-  // Log API key status (without revealing the full key)
-  mapsLogger.logApiKeyStatus();
-
-  // Get API key from environment variable
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const isStaticBuild = process.env.IS_BUILD_TIME === 'true';
-  const isDevelopment = process.env.NODE_ENV === 'development';
-
-  // Debug output in development
-  if (isDevelopment) {
-    console.log('🗺️ Google Maps environment:', {
-      isDevelopment,
-      isStaticBuild,
-      hasKey: !!apiKey,
-      keyLength: apiKey ? apiKey.length : 0,
-      isPlaceholder: apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE',
-    });
-  }
-
-  if (!apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
-    if (isDevelopment) {
-      console.warn(
-        'Google Maps API Key not set or invalid in .env.local. Map functionality will not work properly. Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key to .env.local'
-      );
-      // In development, load without key to at least show the input field
-      loadScriptWithoutKey();
-    } else {
-      // In production, log the error but don't attempt to load without key
-      mapsLogger.logScriptLoading(false, new Error('API key missing or invalid in production'));
-    }
-    return;
-  }
-
-  try {
-    // Create script element
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-    script.crossOrigin = 'anonymous'; // Add CORS attribute
-
-    script.onload = () => {
-      mapsLogger.logScriptLoading(true);
-      callback();
-    };
-
-    script.onerror = error => {
-      mapsLogger.logScriptLoading(
-        false,
-        error instanceof Error ? error : new Error('Script load failed')
-      );
-    };
-
-    // Add script to document
-    document.head.appendChild(script);
-  } catch (error) {
-    mapsLogger.logScriptLoading(
-      false,
-      error instanceof Error ? error : new Error('Failed to create script element')
-    );
-  }
-};
-
-// Function to load without API key (development only)
-const loadScriptWithoutKey = () => {
-  try {
-    const script = document.createElement('script');
-    script.src = 'https://maps.googleapis.com/maps/api/js?libraries=places';
-    script.async = true;
-    script.defer = true;
-    script.crossOrigin = 'anonymous'; // Add CORS attribute
-
-    script.onload = () => {
-      console.log('🗺️ Google Maps script loaded without API key (development only)');
-    };
-
-    script.onerror = error => {
-      console.error('❌ Failed to load Google Maps script without API key', error);
-    };
-
-    // No callback here as we're just showing the input without full functionality
-    document.head.appendChild(script);
-  } catch (error) {
-    console.error('❌ Error creating script element for Google Maps', error);
-  }
-};
-
+/**
+ * Enhanced address autocomplete field that uses Google Maps Places API
+ * with better API key detection and real-time address validation
+ */
 export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   isRequired,
   onAddressSelect,
@@ -113,76 +23,87 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     register,
     setValue,
     formState: { errors },
+    watch,
   } = useFormContext<SignupFormData>();
 
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
-  const [inputElement, setInputElement] = useState<HTMLInputElement | null>(null);
+  // Track input element and autocomplete instance
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+  const [userTyping, setUserTyping] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
-  // Load the Google Maps script
+  // Current address value
+  const currentAddress = watch('business_address');
+
+  // Use custom hook to manage Google Maps API loading
+  const { status, isLoaded, hasValidKey, loadScript } = useGoogleMapsApi({ libraries: ['places'] });
+
+  // Load Google Maps API on component mount
   useEffect(() => {
-    // Set up a global error listener to catch CORS issues
-    const handleGlobalError = (event: ErrorEvent) => {
-      // Only handle Google Maps related errors
-      if (
-        event.message &&
-        (event.message.includes('google') ||
-          event.message.includes('maps') ||
-          event.message.includes('googleapis'))
-      ) {
-        // Log the CORS error with detailed debugging information
-        mapsLogger.logCorsIssue(event);
-      }
-    };
+    loadScript();
+  }, [loadScript]);
 
-    // Add the error listener
-    window.addEventListener('error', handleGlobalError);
-
-    // Load the script
-    loadGoogleMapsScript(() => {
-      setIsScriptLoaded(true);
-    });
-
-    // Clean up listener on unmount
-    return () => {
-      window.removeEventListener('error', handleGlobalError);
-    };
-  }, []);
-
-  // Initialize autocomplete when script is loaded and input is available
+  // Show appropriate status messages based on API loading state
   useEffect(() => {
-    if (!isScriptLoaded || !inputElement) return;
-
-    // Check if Google Maps and Places API is available
-    if (!window.google || !window.google.maps || !window.google.maps.places) {
-      mapsLogger.logPlacesInitialization(
-        false,
-        new Error('Google Maps Places API not loaded properly')
-      );
-      return;
+    switch (status) {
+      case 'idle':
+      case 'loading':
+        setStatusMessage('Loading address lookup...');
+        break;
+      case 'no-key':
+        setStatusMessage('Address validation not available');
+        break;
+      case 'invalid-key':
+        setStatusMessage('Invalid Maps API configuration');
+        break;
+      case 'error':
+        setStatusMessage('Error loading address validation');
+        break;
+      case 'ready':
+        setStatusMessage(null);
+        break;
     }
+  }, [status]);
+
+  // Initialize Places Autocomplete when API is loaded and input element is available
+  useEffect(() => {
+    // Only initialize when API is loaded and we have an input element
+    if (!isLoaded || !inputRef.current || autocompleteRef.current) return;
 
     try {
+      // Create autocomplete instance
       const options: google.maps.places.AutocompleteOptions = {
         types: ['address'],
         fields: ['address_components', 'formatted_address', 'geometry', 'place_id'],
       };
 
-      const autocompleteInstance = new google.maps.places.Autocomplete(inputElement, options);
+      autocompleteRef.current = new window.google.maps.places.Autocomplete(
+        inputRef.current,
+        options
+      );
+
+      // Log successful initialization
       mapsLogger.logPlacesInitialization(true);
 
-      autocompleteInstance.addListener('place_changed', () => {
+      // Add place_changed listener
+      autocompleteRef.current.addListener('place_changed', () => {
+        if (!autocompleteRef.current) return;
+
         try {
-          const place = autocompleteInstance.getPlace();
+          const place = autocompleteRef.current.getPlace();
           const hasGeometry = !!(place && place.geometry && place.geometry.location);
           const hasAddress = !!(place && place.formatted_address);
           const formattedAddress = place && place.formatted_address ? place.formatted_address : '';
           const placeId = place && place.place_id ? place.place_id : '';
 
-          // Log the place selection with enough info for debugging
+          // Log the place selection
           mapsLogger.logPlaceSelection(placeId, formattedAddress, hasGeometry);
 
+          // Clear user typing state as selection is made
+          setUserTyping(false);
+
+          // Update form with the selected address and coordinates
           if (hasGeometry && hasAddress && place.geometry && place.geometry.location) {
-            // Update form values
             setValue('business_address', formattedAddress, { shouldValidate: true });
             setValue('latitude', place.geometry.location.lat() || 0, { shouldValidate: true });
             setValue('longitude', place.geometry.location.lng() || 0, { shouldValidate: true });
@@ -196,17 +117,21 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               );
             }
           } else {
-            // Handle case where place doesn't have geometry or formatted address
+            // Handle case where selection doesn't have full data
             console.warn('Selected place missing geometry or formatted address', {
               hasGeometry,
               hasAddress,
-              placeId: place.place_id,
+              placeId,
             });
 
-            // Still update the address field with what the user entered
-            const manualAddress = inputElement.value;
+            // Still update the address field with current input value
+            const manualAddress = inputRef.current?.value;
             if (manualAddress) {
               setValue('business_address', manualAddress, { shouldValidate: true });
+
+              // Clear lat/lng since we don't have valid coordinates
+              setValue('latitude', undefined, { shouldValidate: false });
+              setValue('longitude', undefined, { shouldValidate: false });
             }
           }
         } catch (error) {
@@ -214,24 +139,42 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         }
       });
     } catch (error) {
+      // Log initialization failure
       mapsLogger.logPlacesInitialization(
         false,
-        error instanceof Error ? error : new Error('Initialization failed')
+        error instanceof Error ? error : new Error('Autocomplete initialization failed')
       );
     }
 
-    // Cleanup
+    // Cleanup listener on unmount
     return () => {
       // Google Maps doesn't expose a direct way to clean up an autocomplete
-      // but for single-page apps we generally don't need explicit cleanup
+      autocompleteRef.current = null;
     };
-  }, [isScriptLoaded, inputElement, setValue, onAddressSelect]);
+  }, [isLoaded, setValue, onAddressSelect]);
 
-  // Register the input with react-hook-form and capture element reference
-  const { ref, ...rest } = register('business_address');
+  // Handle input changes for real-time validation or to show user is typing
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUserTyping(true);
+
+    // Update form value as user types
+    setValue('business_address', e.target.value, {
+      shouldValidate: e.target.value.length > 5, // Only validate longer addresses
+    });
+
+    // Clear coordinates when user is typing (will be set when place is selected)
+    if (watch('latitude') || watch('longitude')) {
+      setValue('latitude', undefined, { shouldValidate: false });
+      setValue('longitude', undefined, { shouldValidate: false });
+    }
+  };
+
+  // Register the input with react-hook-form
+  const { ref, ...inputProps } = register('business_address');
 
   return (
     <div className="relative">
+      {/* Address Icon */}
       <div className="absolute top-3 left-3 pointer-events-none">
         <svg
           className="h-5 w-5 text-gray-400"
@@ -253,27 +196,60 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           />
         </svg>
       </div>
+
+      {/* Input Field */}
       <input
         id="business_address"
-        className="form-input input-with-icon"
+        className={`form-input input-with-icon ${
+          !hasValidKey && 'pr-12' // Extra padding if showing warning icon
+        }`}
         placeholder={isRequired ? 'Enter your business address' : 'Optional for merchants'}
         aria-required={isRequired}
         aria-invalid={errors.business_address ? 'true' : 'false'}
         ref={element => {
           // Call react-hook-form's ref
           ref(element);
-          // Store element in state instead of directly assigning to ref.current
-          setInputElement(element);
+          // Store in our local ref
+          inputRef.current = element;
         }}
-        {...rest}
+        autoComplete="off" // Disable browser's autocomplete to avoid conflicts
+        {...inputProps}
+        // Override react-hook-form's onChange with our custom handler
+        // This needs to come after {...inputProps} to ensure it takes precedence
+        onChange={handleInputChange}
       />
+
+      {/* API Status Indicator */}
+      {(!hasValidKey || status === 'error') && (
+        <div className="absolute top-3 right-3 pointer-events-none">
+          <svg
+            className="h-5 w-5 text-amber-500"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            />
+          </svg>
+        </div>
+      )}
+
+      {/* Status Message */}
+      {statusMessage && <div className="mt-1 text-xs text-amber-600">{statusMessage}</div>}
+
+      {/* Typing Indicator */}
+      {userTyping && isLoaded && !statusMessage && (
+        <div className="mt-1 text-xs text-blue-600">Type your address for suggestions...</div>
+      )}
+
+      {/* Success Indicator - address has coordinates */}
+      {!userTyping && currentAddress && watch('latitude') && watch('longitude') && (
+        <div className="mt-1 text-xs text-green-600">✓ Valid address with location data</div>
+      )}
     </div>
   );
 };
-
-// Add Google Maps API types to Window interface
-declare global {
-  interface Window {
-    google: any;
-  }
-}
