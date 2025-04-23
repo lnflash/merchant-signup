@@ -37,10 +37,7 @@ export const AddressMap: React.FC<AddressMapProps> = ({
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: apiKey,
-    // Add CORS settings
-    googleMapsApiOptions: {
-      crossOrigin: 'anonymous',
-    },
+    // No additional options needed here
   });
 
   // Map state is used in the callbacks
