@@ -62,37 +62,69 @@ export default function PhoneInput({
     }
   };
 
-  // Detect country code from the phone number
+  // Detect country code from the phone number only on initial render or when phone value changes significantly
   useEffect(() => {
     if (phoneValue && phoneValue.startsWith('+')) {
-      // Find the matching country code
-      const matchedCountry = COMMON_COUNTRY_CODES.find(cc => phoneValue.startsWith(cc.code));
+      // Find the matching country code by checking which one the phone number starts with
+      // Sort by length descending to match the longest code first (e.g. +1868 before +1)
+      const sortedCodes = [...COMMON_COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length);
 
-      if (matchedCountry) {
+      // Find the best matching country code
+      const matchedCountry = sortedCodes.find(cc => phoneValue.startsWith(cc.code));
+
+      if (matchedCountry && matchedCountry.code !== selectedCountry) {
         setSelectedCountry(matchedCountry.code);
       }
     }
-  }, [phoneValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phoneValue && phoneValue.length < 7 ? phoneValue : '', selectedCountry]);
 
   // Format phone number as user types
   const formatPhoneNumber = (value: string) => {
     // Return empty string if no value
     if (!value) return '';
 
-    // If the value doesn't start with +, add the selected country code
+    // Get the national number part if this is a change
+    let nationalNumber = '';
     let phoneNumberToFormat = value;
-    if (!value.startsWith('+')) {
-      if (value.startsWith(selectedCountry.substring(1))) {
-        // If value starts with country code digits but not +, just add +
-        phoneNumberToFormat = `+${value}`;
+
+    try {
+      // First check if we already have a properly formatted number with country code
+      if (value.startsWith('+')) {
+        const parsedNumber = parsePhoneNumberFromString(value);
+        if (parsedNumber && parsedNumber.isValid()) {
+          // Already formatted correctly, just return the input
+          return value;
+        }
+
+        // If not valid with current formatting, let's extract just the national part
+        // and reformat with the selected country code
+        COMMON_COUNTRY_CODES.forEach(country => {
+          if (value.startsWith(country.code)) {
+            nationalNumber = value.substring(country.code.length).replace(/\D/g, '');
+            phoneNumberToFormat = `${selectedCountry}${nationalNumber}`;
+            return;
+          }
+        });
       } else {
-        phoneNumberToFormat = `${selectedCountry}${value}`;
+        // If it doesn't start with +, assume it's just a national number
+        nationalNumber = value.replace(/\D/g, '');
+        phoneNumberToFormat = `${selectedCountry}${nationalNumber}`;
       }
+    } catch (e) {
+      // If something goes wrong, just use a simple approach
+      const digitsOnly = value.replace(/\D/g, '');
+      phoneNumberToFormat = `${selectedCountry}${digitsOnly}`;
     }
 
     // Format using AsYouType formatter
-    const formatter = new AsYouType();
-    return formatter.input(phoneNumberToFormat);
+    try {
+      const formatter = new AsYouType();
+      return formatter.input(phoneNumberToFormat);
+    } catch (e) {
+      // If formatter fails, return a basic format
+      return phoneNumberToFormat;
+    }
   };
 
   // Validate the phone number
@@ -112,25 +144,37 @@ export default function PhoneInput({
     const newCountryCode = e.target.value;
     setSelectedCountry(newCountryCode);
 
-    // Update the phone number with the new country code
-    let newValue = phoneValue;
+    // Extract just the phone number without any country code
+    let nationalNumber = '';
 
-    // Remove old country code if present
-    if (phoneValue.startsWith('+')) {
-      // Try to find the current country code
-      const currentCountry = COMMON_COUNTRY_CODES.find(cc => phoneValue.startsWith(cc.code));
-
-      if (currentCountry) {
-        // Remove the old country code
-        newValue = phoneValue.substring(currentCountry.code.length);
+    try {
+      // Try to parse with libphonenumber
+      const phoneNumber = parsePhoneNumberFromString(phoneValue);
+      if (phoneNumber) {
+        // Get just the national number without country code
+        nationalNumber = phoneNumber.nationalNumber || '';
       } else {
-        // If we couldn't detect the country code, just use numbers
-        newValue = phoneValue.replace(/[^0-9]/g, '');
+        // If parsing fails, try to strip the country code manually
+        COMMON_COUNTRY_CODES.forEach(country => {
+          if (phoneValue.startsWith(country.code)) {
+            nationalNumber = phoneValue.substring(country.code.length).trim();
+          }
+        });
+
+        // If we still don't have a national number, just clean the input of all non-digits
+        if (!nationalNumber) {
+          nationalNumber = phoneValue.replace(/[^\d]/g, '');
+        }
       }
+    } catch (e) {
+      // Fallback to simple regex approach
+      nationalNumber = phoneValue.replace(/^\+\d+\s*/, '').replace(/[^\d]/g, '');
     }
 
-    // Add the new country code
-    newValue = `${newCountryCode}${newValue}`;
+    // Create the new value with the new country code and the national number
+    const newValue = `${newCountryCode}${nationalNumber}`;
+
+    // Update the field value with the formatted phone number
     setValue(name, formatPhoneNumber(newValue), { shouldValidate: true });
   };
 
