@@ -28,10 +28,6 @@ class GoogleMapsLogger {
    * @param customApiKey Optional custom API key to check (for window-injected keys)
    */
   public logApiKeyStatus(customApiKey?: string): void {
-    // Get API key from environment variables or use the provided custom key
-    const apiKey = customApiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    const buildTime = process.env.IS_BUILD_TIME === 'true';
-
     // Check for window-injected API key (static builds)
     const windowApiKey = typeof window !== 'undefined' && (window as any).googleMapsApiKey;
     // Also check window.ENV which is set in static builds
@@ -40,6 +36,23 @@ class GoogleMapsLogger {
       (window as any).ENV &&
       (window as any).ENV.GOOGLE_MAPS_API_KEY;
     const hasWindowKey = !!windowApiKey || !!windowEnvApiKey;
+
+    // Determine best API key from all sources
+    let apiKey = customApiKey || '';
+
+    // If no custom key, try environment variable
+    if (!apiKey) {
+      apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+    }
+
+    // If still no key and we have window keys, use those
+    if (!apiKey && windowEnvApiKey) {
+      apiKey = windowEnvApiKey;
+    } else if (!apiKey && windowApiKey) {
+      apiKey = windowApiKey;
+    }
+
+    const buildTime = process.env.IS_BUILD_TIME === 'true';
 
     // Determine if we're running in a client or server context
     const runtimeContext = typeof window !== 'undefined' ? 'client' : 'server';
@@ -50,17 +63,12 @@ class GoogleMapsLogger {
     let keySource = 'env';
 
     // Figure out the key source
-    if (windowApiKey && !customApiKey) {
-      keySource = 'window';
-    } else if (windowEnvApiKey && !customApiKey && !windowApiKey) {
-      keySource = 'window.ENV';
-    } else if (customApiKey) {
+    if (customApiKey) {
       keySource = 'custom';
-    }
-
-    // If window.ENV has a key, use it when no custom key is provided
-    if (windowEnvApiKey && !apiKey && !customApiKey) {
-      apiKey = windowEnvApiKey;
+    } else if (windowApiKey && apiKey === windowApiKey) {
+      keySource = 'window';
+    } else if (windowEnvApiKey && apiKey === windowEnvApiKey) {
+      keySource = 'window.ENV';
     }
 
     if (apiKey) {
