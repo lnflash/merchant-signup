@@ -8,7 +8,11 @@
 console.log('🔍 Checking environment variables...');
 
 // Required environment variables
-const requiredVars = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'];
+const requiredVars = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY',
+];
 
 // Optional environment variables
 const optionalVars = ['NEXT_PUBLIC_API_BASE_URL', 'NEXT_PUBLIC_IS_DIGITALOCEAN'];
@@ -51,6 +55,14 @@ requiredVars.forEach(varName => {
   } else if (varName === 'NEXT_PUBLIC_SUPABASE_ANON_KEY') {
     // Simple length check
     if (value.length < 20) {
+      console.error(`❌ ${varName} appears to be invalid (too short)`);
+      hasErrors = true;
+    } else {
+      console.log(`✅ ${varName} is set (length: ${value.length})`);
+    }
+  } else if (varName === 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY') {
+    // Simple length check for Google Maps API key
+    if (value.length < 10) {
       console.error(`❌ ${varName} appears to be invalid (too short)`);
       hasErrors = true;
     } else {
@@ -104,8 +116,9 @@ if (isDigitalOcean) {
 
   // Important note about DigitalOcean App Platform
   console.log('\n⚠️ IMPORTANT DigitalOcean App Platform Note:');
-  console.log('   Make sure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY');
-  console.log('   are set as Runtime Environment Variables, not Build-time Environment Variables.');
+  console.log('   Make sure NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,');
+  console.log('   and NEXT_PUBLIC_GOOGLE_MAPS_API_KEY are set as Runtime Environment Variables,');
+  console.log('   not Build-time Environment Variables.');
   console.log(
     '   Build-time variables are only available during build and not when the app is running!'
   );
@@ -123,6 +136,10 @@ if (process.env.IS_BUILD_TIME === 'true') {
   console.log(
     'Supabase Key:',
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Available' : '❌ Missing'
+  );
+  console.log(
+    'Google Maps API Key:',
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? '✅ Available' : '❌ Missing'
   );
 }
 

@@ -34,7 +34,9 @@ const EnvDebug = () => {
           // Safely access window.location.href
           if (window.location && window.location.href) {
             const href = window.location.href;
-            vars['WINDOW_LOCATION'] = href.split('?')[0];
+            const urlParts = href.split('?');
+            vars['WINDOW_LOCATION'] =
+              urlParts && urlParts.length > 0 ? String(urlParts[0]) : 'incomplete-url';
           } else {
             vars['WINDOW_LOCATION'] = 'unavailable';
           }
