@@ -12,6 +12,7 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
       IS_BUILD_TIME: "true"
     
     steps:
@@ -72,6 +73,7 @@ jobs:
         {
           "supabaseUrl": "$NEXT_PUBLIC_SUPABASE_URL",
           "supabaseKey": "$NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "googleMapsApiKey": "$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
           "bucket": "id_uploads",
           "environment": "production",
           "buildTime": true,
@@ -88,16 +90,21 @@ jobs:
         window.ENV = {
           SUPABASE_URL: "$NEXT_PUBLIC_SUPABASE_URL",
           SUPABASE_KEY: "$NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          GOOGLE_MAPS_API_KEY: "$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
           BUILD_TIME: true,
           BUILD_DATE: "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
           PLATFORM: "GithubStaticDeploy",
           DEPLOY_ID: "$GITHUB_RUN_ID"
         };
         
+        // Set the Google Maps API key globally for hooks to find it
+        window.googleMapsApiKey = "$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY";
+        
         // Log that the environment variables have been loaded from the static build
         console.log('Static build environment variables loaded:', {
           hasUrl: !!window.ENV.SUPABASE_URL,
           hasKey: !!window.ENV.SUPABASE_KEY,
+          hasGoogleMapsKey: !!window.ENV.GOOGLE_MAPS_API_KEY,
           buildTime: window.ENV.BUILD_TIME,
           buildDate: window.ENV.BUILD_DATE
         });
@@ -129,15 +136,23 @@ jobs:
             echo "✅ Added supabase-anon-key meta tag to $htmlfile"
           fi
           
+          if ! grep -q 'meta name="google-maps-api-key"' "$htmlfile"; then
+            sed -i 's|<head>|<head>\n  <meta name="google-maps-api-key" content="'"$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"'">|' "$htmlfile"
+            echo "✅ Added google-maps-api-key meta tag to $htmlfile"
+          fi
+          
           # Use echo statements to create the script file - avoiding YAML heredoc issues
           echo "Creating temporary script file for injection..."
           echo '<script>' > /tmp/window-env-script.html
           echo '  window.ENV = window.ENV || {' >> /tmp/window-env-script.html
           echo '    SUPABASE_URL: "'"$NEXT_PUBLIC_SUPABASE_URL"'",' >> /tmp/window-env-script.html
           echo '    SUPABASE_KEY: "'"$NEXT_PUBLIC_SUPABASE_ANON_KEY"'",' >> /tmp/window-env-script.html
+          echo '    GOOGLE_MAPS_API_KEY: "'"$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"'",' >> /tmp/window-env-script.html
           echo '    BUILD_TIME: true,' >> /tmp/window-env-script.html
           echo '    BUILD_DATE: "'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'"' >> /tmp/window-env-script.html
           echo '  };' >> /tmp/window-env-script.html
+          echo '  // Set the Google Maps API key globally for hooks to find it' >> /tmp/window-env-script.html
+          echo '  window.googleMapsApiKey = "'"$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"'";' >> /tmp/window-env-script.html
           echo '</script>' >> /tmp/window-env-script.html
           
           # Inject the script file after title tag if window.ENV is missing
@@ -183,6 +198,7 @@ jobs:
           echo '  <meta name="viewport" content="width=device-width, initial-scale=1.0">' >> out/form/index.html
           echo '  <meta name="supabase-url" content="'"$NEXT_PUBLIC_SUPABASE_URL"'">' >> out/form/index.html
           echo '  <meta name="supabase-anon-key" content="'"$NEXT_PUBLIC_SUPABASE_ANON_KEY"'">' >> out/form/index.html
+          echo '  <meta name="google-maps-api-key" content="'"$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"'">' >> out/form/index.html
           echo '  <meta name="static-build" content="true">' >> out/form/index.html
           echo '  <meta name="build-date" content="'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'">' >> out/form/index.html
           
@@ -192,13 +208,18 @@ jobs:
           echo '    window.ENV = {' >> out/form/index.html
           echo '      SUPABASE_URL: "'"$NEXT_PUBLIC_SUPABASE_URL"'",' >> out/form/index.html
           echo '      SUPABASE_KEY: "'"$NEXT_PUBLIC_SUPABASE_ANON_KEY"'",' >> out/form/index.html
+          echo '      GOOGLE_MAPS_API_KEY: "'"$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"'",' >> out/form/index.html
           echo '      BUILD_TIME: true,' >> out/form/index.html
           echo '      BUILD_DATE: "'"$(date -u +"%Y-%m-%dT%H:%M:%SZ")"'",' >> out/form/index.html
           echo '      PLATFORM: "StaticBuild"' >> out/form/index.html
           echo '    };' >> out/form/index.html
+          echo '    // Set the Google Maps API key globally for hooks to find it' >> out/form/index.html
+          echo '    window.googleMapsApiKey = "'"$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"'";' >> out/form/index.html
           echo '    console.log("Static build environment initialized from inline script with credentials:", {' >> out/form/index.html
           echo '      hasUrl: !!window.ENV.SUPABASE_URL,' >> out/form/index.html 
           echo '      hasKey: !!window.ENV.SUPABASE_KEY,' >> out/form/index.html
+          echo '      hasGoogleMapsKey: !!window.ENV.GOOGLE_MAPS_API_KEY,' >> out/form/index.html
+          echo '      hasWindowGoogleMapsKey: !!window.googleMapsApiKey,' >> out/form/index.html
           echo '      buildTime: window.ENV.BUILD_TIME' >> out/form/index.html
           echo '    });' >> out/form/index.html
           echo '  </script>' >> out/form/index.html
@@ -226,6 +247,8 @@ jobs:
           echo '      status.innerHTML = "<h2>Environment Status</h2><ul style=\"list-style:none;padding:0\">" +' >> out/form/index.html
           echo '        "<li>Supabase URL: " + (env.SUPABASE_URL ? "✅" : "❌") + "</li>" +' >> out/form/index.html
           echo '        "<li>Supabase Key: " + (env.SUPABASE_KEY ? "✅" : "❌") + "</li>" +' >> out/form/index.html
+          echo '        "<li>Google Maps API Key: " + (env.GOOGLE_MAPS_API_KEY ? "✅" : "❌") + "</li>" +' >> out/form/index.html
+          echo '        "<li>window.googleMapsApiKey: " + (window.googleMapsApiKey ? "✅" : "❌") + "</li>" +' >> out/form/index.html
           echo '        "<li>Build Time Variables: " + (env.BUILD_TIME ? "✅" : "❌") + "</li></ul>";' >> out/form/index.html
           echo '    });' >> out/form/index.html
           echo '  </script>' >> out/form/index.html
