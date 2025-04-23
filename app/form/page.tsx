@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import SignupForm from './components/SignupForm';
 import debugEnvironment from './components/debug';
+import EnvDebug from './components/EnvDebug';
 
 export default function FormPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -74,6 +75,9 @@ export default function FormPage() {
     <div className="max-w-xl mx-auto bg-white p-8 rounded-xl shadow-md">
       {/* Removed header labels */}
       <SignupForm />
+
+      {/* Environment debugging tool - only visible in development */}
+      <EnvDebug />
     </div>
   );
 }

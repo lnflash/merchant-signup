@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { mapsLogger } from '../../../src/utils/mapsLogger';
 
 interface AddressMapProps {
   latitude: number | null;
@@ -26,6 +27,39 @@ export const AddressMap: React.FC<AddressMapProps> = ({
 }) => {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const invalidApiKey = !apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE';
+  const buildTime = process.env.IS_BUILD_TIME === 'true';
+
+  // Log API key status on mount and set up error listeners
+  useEffect(() => {
+    mapsLogger.logApiKeyStatus();
+
+    // Additional console logging in development for easier debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🗺️ AddressMap initialized with:', {
+        hasApiKey: !!apiKey && apiKey !== 'YOUR_GOOGLE_MAPS_API_KEY_HERE',
+        keyLength: apiKey ? apiKey.length : 0,
+        buildTime,
+        environment: process.env.NODE_ENV,
+        coordinates: {
+          lat: latitude,
+          lng: longitude,
+        },
+      });
+    }
+
+    // Set up a global error listener specifically for Maps API
+    const handleGlobalError = (event: ErrorEvent) => {
+      if (event.message && event.message.includes('google.maps')) {
+        mapsLogger.logCorsIssue(event);
+      }
+    };
+
+    window.addEventListener('error', handleGlobalError);
+
+    return () => {
+      window.removeEventListener('error', handleGlobalError);
+    };
+  }, [apiKey, latitude, longitude, buildTime]);
 
   // Show warnings only in development
   if (process.env.NODE_ENV === 'development' && invalidApiKey) {
@@ -39,6 +73,13 @@ export const AddressMap: React.FC<AddressMapProps> = ({
     googleMapsApiKey: apiKey,
     // No additional options needed here
   });
+
+  // Log when the map loads or fails to load
+  useEffect(() => {
+    if (isLoaded) {
+      mapsLogger.logMapLoading(true);
+    }
+  }, [isLoaded]);
 
   // Map state is used in the callbacks
   const [, setMap] = useState<google.maps.Map | null>(null);

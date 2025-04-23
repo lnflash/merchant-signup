@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { SignupFormData } from '../../../src/types';
+import { mapsLogger } from '../../../src/utils/mapsLogger';
 
 interface AddressAutocompleteProps {
   isRequired: boolean;
@@ -12,15 +13,29 @@ interface AddressAutocompleteProps {
 const loadGoogleMapsScript = (callback: () => void) => {
   // Check if Google Maps API is already loaded
   if (typeof window.google !== 'undefined' && window.google.maps) {
+    mapsLogger.logScriptLoading(true);
     callback();
     return;
   }
 
+  // Log API key status (without revealing the full key)
+  mapsLogger.logApiKeyStatus();
+
   // Get API key from environment variable
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-
-  // The API key is required for production
+  const isStaticBuild = process.env.IS_BUILD_TIME === 'true';
   const isDevelopment = process.env.NODE_ENV === 'development';
+
+  // Debug output in development
+  if (isDevelopment) {
+    console.log('🗺️ Google Maps environment:', {
+      isDevelopment,
+      isStaticBuild,
+      hasKey: !!apiKey,
+      keyLength: apiKey ? apiKey.length : 0,
+      isPlaceholder: apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE',
+    });
+  }
 
   if (!apiKey || apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
     if (isDevelopment) {
@@ -29,32 +44,65 @@ const loadGoogleMapsScript = (callback: () => void) => {
       );
       // In development, load without key to at least show the input field
       loadScriptWithoutKey();
+    } else {
+      // In production, log the error but don't attempt to load without key
+      mapsLogger.logScriptLoading(false, new Error('API key missing or invalid in production'));
     }
     return;
   }
 
-  // Create script element
-  const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-  script.async = true;
-  script.defer = true;
-  script.crossOrigin = 'anonymous'; // Add CORS attribute
-  script.onload = callback;
+  try {
+    // Create script element
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = 'anonymous'; // Add CORS attribute
 
-  // Add script to document
-  document.head.appendChild(script);
+    script.onload = () => {
+      mapsLogger.logScriptLoading(true);
+      callback();
+    };
+
+    script.onerror = error => {
+      mapsLogger.logScriptLoading(
+        false,
+        error instanceof Error ? error : new Error('Script load failed')
+      );
+    };
+
+    // Add script to document
+    document.head.appendChild(script);
+  } catch (error) {
+    mapsLogger.logScriptLoading(
+      false,
+      error instanceof Error ? error : new Error('Failed to create script element')
+    );
+  }
 };
 
 // Function to load without API key (development only)
 const loadScriptWithoutKey = () => {
-  const script = document.createElement('script');
-  script.src = 'https://maps.googleapis.com/maps/api/js?libraries=places';
-  script.async = true;
-  script.defer = true;
-  script.crossOrigin = 'anonymous'; // Add CORS attribute
+  try {
+    const script = document.createElement('script');
+    script.src = 'https://maps.googleapis.com/maps/api/js?libraries=places';
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = 'anonymous'; // Add CORS attribute
 
-  // No callback here as we're just showing the input without full functionality
-  document.head.appendChild(script);
+    script.onload = () => {
+      console.log('🗺️ Google Maps script loaded without API key (development only)');
+    };
+
+    script.onerror = error => {
+      console.error('❌ Failed to load Google Maps script without API key', error);
+    };
+
+    // No callback here as we're just showing the input without full functionality
+    document.head.appendChild(script);
+  } catch (error) {
+    console.error('❌ Error creating script element for Google Maps', error);
+  }
 };
 
 export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
@@ -72,9 +120,32 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   // Load the Google Maps script
   useEffect(() => {
+    // Set up a global error listener to catch CORS issues
+    const handleGlobalError = (event: ErrorEvent) => {
+      // Only handle Google Maps related errors
+      if (
+        event.message &&
+        (event.message.includes('google') ||
+          event.message.includes('maps') ||
+          event.message.includes('googleapis'))
+      ) {
+        // Log the CORS error with detailed debugging information
+        mapsLogger.logCorsIssue(event);
+      }
+    };
+
+    // Add the error listener
+    window.addEventListener('error', handleGlobalError);
+
+    // Load the script
     loadGoogleMapsScript(() => {
       setIsScriptLoaded(true);
     });
+
+    // Clean up listener on unmount
+    return () => {
+      window.removeEventListener('error', handleGlobalError);
+    };
   }, []);
 
   // Initialize autocomplete when script is loaded and input is available
@@ -83,23 +154,32 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
     // Check if Google Maps and Places API is available
     if (!window.google || !window.google.maps || !window.google.maps.places) {
-      console.warn('Google Maps Places API not loaded properly');
+      mapsLogger.logPlacesInitialization(
+        false,
+        new Error('Google Maps Places API not loaded properly')
+      );
       return;
     }
 
     try {
       const options: google.maps.places.AutocompleteOptions = {
         types: ['address'],
-        fields: ['address_components', 'formatted_address', 'geometry'],
+        fields: ['address_components', 'formatted_address', 'geometry', 'place_id'],
       };
 
       const autocompleteInstance = new google.maps.places.Autocomplete(inputElement, options);
+      mapsLogger.logPlacesInitialization(true);
 
       autocompleteInstance.addListener('place_changed', () => {
         try {
           const place = autocompleteInstance.getPlace();
+          const hasGeometry = !!(place && place.geometry && place.geometry.location);
+          const hasAddress = !!place.formatted_address;
 
-          if (place && place.geometry && place.formatted_address) {
+          // Log the place selection with enough info for debugging
+          mapsLogger.logPlaceSelection(place.place_id, place.formatted_address, hasGeometry);
+
+          if (hasGeometry && hasAddress) {
             // Update form values
             setValue('business_address', place.formatted_address, { shouldValidate: true });
             setValue('latitude', place.geometry.location?.lat() || 0, { shouldValidate: true });
@@ -115,7 +195,12 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             }
           } else {
             // Handle case where place doesn't have geometry or formatted address
-            console.warn('Selected place missing geometry or formatted address');
+            console.warn('Selected place missing geometry or formatted address', {
+              hasGeometry,
+              hasAddress,
+              placeId: place.place_id,
+            });
+
             // Still update the address field with what the user entered
             const manualAddress = inputElement.value;
             if (manualAddress) {
@@ -127,7 +212,10 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         }
       });
     } catch (error) {
-      console.error('Error initializing Google Places Autocomplete:', error);
+      mapsLogger.logPlacesInitialization(
+        false,
+        error instanceof Error ? error : new Error('Initialization failed')
+      );
     }
 
     // Cleanup
