@@ -17,7 +17,8 @@ This application provides a streamlined signup flow for merchants looking to acc
 - Enhanced security with CSRF protection
 - Mobile-friendly responsive design
 - Flash-branded UI aligned with the design system
-- Google Maps integration for address validation and geolocation
+- **Enhanced phone input** with support for 50+ countries and smart formatting ([details](PHONE_MAP_FEATURES.md))
+- **Google Maps integration** for address validation and interactive map display ([details](PHONE_MAP_FEATURES.md))
 
 ## Tech Stack
 
@@ -174,7 +175,21 @@ This application is designed to integrate with the Flash API. Merchant data is c
 
 ## Version History
 
-- **0.4.0** - Added Google Maps integration for address validation and geolocation, replaced phone verification with captcha
-- **0.3.0** - Added phone-based authentication, improved security with CSRF protection
-- **0.2.0** - Enhanced UI with Flash design system, improved UX, and better code organization
-- **0.1.0** - Initial release with basic signup functionality
+- **0.4.0** - Enhanced features:
+  - Added Google Maps integration for address validation and geolocation
+  - Replaced phone verification with captcha authentication for simpler onboarding
+  - Implemented international phone input with 50+ countries supported
+  - Added interactive map display for business address validation
+  - Improved mobile experience with responsive map controls
+- **0.3.0** - Authentication improvements:
+  - Added phone-based authentication
+  - Improved security with CSRF protection
+  - Enhanced error handling and validation
+- **0.2.0** - UI/UX improvements:
+  - Enhanced UI with Flash design system
+  - Improved UX and form flow
+  - Better code organization and performance optimization
+- **0.1.0** - Initial release:
+  - Basic signup functionality
+  - Core form validation
+  - Integration with Supabase backend

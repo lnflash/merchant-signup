@@ -2,6 +2,8 @@
 
 This guide will help you set up the Google Maps JavaScript API with Places Autocomplete for address validation in the Flash Merchant Signup application.
 
+For detailed information about the map and address features, see [PHONE_MAP_FEATURES.md](PHONE_MAP_FEATURES.md).
+
 ## Prerequisites
 
 1. Google Cloud Platform account

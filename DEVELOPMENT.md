@@ -10,6 +10,9 @@ This development guide provides comprehensive documentation for understanding an
 - [Project Structure](#project-structure)
 - [Form Submission Flow](#form-submission-flow)
 - [Database Schema](#database-schema)
+- [Enhanced Features](#enhanced-features)
+  - [Phone Input Component](#phone-input-component)
+  - [Google Maps Integration](#google-maps-integration)
 - [Static Build Considerations](#static-build-considerations)
 - [Common Development Tasks](#common-development-tasks)
 - [Testing](#testing)
@@ -217,6 +220,102 @@ The application uses several storage buckets with specific purposes:
 2. `formdata`: Public bucket for form submission JSON files (fallback)
 3. `public`: General purpose public bucket (secondary fallback)
 4. `forms`: Additional fallback for form data
+
+## Enhanced Features
+
+The application includes several enhanced features to improve user experience and data collection. For detailed user-facing documentation, see [PHONE_MAP_FEATURES.md](PHONE_MAP_FEATURES.md).
+
+### Phone Input Component
+
+The application includes an enhanced phone input component with support for 50+ countries.
+
+#### Implementation
+
+- **File**: `app/form/components/PhoneInput.tsx`
+- **Dependencies**: `libphonenumber-js` for formatting and validation
+- **Integration**: Used in the first step of the form
+
+The phone component is implemented with the following features:
+
+```typescript
+// Country codes structure
+const COUNTRY_CODES = {
+  common: [
+    {
+      code: '+1',
+      label: 'US/Canada',
+      flag: '🇺🇸',
+      example: '(201) 555-0123',
+      format: '(XXX) XXX-XXXX',
+    },
+    // More countries...
+  ],
+  caribbean: [
+    { code: '+1242', label: 'Bahamas', flag: '🇧🇸', example: '359-1234', format: 'XXX-XXXX' },
+    // More countries...
+  ],
+  latinAmerica: [
+    // Latin American countries...
+  ],
+  africa: [
+    // African countries...
+  ],
+};
+```
+
+The component uses React Hook Form's `Controller` pattern to maintain both the country code and national number separately while providing a single combined value to the form.
+
+#### Customization
+
+To add or modify supported countries, edit the `COUNTRY_CODES` object in `PhoneInput.tsx`. Each country requires:
+
+- `code`: International dialing code
+- `label`: Country name
+- `flag`: Emoji flag
+- `example`: Example number format
+- `format`: Format pattern for display
+
+### Google Maps Integration
+
+The application integrates Google Maps for enhanced address input with validation and geolocation.
+
+#### Components
+
+1. **AddressAutocomplete**:
+
+   - **File**: `app/form/components/AddressAutocomplete.tsx`
+   - **Purpose**: Provides address suggestions and validation using Google Places API
+
+2. **AddressMap**:
+   - **File**: `app/form/components/AddressMap.tsx`
+   - **Purpose**: Displays a map with the selected location
+
+#### API Key Configuration
+
+The Google Maps integration requires an API key configured in environment variables:
+
+```
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
+```
+
+For static builds, this key is embedded at build time via the `env` section in `next.config.js`.
+
+#### Implementation Details
+
+The map integration captures latitude and longitude coordinates when an address is selected:
+
+```typescript
+// When a place is selected from autocomplete
+setValue('business_address', place.formatted_address, { shouldValidate: true });
+setValue('latitude', place.geometry.location?.lat() || 0, { shouldValidate: true });
+setValue('longitude', place.geometry.location?.lng() || 0, { shouldValidate: true });
+```
+
+To customize or extend the map functionality, modify the following files:
+
+- `AddressAutocomplete.tsx`: For address input behavior
+- `AddressMap.tsx`: For map display options
+- `BusinessInfoStep.tsx`: For integration with the form
 
 ### Row-Level Security (RLS) Policies
 
