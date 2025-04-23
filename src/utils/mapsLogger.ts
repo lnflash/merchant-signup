@@ -34,7 +34,12 @@ class GoogleMapsLogger {
 
     // Check for window-injected API key (static builds)
     const windowApiKey = typeof window !== 'undefined' && (window as any).googleMapsApiKey;
-    const hasWindowKey = !!windowApiKey;
+    // Also check window.ENV which is set in static builds
+    const windowEnvApiKey =
+      typeof window !== 'undefined' &&
+      (window as any).ENV &&
+      (window as any).ENV.GOOGLE_MAPS_API_KEY;
+    const hasWindowKey = !!windowApiKey || !!windowEnvApiKey;
 
     // Determine if we're running in a client or server context
     const runtimeContext = typeof window !== 'undefined' ? 'client' : 'server';
@@ -44,10 +49,18 @@ class GoogleMapsLogger {
     let partial = '';
     let keySource = 'env';
 
+    // Figure out the key source
     if (windowApiKey && !customApiKey) {
       keySource = 'window';
+    } else if (windowEnvApiKey && !customApiKey && !windowApiKey) {
+      keySource = 'window.ENV';
     } else if (customApiKey) {
       keySource = 'custom';
+    }
+
+    // If window.ENV has a key, use it when no custom key is provided
+    if (windowEnvApiKey && !apiKey && !customApiKey) {
+      apiKey = windowEnvApiKey;
     }
 
     if (apiKey) {
@@ -76,6 +89,8 @@ class GoogleMapsLogger {
       context: runtimeContext,
       keySource,
       hasWindowKey,
+      hasWindowEnvKey: !!windowEnvApiKey,
+      windowENVExists: typeof window !== 'undefined' && !!(window as any).ENV,
       keyPresent: !!apiKey,
       keyLength: apiKey ? apiKey.length : 0,
       ...(partial ? { partialKey: partial } : {}),

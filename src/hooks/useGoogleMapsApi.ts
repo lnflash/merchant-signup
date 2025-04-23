@@ -77,11 +77,15 @@ export function useGoogleMapsApi(
   // Check for API key in window first (might be injected in static HTML)
   const windowApiKey = typeof window !== 'undefined' && (window as any).googleMapsApiKey;
 
+  // Also check window.ENV which is used in static builds
+  const envObjApiKey =
+    typeof window !== 'undefined' && window.ENV && window.ENV.GOOGLE_MAPS_API_KEY;
+
   // Then fallback to environment variable
   const envApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   // Use the best available key, with window taking precedence
-  const apiKey = windowApiKey || envApiKey;
+  const apiKey = windowApiKey || envObjApiKey || envApiKey;
 
   // Generate debug-safe version of key (don't log full key for security)
   const apiKeyDebug = !apiKey
@@ -104,14 +108,24 @@ export function useGoogleMapsApi(
         environment: process.env.NODE_ENV,
         isStaticBuild,
         windowApiKey: !!windowApiKey,
+        windowEnvApiKey: !!envObjApiKey,
         envApiKey: !!envApiKey,
         apiKeyDebug,
         hasValidKey,
+        windowEnvExists: typeof window !== 'undefined' && !!window.ENV,
         globalScriptStatus: globalState.status,
         googleAvailable: typeof window !== 'undefined' && !!window.google && !!window.google.maps,
       });
     }
-  }, [isDevelopment, windowApiKey, envApiKey, apiKeyDebug, hasValidKey, isStaticBuild]);
+  }, [
+    isDevelopment,
+    windowApiKey,
+    envObjApiKey,
+    envApiKey,
+    apiKeyDebug,
+    hasValidKey,
+    isStaticBuild,
+  ]);
 
   // Determine initial status based on API key and global state
   useEffect(() => {
