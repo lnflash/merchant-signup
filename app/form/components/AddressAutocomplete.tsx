@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { SignupFormData } from '../../../src/types';
 
@@ -45,10 +45,8 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     formState: { errors },
   } = useFormContext<SignupFormData>();
 
-  const inputRef = useRef<HTMLInputElement>(null);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
-  // Autocomplete instance is only used within the effect and event listener
-  const [, setAutocomplete] = useState<google.maps.places.Autocomplete | null>(null);
+  const [inputElement, setInputElement] = useState<HTMLInputElement | null>(null);
 
   // Load the Google Maps script
   useEffect(() => {
@@ -59,54 +57,44 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   // Initialize autocomplete when script is loaded and input is available
   useEffect(() => {
-    if (isScriptLoaded && inputRef.current) {
-      const options: google.maps.places.AutocompleteOptions = {
-        types: ['address'],
-        fields: ['address_components', 'formatted_address', 'geometry'],
-      };
+    if (!isScriptLoaded || !inputElement) return;
 
-      const autocompleteInstance = new google.maps.places.Autocomplete(inputRef.current, options);
+    const options: google.maps.places.AutocompleteOptions = {
+      types: ['address'],
+      fields: ['address_components', 'formatted_address', 'geometry'],
+    };
 
-      autocompleteInstance.addListener('place_changed', () => {
-        const place = autocompleteInstance.getPlace();
+    const autocompleteInstance = new google.maps.places.Autocomplete(inputElement, options);
 
-        if (place.geometry && place.formatted_address) {
-          // Update form values
-          setValue('business_address', place.formatted_address, { shouldValidate: true });
-          setValue('latitude', place.geometry.location?.lat() || 0, { shouldValidate: true });
-          setValue('longitude', place.geometry.location?.lng() || 0, { shouldValidate: true });
+    autocompleteInstance.addListener('place_changed', () => {
+      const place = autocompleteInstance.getPlace();
 
-          // Call the callback if provided
-          if (onAddressSelect) {
-            onAddressSelect(
-              place.formatted_address,
-              place.geometry.location?.lat() || 0,
-              place.geometry.location?.lng() || 0
-            );
-          }
+      if (place.geometry && place.formatted_address) {
+        // Update form values
+        setValue('business_address', place.formatted_address, { shouldValidate: true });
+        setValue('latitude', place.geometry.location?.lat() || 0, { shouldValidate: true });
+        setValue('longitude', place.geometry.location?.lng() || 0, { shouldValidate: true });
+
+        // Call the callback if provided
+        if (onAddressSelect) {
+          onAddressSelect(
+            place.formatted_address,
+            place.geometry.location?.lat() || 0,
+            place.geometry.location?.lng() || 0
+          );
         }
-      });
-
-      setAutocomplete(autocompleteInstance);
-    }
-  }, [isScriptLoaded, setValue, onAddressSelect]);
-
-  // Register the input with react-hook-form
-  const { ref, ...rest } = register('business_address');
-
-  // Create a callback ref that combines the RHF ref and our local ref
-  const setInputRef = useCallback(
-    (element: HTMLInputElement | null) => {
-      // Call the react-hook-form ref function
-      ref(element);
-
-      // Store the element in our local ref (safe approach)
-      if (element) {
-        inputRef.current = element;
       }
-    },
-    [ref]
-  );
+    });
+
+    // Cleanup
+    return () => {
+      // Google Maps doesn't expose a direct way to clean up an autocomplete
+      // but for single-page apps we generally don't need explicit cleanup
+    };
+  }, [isScriptLoaded, inputElement, setValue, onAddressSelect]);
+
+  // Register the input with react-hook-form and capture element reference
+  const { ref, ...rest } = register('business_address');
 
   return (
     <div className="relative">
@@ -137,7 +125,12 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         placeholder={isRequired ? 'Enter your business address' : 'Optional for merchants'}
         aria-required={isRequired}
         aria-invalid={errors.business_address ? 'true' : 'false'}
-        ref={setInputRef}
+        ref={element => {
+          // Call react-hook-form's ref
+          ref(element);
+          // Store element in state instead of directly assigning to ref.current
+          setInputElement(element);
+        }}
         {...rest}
       />
     </div>

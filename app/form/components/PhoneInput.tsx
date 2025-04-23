@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
-import {
-  AsYouType,
-  parsePhoneNumberFromString,
-  getExampleNumber,
-  CountryCode,
-} from 'libphonenumber-js';
+import { parsePhoneNumberFromString, getExampleNumber, CountryCode } from 'libphonenumber-js';
 import examples from 'libphonenumber-js/examples.mobile.json';
 
 // Country codes for the phone number dropdown - with categories
