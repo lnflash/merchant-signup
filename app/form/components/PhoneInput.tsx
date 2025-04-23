@@ -73,10 +73,19 @@ export default function PhoneInput({
       if (countryCodeDigits.length > 1) {
         // For longer country codes, try to match with the exact code
         COMMON_COUNTRY_CODES.forEach(country => {
-          if (country.code === countryCode) {
-            const countryName = country.label.split(' ')[0].trim();
-            if (countryName && examples[countryName as any]) {
-              example = examples[countryName as any];
+          if (country.code === countryCode && country.label) {
+            const parts = country.label.split(' ');
+            if (parts && parts.length > 0) {
+              const countryPart = parts[0];
+              if (countryPart) {
+                const countryName = countryPart.trim();
+
+                // Type-safe way to check if the example exists
+                const exampleCountry = countryName as keyof typeof examples;
+                if (countryName && examples[exampleCountry]) {
+                  example = examples[exampleCountry];
+                }
+              }
             }
           }
         });
