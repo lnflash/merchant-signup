@@ -113,9 +113,12 @@ export default function PhoneInput({
   useEffect(() => {
     // Only update if we have a national number
     if (nationalNumber) {
-      const formatter = new AsYouType();
-      const formattedNumber = formatter.input(`${countryCode}${nationalNumber}`);
-      setValue(name, formattedNumber, { shouldValidate: true });
+      // Store the raw value instead of using AsYouType
+      const fullNumber = `${countryCode}${nationalNumber}`;
+      setValue(name, fullNumber, { shouldValidate: true });
+    } else {
+      // Clear the field when national number is empty
+      setValue(name, '', { shouldValidate: false });
     }
   }, [countryCode, nationalNumber, name, setValue]);
 
@@ -242,23 +245,12 @@ export default function PhoneInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Enhanced formatting for better readability
+  // Simple formatting for display - prevents duplication issues
   const formatNationalNumberForDisplay = (number: string) => {
     if (!number) return '';
 
+    // Basic formatting without using AsYouType to avoid duplication issues
     try {
-      // Try to use AsYouType formatter for best formatting
-      const formatter = new AsYouType();
-      const formatted = formatter.input(`${countryCode}${number}`);
-
-      // Remove the country code part if present
-      if (formatted.startsWith(countryCode)) {
-        return formatted.substring(countryCode.length).trim();
-      }
-
-      return formatted;
-    } catch (e) {
-      // Fallback to simple formatting if AsYouType fails
       if (number.length <= 4) {
         return number;
       } else if (number.length <= 7) {
@@ -267,12 +259,12 @@ export default function PhoneInput({
         // Format like (XXX) XXX-XXXX for 10 digit numbers (US/Canada style)
         return `(${number.substring(0, 3)}) ${number.substring(3, 6)}-${number.substring(6)}`;
       } else {
-        // For other numbers, use groups of 3-4 digits where possible
+        // For other numbers, use groups of 2-3 digits where possible
         const groups = [];
         let remaining = number;
 
-        // Handle groups of 3 or 4
-        while (remaining.length > 4) {
+        // Handle groups of 2-3
+        while (remaining.length > 3) {
           groups.push(remaining.substring(0, 3));
           remaining = remaining.substring(3);
         }
@@ -284,6 +276,9 @@ export default function PhoneInput({
 
         return groups.join('-');
       }
+    } catch (e) {
+      // If any error occurs, just return the raw number
+      return number;
     }
   };
 
