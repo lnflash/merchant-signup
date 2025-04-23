@@ -25,6 +25,8 @@ const nextConfig = {
     // Explicitly pass Supabase credentials to be baked into the client build
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    // Pass Google Maps API key for client-side usage
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
   },
   images: {
     unoptimized: true, // Required for static export
@@ -43,7 +45,7 @@ const nextConfig = {
                 {
                   key: 'Content-Security-Policy',
                   value:
-                    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.ondigitalocean.app https://*.cloudflare.com https://*.supabase.co https://*.supabase.in; frame-src 'self' https://*.cloudflare.com; report-uri https://flash-merchant-signup-ov4yh.ondigitalocean.app/api/csp-report;",
+                    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.cloudflare.com https://challenges.cloudflare.com https://*.googleapis.com https://maps.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.googleapis.com https://*.gstatic.com; connect-src 'self' https://*.ondigitalocean.app https://*.cloudflare.com https://*.supabase.co https://*.supabase.in https://*.googleapis.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://*.cloudflare.com https://*.google.com; report-uri https://flash-merchant-signup-ov4yh.ondigitalocean.app/api/csp-report;",
                 },
                 {
                   key: 'X-Content-Type-Options',

@@ -1,7 +1,10 @@
 'use client';
 
 import { useFormContext } from 'react-hook-form';
+import { useState } from 'react';
 import { SignupFormData } from '../../../src/types';
+import { AddressAutocomplete } from './AddressAutocomplete';
+import { AddressMap } from './AddressMap';
 
 type StepProps = {
   currentStep: number;
@@ -17,6 +20,11 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     clearErrors,
   } = useFormContext<SignupFormData>();
   const accountType = watch('account_type');
+  const [mapExpanded, setMapExpanded] = useState(true);
+
+  // Watch latitude and longitude values
+  const latitude = watch('latitude');
+  const longitude = watch('longitude');
 
   if (currentStep !== 3) return null;
 
@@ -122,45 +130,48 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
             <span className="text-gray-400 text-xs ml-2">(Optional)</span>
           )}
         </label>
-        <div className="relative">
-          <div className="absolute top-3 left-3 pointer-events-none">
-            <svg
-              className="h-5 w-5 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-          </div>
-          <textarea
-            id="business_address"
-            {...register('business_address')}
-            className="form-input input-with-icon"
-            rows={3}
-            placeholder={
-              isBusinessInfoRequired ? 'Enter your business address' : 'Optional for merchants'
-            }
-            aria-required={isBusinessInfoRequired}
-            aria-invalid={errors.business_address ? 'true' : 'false'}
-          />
-        </div>
+
+        <AddressAutocomplete
+          isRequired={isBusinessInfoRequired}
+          onAddressSelect={(address, lat, lng) => {
+            setValue('business_address', address, { shouldValidate: true });
+            setValue('latitude', lat, { shouldValidate: true });
+            setValue('longitude', lng, { shouldValidate: true });
+
+            // Ensure map is expanded when address is selected
+            setMapExpanded(true);
+          }}
+        />
+
         {errors.business_address && (
           <p className="form-error" role="alert">
             {errors.business_address.message?.toString()}
           </p>
         )}
+
+        {/* Map display area - only show when address has coordinates */}
+        <div className="mt-3">
+          {latitude && longitude && (
+            <div className="md:hidden flex justify-between items-center mb-2">
+              <span className="text-sm text-gray-600">
+                {mapExpanded ? 'Location map:' : 'Location verified ✓'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setMapExpanded(!mapExpanded)}
+                className="text-sm text-blue-600 underline focus:outline-none"
+              >
+                {mapExpanded ? 'Hide map' : 'Show map'}
+              </button>
+            </div>
+          )}
+          <AddressMap
+            latitude={latitude || null}
+            longitude={longitude || null}
+            isExpanded={mapExpanded}
+            toggleExpand={() => setMapExpanded(!mapExpanded)}
+          />
+        </div>
       </div>
 
       <div className="mt-8 flex justify-between">

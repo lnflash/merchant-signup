@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
+    "@react-google-maps/api": "^2.20.6",
     "@supabase/supabase-js": "^2.38.4",
     "libphonenumber-js": "^1.12.7",
     "next": "14.0.3",
