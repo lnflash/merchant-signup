@@ -37,8 +37,72 @@ export const AddressMap: React.FC<AddressMapProps> = ({
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
+  // Diagnostic function to check all possible API key sources
+  const checkApiKey = () => {
+    // Log all possible API key sources
+    console.log('🗺️ Google Maps API Key Debug:');
+    console.log(
+      '- window.googleMapsApiKey:',
+      typeof window !== 'undefined' && !!(window as any).googleMapsApiKey
+    );
+    console.log(
+      '- window.ENV?.GOOGLE_MAPS_API_KEY:',
+      typeof window !== 'undefined' && !!(window as any).ENV?.GOOGLE_MAPS_API_KEY
+    );
+
+    // Check meta tag
+    const metaTag =
+      typeof document !== 'undefined' && document.querySelector('meta[name="google-maps-api-key"]');
+    console.log('- Meta tag present:', !!metaTag);
+    console.log(
+      '- Meta tag content:',
+      metaTag ? (metaTag.getAttribute('content') ? 'has content' : 'empty content') : 'N/A'
+    );
+
+    // Check process.env
+    console.log(
+      '- process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:',
+      !!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    );
+
+    // Check if script is in DOM
+    const script = typeof document !== 'undefined' && document.getElementById('google-maps-script');
+    console.log('- Google Maps script in DOM:', !!script);
+
+    // Get content of window.ENV
+    if (typeof window !== 'undefined' && (window as any).ENV) {
+      console.log('- window.ENV object:', Object.keys((window as any).ENV));
+    } else {
+      console.log('- window.ENV object: not found');
+    }
+  };
+
   // Load the Google Maps API on component mount
   useEffect(() => {
+    // Run diagnostic check
+    checkApiKey();
+
+    // Try to manually set the key for debugging
+    if (
+      typeof window !== 'undefined' &&
+      document.querySelector('meta[name="google-maps-api-key"]')
+    ) {
+      const metaTag = document.querySelector('meta[name="google-maps-api-key"]');
+      const metaContent = metaTag?.getAttribute('content');
+
+      if (metaContent && !window.googleMapsApiKey) {
+        console.log('🗺️ Setting window.googleMapsApiKey from meta tag');
+        (window as any).googleMapsApiKey = metaContent;
+
+        // Also set it in window.ENV if it exists
+        if ((window as any).ENV) {
+          console.log('🗺️ Setting window.ENV.GOOGLE_MAPS_API_KEY from meta tag');
+          (window as any).ENV.GOOGLE_MAPS_API_KEY = metaContent;
+        }
+      }
+    }
+
+    // Now call the load script
     loadScript();
   }, [loadScript]);
 

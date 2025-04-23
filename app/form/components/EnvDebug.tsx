@@ -59,6 +59,37 @@ const EnvDebug = () => {
             vars['WINDOW_GOOGLE_MAPS_API_KEY'] = 'not set';
           }
 
+          // Check for window.ENV.GOOGLE_MAPS_API_KEY
+          if ((window as any).ENV && (window as any).ENV.GOOGLE_MAPS_API_KEY) {
+            const key = (window as any).ENV.GOOGLE_MAPS_API_KEY as string;
+            if (key.length > 10) {
+              vars['WINDOW_ENV_GOOGLE_MAPS_API_KEY'] =
+                `${key.substring(0, 3)}...${key.substring(key.length - 3)}`;
+            } else if (key) {
+              vars['WINDOW_ENV_GOOGLE_MAPS_API_KEY'] = '****';
+            } else {
+              vars['WINDOW_ENV_GOOGLE_MAPS_API_KEY'] = 'empty';
+            }
+          } else {
+            vars['WINDOW_ENV_GOOGLE_MAPS_API_KEY'] = 'not set';
+          }
+
+          // Check for Google Maps API key meta tag
+          const metaGoogleMapsApiKey = document.querySelector('meta[name="google-maps-api-key"]');
+          if (metaGoogleMapsApiKey) {
+            const key = metaGoogleMapsApiKey.getAttribute('content') || '';
+            if (key.length > 10) {
+              vars['META_GOOGLE_MAPS_API_KEY'] =
+                `${key.substring(0, 3)}...${key.substring(key.length - 3)}`;
+            } else if (key) {
+              vars['META_GOOGLE_MAPS_API_KEY'] = '****';
+            } else {
+              vars['META_GOOGLE_MAPS_API_KEY'] = 'empty';
+            }
+          } else {
+            vars['META_GOOGLE_MAPS_API_KEY'] = 'not found';
+          }
+
           // Check if Google Maps script exists in DOM
           const scriptExists = document.getElementById('google-maps-script') !== null;
           vars['MAPS_SCRIPT_IN_DOM'] = scriptExists ? 'true' : 'false';
