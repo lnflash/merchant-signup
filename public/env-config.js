@@ -9,16 +9,33 @@ try {
     // First check if meta tags exist (they're added during the build)
     const supabaseUrlMeta = document.querySelector('meta[name="supabase-url"]');
     const supabaseKeyMeta = document.querySelector('meta[name="supabase-anon-key"]');
+    const googleMapsKeyMeta = document.querySelector('meta[name="google-maps-api-key"]');
 
+    // Start with an empty result
+    const result = {
+      SUPABASE_URL: '',
+      SUPABASE_KEY: '',
+      GOOGLE_MAPS_API_KEY: '',
+      source: 'none',
+    };
+
+    // Update from meta tags if available
     if (supabaseUrlMeta && supabaseKeyMeta) {
       const url = supabaseUrlMeta.getAttribute('content');
       const key = supabaseKeyMeta.getAttribute('content');
+
       if (url && key) {
-        return {
-          SUPABASE_URL: url,
-          SUPABASE_KEY: key,
-          source: 'meta-tags',
-        };
+        result.SUPABASE_URL = url;
+        result.SUPABASE_KEY = key;
+        result.source = 'meta-tags';
+      }
+    }
+
+    // Add Google Maps API key if available
+    if (googleMapsKeyMeta) {
+      const mapsKey = googleMapsKeyMeta.getAttribute('content');
+      if (mapsKey) {
+        result.GOOGLE_MAPS_API_KEY = mapsKey;
       }
     }
 
@@ -27,31 +44,42 @@ try {
       typeof window.NEXT_PUBLIC_SUPABASE_URL !== 'undefined' &&
       typeof window.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'undefined'
     ) {
-      return {
-        SUPABASE_URL: window.NEXT_PUBLIC_SUPABASE_URL,
-        SUPABASE_KEY: window.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-        source: 'next-build',
-      };
+      result.SUPABASE_URL = window.NEXT_PUBLIC_SUPABASE_URL;
+      result.SUPABASE_KEY = window.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      result.source = 'next-build';
+    }
+
+    // Check for Google Maps API key
+    if (typeof window.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY !== 'undefined') {
+      result.GOOGLE_MAPS_API_KEY = window.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     }
 
     // Look for hardcoded values in the document as a last resort
-    const htmlContent = document.documentElement.innerHTML;
-    const urlMatch = htmlContent.match(/NEXT_PUBLIC_SUPABASE_URL["']:["'](https:\/\/[^"']+)["']/);
-    const keyMatch = htmlContent.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY["']:["']([^"']+)["']/);
+    if (!result.SUPABASE_URL || !result.SUPABASE_KEY) {
+      const htmlContent = document.documentElement.innerHTML;
+      const urlMatch = htmlContent.match(/NEXT_PUBLIC_SUPABASE_URL["']:["'](https:\/\/[^"']+)["']/);
+      const keyMatch = htmlContent.match(/NEXT_PUBLIC_SUPABASE_ANON_KEY["']:["']([^"']+)["']/);
 
-    if (urlMatch && urlMatch[1] && keyMatch && keyMatch[1]) {
-      return {
-        SUPABASE_URL: urlMatch[1],
-        SUPABASE_KEY: keyMatch[1],
-        source: 'html-extract',
-      };
+      if (urlMatch && urlMatch[1] && keyMatch && keyMatch[1]) {
+        result.SUPABASE_URL = urlMatch[1];
+        result.SUPABASE_KEY = keyMatch[1];
+        result.source = 'html-extract';
+      }
     }
 
-    return {
-      SUPABASE_URL: '',
-      SUPABASE_KEY: '',
-      source: 'none',
-    };
+    // Try to extract Google Maps API key from HTML if not found yet
+    if (!result.GOOGLE_MAPS_API_KEY) {
+      const htmlContent = document.documentElement.innerHTML;
+      const mapsKeyMatch = htmlContent.match(
+        /NEXT_PUBLIC_GOOGLE_MAPS_API_KEY["']:["']([^"']+)["']/
+      );
+
+      if (mapsKeyMatch && mapsKeyMatch[1]) {
+        result.GOOGLE_MAPS_API_KEY = mapsKeyMatch[1];
+      }
+    }
+
+    return result;
   };
 
   // Get the environment variables
@@ -60,13 +88,19 @@ try {
   // Apply them to window.ENV
   window.ENV.SUPABASE_URL = envVars.SUPABASE_URL;
   window.ENV.SUPABASE_KEY = envVars.SUPABASE_KEY;
+  window.ENV.GOOGLE_MAPS_API_KEY = envVars.GOOGLE_MAPS_API_KEY;
   window.ENV.BUILD_TIME = true;
   window.ENV.BUILD_DATE = new Date().toISOString();
 
+  // Set global Google Maps API key for our components to find
+  // This matches how Supabase credentials work in the static build
+  window.googleMapsApiKey = envVars.GOOGLE_MAPS_API_KEY;
+
   // Log information about the environment
   console.log('Environment configuration:', {
-    hasUrl: !!window.ENV.SUPABASE_URL,
-    hasKey: !!window.ENV.SUPABASE_KEY,
+    hasSupabaseUrl: !!window.ENV.SUPABASE_URL,
+    hasSupabaseKey: !!window.ENV.SUPABASE_KEY,
+    hasGoogleMapsKey: !!window.ENV.GOOGLE_MAPS_API_KEY,
     buildTime: true,
     source: envVars.source,
     hostname: window.location.hostname,

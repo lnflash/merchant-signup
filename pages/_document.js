@@ -5,6 +5,7 @@ export default function Document() {
   // IMPORTANT: On the server side, we need to check if we're in the browser
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   return (
     <Html lang="en">
@@ -12,6 +13,7 @@ export default function Document() {
         {/* Environment variables for client-side access */}
         {supabaseUrl && <meta name="supabase-url" content={supabaseUrl} />}
         {supabaseAnonKey && <meta name="supabase-anon-key" content={supabaseAnonKey} />}
+        {googleMapsApiKey && <meta name="google-maps-api-key" content={googleMapsApiKey} />}
 
         {/* Environment configuration script - MUST be loaded first */}
         <script src="/env-config.js" />
@@ -23,6 +25,10 @@ export default function Document() {
               // Inline environment variables as a fallback
               window.NEXT_PUBLIC_SUPABASE_URL = "${supabaseUrl || ''}";
               window.NEXT_PUBLIC_SUPABASE_ANON_KEY = "${supabaseAnonKey || ''}";
+              window.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY = "${googleMapsApiKey || ''}";
+              
+              // Set global Google Maps API key - this is the most reliable way for static builds
+              window.googleMapsApiKey = "${googleMapsApiKey || ''}";
             `,
           }}
         />

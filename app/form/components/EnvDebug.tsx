@@ -18,34 +18,81 @@ const EnvDebug = () => {
   useEffect(() => {
     if (!isDevelopment) return;
 
-    // Collect environment variables
-    const vars: Record<string, string> = {};
+    // Wait a bit to ensure window is fully loaded
+    const timer = setTimeout(() => {
+      // Collect environment variables
+      const vars: Record<string, string> = {};
 
-    // Process environment variables (only public ones for security)
-    Object.keys(process.env).forEach(key => {
-      if (key.startsWith('NEXT_PUBLIC_')) {
-        const value = process.env[key] || '';
+      // Add runtime information
+      vars['RUNTIME'] = typeof window !== 'undefined' ? 'client' : 'server';
+      vars['HAS_WINDOW'] = typeof window !== 'undefined' ? 'true' : 'false';
+      vars['HAS_DOCUMENT'] = typeof document !== 'undefined' ? 'true' : 'false';
 
-        // Mask the value for sensitive information
-        if (key.includes('KEY') || key.includes('TOKEN') || key.includes('SECRET')) {
-          if (value.length > 10) {
-            vars[key] = `${value.substring(0, 4)}...${value.substring(value.length - 4)}`;
-          } else if (value) {
-            vars[key] = '****';
+      // Safely access window properties with type assertions
+      if (typeof window !== 'undefined') {
+        try {
+          // Safely access window.location.href
+          if (window.location && window.location.href) {
+            const href = window.location.href;
+            vars['WINDOW_LOCATION'] = href.split('?')[0];
           } else {
-            vars[key] = 'empty';
+            vars['WINDOW_LOCATION'] = 'unavailable';
           }
-        } else {
-          vars[key] = value;
+
+          // Check if Google Maps is loaded
+          vars['GOOGLE_MAPS_LOADED'] = window.google && window.google.maps ? 'true' : 'false';
+
+          // Check for window.googleMapsApiKey (our custom global API key)
+          if ((window as any).googleMapsApiKey) {
+            const key = (window as any).googleMapsApiKey as string;
+            if (key.length > 10) {
+              vars['WINDOW_GOOGLE_MAPS_API_KEY'] =
+                `${key.substring(0, 3)}...${key.substring(key.length - 3)}`;
+            } else if (key) {
+              vars['WINDOW_GOOGLE_MAPS_API_KEY'] = '****';
+            } else {
+              vars['WINDOW_GOOGLE_MAPS_API_KEY'] = 'empty';
+            }
+          } else {
+            vars['WINDOW_GOOGLE_MAPS_API_KEY'] = 'not set';
+          }
+
+          // Check if Google Maps script exists in DOM
+          const scriptExists = document.getElementById('google-maps-script') !== null;
+          vars['MAPS_SCRIPT_IN_DOM'] = scriptExists ? 'true' : 'false';
+        } catch (e) {
+          vars['ERROR'] = e instanceof Error ? e.message : 'unknown error';
         }
       }
-    });
 
-    // Add build time flag
-    vars['IS_BUILD_TIME'] = process.env.IS_BUILD_TIME || 'false';
-    vars['NODE_ENV'] = process.env.NODE_ENV || 'unknown';
+      // Process environment variables (only public ones for security)
+      Object.keys(process.env).forEach(key => {
+        if (key.startsWith('NEXT_PUBLIC_')) {
+          const value = process.env[key] || '';
 
-    setEnvVars(vars);
+          // Mask the value for sensitive information
+          if (key.includes('KEY') || key.includes('TOKEN') || key.includes('SECRET')) {
+            if (value.length > 10) {
+              vars[key] = `${value.substring(0, 4)}...${value.substring(value.length - 4)}`;
+            } else if (value) {
+              vars[key] = '****';
+            } else {
+              vars[key] = 'empty';
+            }
+          } else {
+            vars[key] = value;
+          }
+        }
+      });
+
+      // Add build time flag
+      vars['IS_BUILD_TIME'] = process.env.IS_BUILD_TIME || 'false';
+      vars['NODE_ENV'] = process.env.NODE_ENV || 'unknown';
+
+      setEnvVars(vars);
+    }, 1000); // Wait for everything to initialize
+
+    return () => clearTimeout(timer);
   }, [isDevelopment]);
 
   // Don't render anything in production

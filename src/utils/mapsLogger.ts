@@ -25,11 +25,16 @@ class GoogleMapsLogger {
 
   /**
    * Safely log API key (masked) for debugging purposes
+   * @param customApiKey Optional custom API key to check (for window-injected keys)
    */
-  public logApiKeyStatus(): void {
-    // Get API key from environment variables
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  public logApiKeyStatus(customApiKey?: string): void {
+    // Get API key from environment variables or use the provided custom key
+    const apiKey = customApiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     const buildTime = process.env.IS_BUILD_TIME === 'true';
+
+    // Check for window-injected API key (static builds)
+    const windowApiKey = typeof window !== 'undefined' && (window as any).googleMapsApiKey;
+    const hasWindowKey = !!windowApiKey;
 
     // Determine if we're running in a client or server context
     const runtimeContext = typeof window !== 'undefined' ? 'client' : 'server';
@@ -37,6 +42,13 @@ class GoogleMapsLogger {
     // Mask the API key for security
     let keyStatus = 'not set';
     let partial = '';
+    let keySource = 'env';
+
+    if (windowApiKey && !customApiKey) {
+      keySource = 'window';
+    } else if (customApiKey) {
+      keySource = 'custom';
+    }
 
     if (apiKey) {
       // Only show partial key in development with explicit option
@@ -62,6 +74,8 @@ class GoogleMapsLogger {
       buildTime,
       environment: process.env.NODE_ENV,
       context: runtimeContext,
+      keySource,
+      hasWindowKey,
       keyPresent: !!apiKey,
       keyLength: apiKey ? apiKey.length : 0,
       ...(partial ? { partialKey: partial } : {}),
