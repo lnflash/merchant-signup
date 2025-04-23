@@ -13,17 +13,71 @@ import examples from 'libphonenumber-js/examples.mobile.json';
 // A list of common country codes for the dropdown, with Caribbean focus
 const COMMON_COUNTRY_CODES = [
   // Most common codes first
-  { code: '+1', label: '🇺🇸 +1 (US/Canada)' },
+  {
+    code: '+1',
+    label: 'US/Canada',
+    flag: '🇺🇸',
+    example: '(201) 555-0123',
+    format: '(XXX) XXX-XXXX',
+  },
   // Caribbean codes grouped together
-  { code: '+1242', label: '🇧🇸 +1242 (Bahamas)' },
-  { code: '+1246', label: '🇧🇧 +1246 (Barbados)' },
-  { code: '+1284', label: '🇻🇬 +1284 (BVI)' },
-  { code: '+1345', label: '🇰🇾 +1345 (Cayman)' },
-  { code: '+1876', label: '🇯🇲 +1876 (Jamaica)' },
-  { code: '+1868', label: '🇹🇹 +1868 (Trinidad)' },
+  {
+    code: '+1242',
+    label: 'Bahamas',
+    flag: '🇧🇸',
+    example: '359-1234',
+    format: 'XXX-XXXX',
+  },
+  {
+    code: '+1246',
+    label: 'Barbados',
+    flag: '🇧🇧',
+    example: '234-5678',
+    format: 'XXX-XXXX',
+  },
+  {
+    code: '+1284',
+    label: 'BVI',
+    flag: '🇻🇬',
+    example: '340-1234',
+    format: 'XXX-XXXX',
+  },
+  {
+    code: '+1345',
+    label: 'Cayman',
+    flag: '🇰🇾',
+    example: '916-1234',
+    format: 'XXX-XXXX',
+  },
+  {
+    code: '+1876',
+    label: 'Jamaica',
+    flag: '🇯🇲',
+    example: '634-4321',
+    format: 'XXX-XXXX',
+  },
+  {
+    code: '+1868',
+    label: 'Trinidad',
+    flag: '🇹🇹',
+    example: '291-1234',
+    format: 'XXX-XXXX',
+  },
   // Other international
-  { code: '+44', label: '🇬🇧 +44 (UK)' },
-  { code: '+61', label: '🇦🇺 +61 (Australia)' },
+  {
+    code: '+44',
+    label: 'UK',
+    flag: '🇬🇧',
+    example: '7911 123456',
+    format: 'XXXX XXXXXX',
+  },
+  {
+    code: '+61',
+    label: 'Australia',
+    flag: '🇦🇺',
+    example: '412 345 678',
+    format: 'XXX XXX XXX',
+  },
 ];
 
 interface PhoneInputProps {
@@ -65,46 +119,41 @@ export default function PhoneInput({
     }
   }, [countryCode, nationalNumber, name, setValue]);
 
-  // Get an example phone number for the selected country
-  const getExample = () => {
+  // Get example phone number and format for the selected country
+  const getCountryInfo = () => {
+    // Find the selected country in our predefined list
+    const selectedCountry = COMMON_COUNTRY_CODES.find(country => country.code === countryCode);
+
+    if (selectedCountry) {
+      return {
+        example: selectedCountry.example,
+        format: selectedCountry.format,
+        flag: selectedCountry.flag,
+        label: selectedCountry.label,
+      };
+    }
+
+    // Fallback if not found
     try {
       // Extract the country code without the +
       const countryCodeDigits = countryCode.replace('+', '');
 
-      // For multi-part codes like +1876, we need to check examples by country
-      // Try to find an example for the specific code
-      let example;
+      // Use libphonenumber-js to get an example
+      const example = getExampleNumber(countryCodeDigits.substring(0, 2) as CountryCode, examples);
 
-      if (countryCodeDigits.length > 1) {
-        // For longer country codes, try to match with the exact code
-        COMMON_COUNTRY_CODES.forEach(country => {
-          if (country.code === countryCode && country.label) {
-            const parts = country.label.split(' ');
-            if (parts && parts.length > 0) {
-              const countryPart = parts[0];
-              if (countryPart) {
-                const countryName = countryPart.trim();
-
-                // Type-safe way to check if the example exists
-                const exampleCountry = countryName as keyof typeof examples;
-                if (countryName && examples[exampleCountry]) {
-                  example = examples[exampleCountry];
-                }
-              }
-            }
-          }
-        });
-      }
-
-      // If we couldn't find a specific example, use the first 1-2 digits
-      if (!example) {
-        // Cast to CountryCode type since we're using country codes
-        example = getExampleNumber(countryCodeDigits.substring(0, 2) as CountryCode, examples);
-      }
-
-      return example ? example.formatInternational() : `${countryCode} 555-1234`;
+      return {
+        example: example ? example.formatNational() : '555-1234',
+        format: 'XXX-XXXX',
+        flag: '🌍',
+        label: 'International',
+      };
     } catch (e) {
-      return `${countryCode} 555-1234`;
+      return {
+        example: '555-1234',
+        format: 'XXX-XXXX',
+        flag: '🌍',
+        label: 'International',
+      };
     }
   };
 
@@ -248,17 +297,17 @@ export default function PhoneInput({
       <div className="relative">
         {/* Single integrated input field appearance */}
         <div className="flex rounded-lg border border-gray-300 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500 overflow-hidden transition-colors">
-          {/* Country code */}
+          {/* Country code with flag */}
           <div className="flex-shrink-0 bg-gray-50 border-r border-gray-300 flex items-center relative">
             <select
-              className="bg-transparent appearance-none px-3 py-3 pr-6 text-sm font-medium focus:outline-none"
+              className="bg-transparent appearance-none pl-2 pr-8 py-3 text-sm font-medium focus:outline-none"
               value={countryCode}
               onChange={handleCountryChange}
               aria-label="Country code"
             >
               {COMMON_COUNTRY_CODES.map(country => (
                 <option key={country.code} value={country.code}>
-                  {country.code}
+                  {country.flag} {country.code}
                 </option>
               ))}
             </select>
@@ -279,12 +328,12 @@ export default function PhoneInput({
             </div>
           </div>
 
-          {/* Phone number field with auto-format */}
+          {/* Phone number field with dynamic placeholder based on country */}
           <input
             id={name}
             type="tel"
             className="block w-full px-4 py-3 focus:outline-none border-0 shadow-none bg-white"
-            placeholder="(555) 123-4567"
+            placeholder={getCountryInfo().example}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             value={formatNationalNumberForDisplay(nationalNumber)}
@@ -324,14 +373,14 @@ export default function PhoneInput({
         render={({ field }) => <input type="hidden" {...field} />}
       />
 
-      {/* Minimalist feedback - only show errors or very simple help when focused */}
+      {/* Dynamic help text based on country */}
       {errors[name] ? (
         <p className="form-error mt-1" role="alert" id={`${name}-error`}>
           {errors[name]?.message?.toString()}
         </p>
       ) : isFocused && !nationalNumber ? (
         <p className="mt-1 text-xs text-gray-500">
-          Example: {getExample().substring(countryCode.length + 1)}
+          Format: {getCountryInfo().flag} {getCountryInfo().format}
         </p>
       ) : null}
     </div>
