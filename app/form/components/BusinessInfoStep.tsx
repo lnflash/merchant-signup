@@ -1,10 +1,8 @@
 'use client';
 
 import { useFormContext } from 'react-hook-form';
-import { useState } from 'react';
 import { SignupFormData } from '../../../src/types';
-import { AddressAutocomplete } from './AddressAutocomplete';
-import { BusinessLocationMap } from './BusinessLocationMap';
+import { EnhancedAddressInput } from './EnhancedAddressInput';
 
 type StepProps = {
   currentStep: number;
@@ -19,6 +17,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     setValue,
     clearErrors,
   } = useFormContext<SignupFormData>();
+
   const accountType = watch('account_type');
 
   // For debugging
@@ -80,7 +79,8 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
         )}
       </h3>
 
-      <div className="form-group">
+      {/* Business Name Field */}
+      <div className="form-group mb-6">
         <label htmlFor="business_name" className="form-label">
           Business Name
           {isBusinessInfoRequired && <span className="text-red-500 ml-1">*</span>}
@@ -120,6 +120,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
         )}
       </div>
 
+      {/* Enhanced Address Input with Integrated Map */}
       <div className="form-group">
         <label htmlFor="business_address" className="form-label">
           Business Address
@@ -129,25 +130,11 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
           )}
         </label>
 
-        <AddressAutocomplete
-          isRequired={isBusinessInfoRequired}
-          onAddressSelect={(address, lat, lng) => {
-            setValue('business_address', address, { shouldValidate: true });
-            setValue('latitude', lat, { shouldValidate: true });
-            setValue('longitude', lng, { shouldValidate: true });
-          }}
-        />
-
-        {errors.business_address && (
-          <p className="form-error" role="alert">
-            {errors.business_address.message?.toString()}
-          </p>
-        )}
-
-        {/* Map display area - displays the business location map after an address is entered */}
-        {watch('business_address') && <BusinessLocationMap isRequired={isBusinessInfoRequired} />}
+        {/* New all-in-one address input and map component */}
+        <EnhancedAddressInput isRequired={isBusinessInfoRequired} />
       </div>
 
+      {/* Navigation Buttons */}
       <div className="mt-8 flex justify-between">
         <button
           type="button"
