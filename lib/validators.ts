@@ -51,6 +51,7 @@ export const signupFormSchema = z.discriminatedUnion('account_type', [
     ]),
     latitude: z.number().optional().or(z.literal('')),
     longitude: z.number().optional().or(z.literal('')),
+    wants_terminal: z.boolean().optional(),
   }),
 
   // Schema for business accounts
@@ -62,6 +63,7 @@ export const signupFormSchema = z.discriminatedUnion('account_type', [
     business_address: z.string().min(5, 'Please enter a valid address'),
     latitude: z.number().optional().or(z.literal('')),
     longitude: z.number().optional().or(z.literal('')),
+    wants_terminal: z.boolean().optional(),
     // Make merchant fields optional
     bank_name: z.string().optional().or(z.literal('')),
     bank_branch: z.string().optional().or(z.literal('')),
@@ -84,6 +86,7 @@ export const signupFormSchema = z.discriminatedUnion('account_type', [
     business_address: z.string().min(5, 'Please enter a valid address'),
     latitude: z.number().optional().or(z.literal('')),
     longitude: z.number().optional().or(z.literal('')),
+    wants_terminal: z.boolean().optional(),
     // Required merchant fields
     bank_name: z.string().min(2, 'Bank name is required'),
     bank_branch: z.string().min(2, 'Branch is required'),
@@ -114,6 +117,7 @@ export const businessInfoSchema = z.object({
   business_address: z.string().min(5, 'Please enter a valid address'),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
+  wants_terminal: z.boolean().optional(),
 });
 
 export const merchantInfoSchema = z.object({
