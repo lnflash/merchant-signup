@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { SignupFormData } from '../../../src/types';
+import { SignupFormData } from '../../../src/types/index';
 import { mapsLogger } from '../../../src/utils/mapsLogger';
 import { useGoogleMapsApi } from '../../../src/hooks/useGoogleMapsApi';
 

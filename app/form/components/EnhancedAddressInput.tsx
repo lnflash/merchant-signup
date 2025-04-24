@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { SignupFormData } from '../../../src/types';
+import { SignupFormData } from '../../../src/types/index';
 import { mapsLogger } from '../../../src/utils/mapsLogger';
 import { useGoogleMapsApi } from '../../../src/hooks/useGoogleMapsApi';
 import { AddressMap } from './AddressMap';
@@ -224,7 +224,7 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
   };
 
   // Register the input with react-hook-form
-  const { ref, ...inputProps } = register('business_address');
+  const { ref, onBlur: formOnBlur, ...inputProps } = register('business_address');
 
   const handleFocus = () => {
     setFocused(true);
@@ -233,6 +233,24 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
     if (!addressSelected) {
       setUserTyping(true);
     }
+  };
+
+  // Combine our custom blur handler with react-hook-form's
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Call the original onBlur from react-hook-form if it exists
+    if (formOnBlur) {
+      // Create an event for react-hook-form's onBlur
+      formOnBlur(e);
+    }
+
+    // When field loses focus, keep address selected state but hide the dropdown
+    setTimeout(() => {
+      setFocused(false);
+      // Don't reset userTyping if we have coordinates (address was selected)
+      if (latitude && longitude) {
+        setUserTyping(false);
+      }
+    }, 200); // Delay to allow selection to complete
   };
 
   return (
@@ -285,16 +303,7 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
             aria-required={isRequired}
             aria-invalid={errors.business_address ? 'true' : 'false'}
             onFocus={handleFocus}
-            onBlur={() => {
-              // When field loses focus, keep address selected state but hide the dropdown
-              setTimeout(() => {
-                setFocused(false);
-                // Don't reset userTyping if we have coordinates (address was selected)
-                if (latitude && longitude) {
-                  setUserTyping(false);
-                }
-              }, 200); // Delay to allow selection to complete
-            }}
+            onBlur={handleBlur}
             ref={element => {
               // Call react-hook-form's ref
               ref(element);
