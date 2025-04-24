@@ -405,6 +405,27 @@ declare global {
             input: HTMLInputElement,
             options?: google.maps.places.AutocompleteOptions
           ) => google.maps.places.Autocomplete;
+          PlaceAutocompleteElement: new (options?: {
+            types?: string[];
+            fields?: string[];
+          }) => HTMLElement & {
+            getPlace: () => Promise<{
+              place_id?: string;
+              formatted_address?: string;
+              address_components?: any[];
+              geometry?: {
+                location?: {
+                  lat: () => number;
+                  lng: () => number;
+                };
+              };
+              name?: string;
+              vicinity?: string;
+            }>;
+            addEventListener: (event: string, handler: Function) => void;
+            removeEventListener: (event: string, handler: Function) => void;
+            querySelector: (selector: string) => HTMLElement | null;
+          };
         };
         Map: any;
         Marker: any;
@@ -413,5 +434,13 @@ declare global {
     };
     // For injecting the API key in static builds
     googleMapsApiKey?: string;
+    // For static environment variables
+    ENV?: {
+      SUPABASE_URL?: string;
+      SUPABASE_KEY?: string;
+      GOOGLE_MAPS_API_KEY?: string;
+      BUILD_TIME?: boolean;
+      BUILD_DATE?: string;
+    };
   }
 }
