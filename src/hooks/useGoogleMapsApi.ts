@@ -434,13 +434,5 @@ declare global {
     };
     // For injecting the API key in static builds
     googleMapsApiKey?: string;
-    // For static environment variables
-    ENV?: {
-      SUPABASE_URL?: string;
-      SUPABASE_KEY?: string;
-      GOOGLE_MAPS_API_KEY?: string;
-      BUILD_TIME?: boolean;
-      BUILD_DATE?: string;
-    };
   }
 }

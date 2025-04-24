@@ -29,7 +29,9 @@ export const ModernAddressAutocomplete: React.FC<ModernAddressAutocompleteProps>
   const containerRef = useRef<HTMLDivElement>(null);
   const [userTyping, setUserTyping] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const autoCompleteElementRef = useRef<google.maps.places.PlaceAutocompleteElement | null>(null);
+
+  // For TypeScript compatibility, use any type but we'll treat it as a PlaceAutocompleteElement
+  const autoCompleteElementRef = useRef<any>(null);
 
   // Current address value
   const currentAddress = watch('business_address');
