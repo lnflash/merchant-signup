@@ -209,7 +209,9 @@ export const AccountTypeStep: React.FC<StepProps> = ({ currentStep, setCurrentSt
             </svg>
           </div>
           <span className="font-medium mb-2 text-gray-800">Personal</span>
-          <span className="text-sm text-gray-500 text-center">For individual use</span>
+          <span className="text-sm text-gray-500 text-center">
+            For individual use, no additional info needed
+          </span>
         </button>
 
         <button
@@ -233,8 +235,10 @@ export const AccountTypeStep: React.FC<StepProps> = ({ currentStep, setCurrentSt
               />
             </svg>
           </div>
-          <span className="font-medium mb-2 text-gray-800">Professional</span>
-          <span className="text-sm text-gray-500 text-center">For your professional practice</span>
+          <span className="font-medium mb-2 text-gray-800">Pro</span>
+          <span className="text-sm text-gray-500 text-center">
+            Accept payments as a Pro Flashpoint. Business Name & Address required
+          </span>
         </button>
 
         <button
@@ -262,7 +266,9 @@ export const AccountTypeStep: React.FC<StepProps> = ({ currentStep, setCurrentSt
             </svg>
           </div>
           <span className="font-medium mb-2 text-gray-800">Merchant</span>
-          <span className="text-sm text-gray-500 text-center">Accept payments with Flash</span>
+          <span className="text-sm text-gray-500 text-center">
+            Give rewards as a Merchant Flashpoint. ID and Bank account info required
+          </span>
         </button>
       </div>
 

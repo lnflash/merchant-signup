@@ -95,7 +95,7 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     <div className="bg-white rounded-lg">
       <h3 className="text-xl font-semibold text-gray-800 mb-6">Banking Information</h3>
       <p className="text-sm text-gray-600 mb-6">
-        Please provide your banking details to receive payments as a Flash merchant.
+        Please provide your banking details to receive payments as a Merchant Flashpoint.
       </p>
 
       <div className="form-group">

@@ -394,7 +394,9 @@ export default function SignupForm() {
                           : 'bg-white text-gray-400 border-2 border-gray-200'
                     }`}
                     aria-current={isActive ? 'step' : undefined}
-                    aria-label={`Step ${step} ${isCompleted ? 'completed' : isActive ? 'current' : 'pending'}`}
+                    aria-label={`Step ${step} ${
+                      isCompleted ? 'completed' : isActive ? 'current' : 'pending'
+                    }`}
                   >
                     {isCompleted ? (
                       <svg
@@ -443,12 +445,14 @@ export default function SignupForm() {
           {/* Show authenticated user info */}
           <div className="mt-2 text-right">
             <span className="text-xs text-gray-500">
-              Signed in as:{' '}
               {authService.currentUser?.email
-                ? authService.currentUser.email
+                ? 'Email: ' + authService.currentUser.email
                 : authService.currentUser?.phone
-                  ? `${authService.currentUser.phone.substring(0, 3)}***${authService.currentUser.phone.slice(-2)}`
-                  : 'User'}
+                  ? `${authService.currentUser.phone.substring(
+                      0,
+                      3
+                    )}***${authService.currentUser.phone.slice(-2)}`
+                  : 'Anonymous'}
               <button
                 type="button"
                 onClick={() => {
@@ -464,7 +468,7 @@ export default function SignupForm() {
                 }}
                 className="ml-2 text-blue-600 hover:underline"
               >
-                Sign Out
+                Exit
               </button>
             </span>
           </div>
