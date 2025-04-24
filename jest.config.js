@@ -22,6 +22,12 @@ const customJestConfig = {
   ],
   moduleDirectories: ['node_modules', '<rootDir>/'],
   testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    '/.next/',
+    '/out/',
+    '/src/__tests__/api/', // Ignore API tests since we've removed the API routes
+  ],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
