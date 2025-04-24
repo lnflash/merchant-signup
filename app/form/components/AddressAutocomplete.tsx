@@ -271,7 +271,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
         className={`form-input input-with-icon ${
           !hasValidKey && 'pr-12' // Extra padding if showing warning icon
         }`}
-        placeholder={isRequired ? 'Enter your business address' : 'Optional for merchants'}
+        placeholder={isRequired ? 'Enter your business address' : 'Enter your business address'}
         aria-required={isRequired}
         aria-invalid={errors.business_address ? 'true' : 'false'}
         ref={element => {
