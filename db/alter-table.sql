@@ -30,6 +30,10 @@ ADD COLUMN IF NOT EXISTS attempt TEXT;
 ALTER TABLE signups 
 ADD COLUMN IF NOT EXISTS device_info JSONB;
 
+-- Add wants_terminal boolean field
+ALTER TABLE signups
+ADD COLUMN IF NOT EXISTS wants_terminal BOOLEAN DEFAULT false;
+
 -- Update description for clarity
 COMMENT ON TABLE signups IS 'Merchant signup form submissions with fallback mechanisms';
 
@@ -41,3 +45,4 @@ COMMENT ON COLUMN signups.submitted_at IS 'Client-side timestamp when form was s
 COMMENT ON COLUMN signups.timestamp IS 'String representation of client timestamp';
 COMMENT ON COLUMN signups.attempt IS 'Indicates if this was a direct submission or fallback attempt';
 COMMENT ON COLUMN signups.device_info IS 'Additional device information as JSON';
+COMMENT ON COLUMN signups.wants_terminal IS 'Indicates whether the merchant wants a Flash Terminal device';
