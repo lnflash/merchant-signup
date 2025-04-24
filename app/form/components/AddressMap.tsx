@@ -163,11 +163,14 @@ export const AddressMap: React.FC<AddressMapProps> = ({
     );
   }
 
+  // Determine if we should show the map - be more forgiving about hasValidKey in case it's loaded late
+  const shouldShowMap = isLoaded && latitude && longitude;
+
   // Show loading or error state
-  if (!isLoaded || !latitude || !longitude || !hasValidKey) {
+  if (!shouldShowMap) {
     return (
       <div className="w-full h-[200px] bg-gray-100 rounded-lg flex flex-col items-center justify-center p-4">
-        {!hasValidKey ? (
+        {!hasValidKey && status !== 'loading' ? (
           <>
             <svg
               className="h-8 w-8 text-amber-500 mb-2"

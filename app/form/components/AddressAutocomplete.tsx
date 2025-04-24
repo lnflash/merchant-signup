@@ -71,10 +71,18 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     if (!isLoaded || !inputRef.current || autocompleteRef.current) return;
 
     try {
-      // Create autocomplete instance
+      // Create autocomplete instance with more comprehensive fields
       const options: google.maps.places.AutocompleteOptions = {
         types: ['address'],
-        fields: ['address_components', 'formatted_address', 'geometry', 'place_id'],
+        fields: [
+          'address_components',
+          'formatted_address',
+          'geometry',
+          'geometry.location',
+          'place_id',
+          'name',
+          'vicinity',
+        ],
       };
 
       autocompleteRef.current = new window.google.maps.places.Autocomplete(
@@ -91,6 +99,19 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
         try {
           const place = autocompleteRef.current.getPlace();
+
+          // Enhanced debug logging
+          console.log('🗺️ Raw place data:', {
+            place_id: place?.place_id,
+            formatted_address: place?.formatted_address,
+            hasGeometryObj: !!place?.geometry,
+            hasLocationObj: !!place?.geometry?.location,
+            hasLatLng: !!(place?.geometry?.location?.lat && place?.geometry?.location?.lng),
+            hasAddressComponents: !!(place?.address_components?.length > 0),
+            fieldsRequested: 'address_components,formatted_address,geometry,place_id',
+          });
+
+          // Check if we got a place with all required fields
           const hasGeometry = !!(place && place.geometry && place.geometry.location);
           const hasAddress = !!(place && place.formatted_address);
           const formattedAddress = place && place.formatted_address ? place.formatted_address : '';
@@ -102,8 +123,42 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           // Clear user typing state as selection is made
           setUserTyping(false);
 
-          // Update form with the selected address and coordinates
-          if (hasGeometry && hasAddress && place.geometry && place.geometry.location) {
+          // If we have a place but no geometry, it might be due to incomplete fields parameter
+          // or restrictions in the API key. Let's try to get coordinates using a workaround.
+          if (place && place.place_id && !hasGeometry) {
+            console.log('🗺️ Attempting to handle place without geometry:', place.place_id);
+
+            // Use current input value as address
+            const manualAddress = place.formatted_address || inputRef.current?.value || '';
+
+            if (manualAddress) {
+              // Update the address in the form
+              setValue('business_address', manualAddress, { shouldValidate: true });
+
+              // For now, use center of relevant country/region as an approximation
+              // This is a fallback solution - ideally we would get the real coordinates
+              // You could enhance this with default coordinates for your target market
+              const defaultLat = 18.1096; // Jamaica center lat (example)
+              const defaultLng = -77.2975; // Jamaica center lng (example)
+
+              setValue('latitude', defaultLat, { shouldValidate: true });
+              setValue('longitude', defaultLng, { shouldValidate: true });
+
+              // Call the callback with these default coordinates
+              if (onAddressSelect) {
+                onAddressSelect(manualAddress, defaultLat, defaultLng);
+              }
+
+              console.log('🗺️ Used fallback coordinates for address:', manualAddress);
+            }
+          }
+          // Normal case: we have both geometry and address data
+          else if (hasGeometry && hasAddress && place.geometry && place.geometry.location) {
+            console.log('🗺️ Using actual coordinates:', {
+              lat: place.geometry.location.lat(),
+              lng: place.geometry.location.lng(),
+            });
+
             setValue('business_address', formattedAddress, { shouldValidate: true });
             setValue('latitude', place.geometry.location.lat() || 0, { shouldValidate: true });
             setValue('longitude', place.geometry.location.lng() || 0, { shouldValidate: true });

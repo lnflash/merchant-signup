@@ -149,12 +149,12 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
           </p>
         )}
 
-        {/* Map display area - only show when address has coordinates */}
+        {/* Map display area - show whenever there's an address */}
         <div className="mt-3">
-          {latitude && longitude && (
+          {watch('business_address') && (
             <div className="md:hidden flex justify-between items-center mb-2">
               <span className="text-sm text-gray-600">
-                {mapExpanded ? 'Location map:' : 'Location verified ✓'}
+                {mapExpanded ? 'Location map:' : 'Location info ✓'}
               </span>
               <button
                 type="button"
