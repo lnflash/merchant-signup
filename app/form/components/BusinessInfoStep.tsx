@@ -3,7 +3,7 @@
 import { useFormContext } from 'react-hook-form';
 import { useState } from 'react';
 import { SignupFormData } from '../../../src/types';
-import { SmartAddressAutocomplete } from './SmartAddressAutocomplete';
+import { AddressAutocomplete } from './AddressAutocomplete';
 import { AddressMap } from './AddressMap';
 
 type StepProps = {
@@ -131,7 +131,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
           )}
         </label>
 
-        <SmartAddressAutocomplete
+        <AddressAutocomplete
           isRequired={isBusinessInfoRequired}
           onAddressSelect={(address, lat, lng) => {
             setValue('business_address', address, { shouldValidate: true });

@@ -82,6 +82,14 @@ export const AddressMap: React.FC<AddressMapProps> = ({
     // Run diagnostic check
     checkApiKey();
 
+    // Set a safety timeout to avoid waiting too long for the API
+    const timeoutId = setTimeout(() => {
+      if (status === 'loading') {
+        console.warn('🗺️ Maps API loading timeout, might have CORS issues');
+        setStatusMessage('Maps loading timeout - please try again later');
+      }
+    }, 5000);
+
     // Try to manually set the key for debugging
     if (
       typeof window !== 'undefined' &&
@@ -104,7 +112,9 @@ export const AddressMap: React.FC<AddressMapProps> = ({
 
     // Now call the load script
     loadScript();
-  }, [loadScript]);
+
+    return () => clearTimeout(timeoutId);
+  }, [loadScript, status]);
 
   // Set status messages based on API loading state
   useEffect(() => {

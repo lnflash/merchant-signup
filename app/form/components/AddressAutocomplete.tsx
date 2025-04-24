@@ -67,6 +67,17 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
 
   // Initialize Places Autocomplete when API is loaded and input element is available
   useEffect(() => {
+    // Log the current state for debugging
+    console.log('🗺️ AddressAutocomplete initialization check:', {
+      isLoaded,
+      hasInputRef: !!inputRef.current,
+      hasAutocompleteRef: !!autocompleteRef.current,
+      googleAvailable: typeof window !== 'undefined' && !!window.google,
+      mapsAvailable: typeof window !== 'undefined' && !!window.google?.maps,
+      placesAvailable: typeof window !== 'undefined' && !!window.google?.maps?.places,
+      status,
+    });
+
     // Only initialize when API is loaded and we have an input element
     if (!isLoaded || !inputRef.current || autocompleteRef.current) return;
 

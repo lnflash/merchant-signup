@@ -255,8 +255,26 @@ export function useGoogleMapsApi(
 
   // Function to load the Google Maps script
   const loadScript = useCallback(() => {
+    // Log detailed debug info
+    console.log('🗺️ Start loading Google Maps script:', {
+      globalScriptLoaded: globalState.scriptLoaded,
+      globalScriptLoading: globalState.scriptLoading,
+      globalScriptError: globalState.scriptLoadError,
+      apiKeySource: apiKey
+        ? windowApiKey
+          ? 'window'
+          : envObjApiKey
+            ? 'window.ENV'
+            : 'env variable'
+        : 'none',
+      apiKeyLength: apiKey ? apiKey.length : 0,
+      isStatic: process.env.IS_BUILD_TIME === 'true',
+      inBrowser: typeof window !== 'undefined',
+    });
+
     // Skip if already loading or loaded or error
     if (globalState.scriptLoaded || globalState.scriptLoading || globalState.scriptLoadError) {
+      console.log('🗺️ Maps script already being handled, state:', globalState.status);
       setStatus(globalState.status);
       return;
     }
@@ -309,9 +327,26 @@ export function useGoogleMapsApi(
         key: apiKey!,
         v: version,
         libraries,
+        // Add callback parameter for better error handling
+        callback: 'googleMapsCallback',
+        // Add nonce to help with CSP and CORS issues
+        nonce: 'google-maps-nonce',
         ...(options.language ? { language: options.language } : {}),
         ...(options.region ? { region: options.region } : {}),
       });
+
+      // Create global callback
+      (window as any).googleMapsCallback = function () {
+        console.log('🗺️ Google Maps API loaded via callback');
+        if (window.google && window.google.maps) {
+          globalState.scriptLoaded = true;
+          globalState.scriptLoading = false;
+          globalState.status = 'ready';
+          setStatus('ready');
+          setError(null);
+          mapsLogger.logScriptLoading(true);
+        }
+      };
 
       const scriptUrl = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
 
