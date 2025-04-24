@@ -107,7 +107,9 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             hasGeometryObj: !!place?.geometry,
             hasLocationObj: !!place?.geometry?.location,
             hasLatLng: !!(place?.geometry?.location?.lat && place?.geometry?.location?.lng),
-            hasAddressComponents: !!(place?.address_components?.length > 0),
+            hasAddressComponents: !!(
+              place?.address_components && place.address_components.length > 0
+            ),
             fieldsRequested: 'address_components,formatted_address,geometry,place_id',
           });
 
