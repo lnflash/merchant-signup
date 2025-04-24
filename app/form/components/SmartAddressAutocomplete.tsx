@@ -21,14 +21,18 @@ export const SmartAddressAutocomplete: React.FC<SmartAddressAutocompleteProps> =
   useEffect(() => {
     if (!isLoaded) return;
 
+    // Set a timeout to ensure we don't get stuck in loading state
+    const timeoutId = setTimeout(() => {
+      if (useModern === null) {
+        console.warn('🗺️ Detection timeout, falling back to classic autocomplete');
+        setUseModern(false);
+      }
+    }, 2000); // 2 second timeout
+
     // Check if the PlaceAutocompleteElement is available
     try {
-      const hasModernApi = !!(
-        window.google &&
-        window.google.maps &&
-        window.google.maps.places &&
-        window.google.maps.places.PlaceAutocompleteElement
-      );
+      // Force classic autocomplete for now due to CORS issues
+      const hasModernApi = false;
 
       console.log(`🗺️ ${hasModernApi ? 'Using modern' : 'Using classic'} address autocomplete`);
       setUseModern(hasModernApi);
@@ -36,7 +40,9 @@ export const SmartAddressAutocomplete: React.FC<SmartAddressAutocompleteProps> =
       console.warn('Failed to detect modern API, falling back to classic', error);
       setUseModern(false);
     }
-  }, [isLoaded]);
+
+    return () => clearTimeout(timeoutId);
+  }, [isLoaded, useModern]);
 
   // Show loading state while we determine which component to use
   if (useModern === null) {
