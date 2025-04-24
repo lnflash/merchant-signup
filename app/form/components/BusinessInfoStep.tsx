@@ -38,11 +38,11 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     }
   };
 
-  const isBusinessInfoRequired = accountType === 'business' || 'merchant';
+  const isBusinessInfoRequired = accountType === 'business';
   const validateAndContinue = () => {
-    if (accountType === 'personal') {
+    if (accountType === 'merchant') {
       // For merchants, business info is optional
-      clearErrors(['business_name', 'business_address']); // Ensure errors are clearedß
+      clearErrors(['business_name', 'business_address']); // Ensure errors are cleared
       setCurrentStep(4);
     } else if (accountType === 'business') {
       // For professionals, business info is required
