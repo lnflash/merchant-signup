@@ -79,17 +79,9 @@ export const signupFormSchema = z.discriminatedUnion('account_type', [
   z.object({
     account_type: z.literal('merchant'),
     ...commonFields,
-    // Business fields optional for merchants
-    business_name: z
-      .string()
-      .min(2, 'Business name must be at least 2 characters')
-      .optional()
-      .or(z.literal('')),
-    business_address: z
-      .string()
-      .min(5, 'Please enter a valid address')
-      .optional()
-      .or(z.literal('')),
+    // Business fields required for merchants
+    business_name: z.string().min(2, 'Business name must be at least 2 characters'),
+    business_address: z.string().min(5, 'Please enter a valid address'),
     latitude: z.number().optional().or(z.literal('')),
     longitude: z.number().optional().or(z.literal('')),
     // Required merchant fields
