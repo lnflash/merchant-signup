@@ -128,15 +128,15 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
           // Log the place selection
           mapsLogger.logPlaceSelection(placeId, formattedAddress, hasGeometry);
 
-          // Mark address as selected and clear typing state
+          // Mark address as selected and clear typing state IMMEDIATELY
           setUserTyping(false);
           setAddressSelected(true);
 
-          // Don't hide focus state immediately to avoid flickering
-          setTimeout(() => setFocused(false), 100);
-
           // Always ensure map is expanded when an address is selected
           setMapExpanded(true);
+
+          // Ensure focus is gone to complete the selection
+          setFocused(false);
 
           console.log('🏙️ Place selected and address marked as selected:', {
             placeId,
@@ -151,7 +151,8 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
             const manualAddress = place.formatted_address || inputRef.current?.value || '';
 
             if (manualAddress) {
-              // Update the address in the form
+              // Update the form values all at once with a synchronous batch
+              // to prevent React state updates from getting out of sync
               setValue('business_address', manualAddress, { shouldValidate: true });
 
               // Use default coordinates (center of target market)
@@ -160,15 +161,30 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
 
               setValue('latitude', defaultLat, { shouldValidate: true });
               setValue('longitude', defaultLng, { shouldValidate: true });
+
+              // Force UI update to immediately show the map
+              setTimeout(() => {
+                setAddressSelected(true);
+              }, 0);
             }
           }
           // Normal case: we have both geometry and address data
           else if (hasGeometry && hasAddress && place.geometry && place.geometry.location) {
             console.log('🏙️ Using actual coordinates from place selection');
 
+            // Get the values before setting them (for stability)
+            const lat = place.geometry.location.lat() || 0;
+            const lng = place.geometry.location.lng() || 0;
+
+            // Set all values in a batch to keep them in sync
             setValue('business_address', formattedAddress, { shouldValidate: true });
-            setValue('latitude', place.geometry.location.lat() || 0, { shouldValidate: true });
-            setValue('longitude', place.geometry.location.lng() || 0, { shouldValidate: true });
+            setValue('latitude', lat, { shouldValidate: true });
+            setValue('longitude', lng, { shouldValidate: true });
+
+            // Force UI update to immediately show the map
+            setTimeout(() => {
+              setAddressSelected(true);
+            }, 0);
           } else {
             // Handle case where selection doesn't have full data
             console.warn('Address selection missing required data');
