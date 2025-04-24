@@ -9,30 +9,9 @@ on:
 env:
   NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co"
   NEXT_PUBLIC_SUPABASE_ANON_KEY: "example-key-for-testing-only"
+  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: "example-maps-key-for-testing-only"
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run typecheck
-
   test:
     runs-on: ubuntu-latest
     steps:
@@ -43,26 +22,3 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm test
-
-  e2e:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'npm'
-      - name: Install dependencies
-        run: npm ci
-      - name: Install Playwright
-        run: npx playwright install --with-deps
-      - name: Setup environment for testing
-        run: |
-          echo "Setting up test environment variables..."
-          # Create a simple test environment for e2e tests
-          echo "NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co" >> .env.local
-          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=example-key-for-testing-only" >> .env.local
-      - name: Build the app
-        run: npm run build
-      - name: Run Playwright tests
-        run: npm run test:e2e

@@ -18,31 +18,40 @@ export const SmartAddressAutocomplete: React.FC<SmartAddressAutocompleteProps> =
   const [useModern, setUseModern] = useState<boolean | null>(null);
   const { isLoaded } = useGoogleMapsApi({ libraries: ['places'] });
 
+  // Always initialize immediately with a fallback
   useEffect(() => {
-    if (!isLoaded) return;
+    console.log('🗺️ SmartAddressAutocomplete mounted, isLoaded:', isLoaded);
 
-    // Set a timeout to ensure we don't get stuck in loading state
+    // Set a very short timeout to ensure rapid initialization
+    // This prevents being stuck in loading state
     const timeoutId = setTimeout(() => {
       if (useModern === null) {
-        console.warn('🗺️ Detection timeout, falling back to classic autocomplete');
+        console.log('🗺️ Immediate fallback to classic autocomplete');
         setUseModern(false);
       }
-    }, 2000); // 2 second timeout
+    }, 100); // Very short timeout for faster initialization
 
-    // Check if the PlaceAutocompleteElement is available
-    try {
-      // Force classic autocomplete for now due to CORS issues
-      const hasModernApi = false;
+    // If Maps API is loaded, check capabilities
+    if (isLoaded) {
+      try {
+        // For now, force classic mode for stability
+        // In the future, can change this to auto-detect capabilities
+        const hasModernApi = false;
 
-      console.log(`🗺️ ${hasModernApi ? 'Using modern' : 'Using classic'} address autocomplete`);
-      setUseModern(hasModernApi);
-    } catch (error) {
-      console.warn('Failed to detect modern API, falling back to classic', error);
+        console.log(`🗺️ ${hasModernApi ? 'Using modern' : 'Using classic'} address autocomplete`);
+        setUseModern(hasModernApi);
+      } catch (error) {
+        console.warn('Failed to detect modern API, using classic', error);
+        setUseModern(false);
+      }
+    } else {
+      // Don't wait for API to load, use classic immediately
+      console.log('🗺️ Maps API not loaded, using classic address autocomplete');
       setUseModern(false);
     }
 
     return () => clearTimeout(timeoutId);
-  }, [isLoaded, useModern]);
+  }, [isLoaded]);
 
   // Show loading state while we determine which component to use
   if (useModern === null) {

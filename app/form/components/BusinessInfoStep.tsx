@@ -4,7 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import { useState } from 'react';
 import { SignupFormData } from '../../../src/types';
 import { AddressAutocomplete } from './AddressAutocomplete';
-import { AddressMap } from './AddressMap';
+import { BusinessLocationMap } from './BusinessLocationMap';
 
 type StepProps = {
   currentStep: number;
@@ -20,11 +20,6 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     clearErrors,
   } = useFormContext<SignupFormData>();
   const accountType = watch('account_type');
-  const [mapExpanded, setMapExpanded] = useState(true);
-
-  // Watch latitude and longitude values
-  const latitude = watch('latitude');
-  const longitude = watch('longitude');
 
   if (currentStep !== 3) return null;
 
@@ -149,29 +144,8 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
           </p>
         )}
 
-        {/* Map display area - show whenever there's an address */}
-        <div className="mt-3">
-          {watch('business_address') && (
-            <div className="md:hidden flex justify-between items-center mb-2">
-              <span className="text-sm text-gray-600">
-                {mapExpanded ? 'Location map:' : 'Location info ✓'}
-              </span>
-              <button
-                type="button"
-                onClick={() => setMapExpanded(!mapExpanded)}
-                className="text-sm text-blue-600 underline focus:outline-none"
-              >
-                {mapExpanded ? 'Hide map' : 'Show map'}
-              </button>
-            </div>
-          )}
-          <AddressMap
-            latitude={latitude || null}
-            longitude={longitude || null}
-            isExpanded={mapExpanded}
-            toggleExpand={() => setMapExpanded(!mapExpanded)}
-          />
-        </div>
+        {/* Map display area - displays the business location map after an address is entered */}
+        {watch('business_address') && <BusinessLocationMap isRequired={isBusinessInfoRequired} />}
       </div>
 
       <div className="mt-8 flex justify-between">
