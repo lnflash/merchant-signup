@@ -21,6 +21,9 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
   } = useFormContext<SignupFormData>();
   const accountType = watch('account_type');
 
+  // For debugging
+  console.log('💼 BusinessInfoStep rendering, accountType:', accountType);
+
   if (currentStep !== 3) return null;
 
   // Clear business field errors if account type is merchant (since they're optional)
@@ -132,9 +135,6 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
             setValue('business_address', address, { shouldValidate: true });
             setValue('latitude', lat, { shouldValidate: true });
             setValue('longitude', lng, { shouldValidate: true });
-
-            // Ensure map is expanded when address is selected
-            setMapExpanded(true);
           }}
         />
 
