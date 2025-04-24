@@ -321,11 +321,17 @@ export const TermsStep: React.FC<StepProps> = ({ currentStep, setCurrentStep }) 
         <div className="mt-4 pt-4 border-t border-blue-200">
           <p className="text-gray-700">
             For the complete terms, please visit our{' '}
-            <a href="#" className="text-blue-600 hover:underline">
+            <a
+              href="https://getflash.io/legal/terms.html"
+              className="text-blue-600 hover:underline"
+            >
               Terms of Service
             </a>{' '}
             and{' '}
-            <a href="#" className="text-blue-600 hover:underline">
+            <a
+              href="https://getflash.io/legal/privacy.html"
+              className="text-blue-600 hover:underline"
+            >
               Privacy Policy
             </a>
             .

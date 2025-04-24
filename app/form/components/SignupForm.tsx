@@ -349,11 +349,17 @@ export default function SignupForm() {
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>
             By signing in, you agree to our{' '}
-            <a href="#" className="text-blue-600 hover:underline">
+            <a
+              href="https://getflash.io/legal/terms.html"
+              className="text-blue-600 hover:underline"
+            >
               Terms of Service
             </a>{' '}
             and{' '}
-            <a href="#" className="text-blue-600 hover:underline">
+            <a
+              href="https://getflash.io/legal/privacy.html"
+              className="text-blue-600 hover:underline"
+            >
               Privacy Policy
             </a>
           </p>

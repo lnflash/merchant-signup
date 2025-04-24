@@ -53,13 +53,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="max-w-md mx-auto">
               <p className="mb-4">&copy; {new Date().getFullYear()} Flash. All rights reserved.</p>
               <div className="flex justify-center space-x-4 text-xs">
-                <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">
+                <a
+                  href="https://getflash.io/legal/privacy.html"
+                  className="text-gray-500 hover:text-blue-600 transition-colors"
+                >
                   Privacy Policy
                 </a>
-                <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">
+                <a
+                  href="https://getflash.io/legal/terms.html"
+                  className="text-gray-500 hover:text-blue-600 transition-colors"
+                >
                   Terms of Service
                 </a>
-                <a href="#" className="text-gray-500 hover:text-blue-600 transition-colors">
+                <a
+                  href="https://docs.getflash.io"
+                  className="text-gray-500 hover:text-blue-600 transition-colors"
+                >
                   Help Center
                 </a>
               </div>
