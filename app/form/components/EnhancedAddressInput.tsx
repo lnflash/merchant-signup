@@ -37,6 +37,16 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
   const latitude = watch('latitude');
   const longitude = watch('longitude');
 
+  // Track changes to coordinates to update address selected state
+  useEffect(() => {
+    // If we have coordinates, make sure address is marked as selected
+    if (latitude && longitude) {
+      setAddressSelected(true);
+      setUserTyping(false);
+      console.log('🏙️ Coordinates detected, marking address as selected:', { latitude, longitude });
+    }
+  }, [latitude, longitude]);
+
   // Use custom hook to manage Google Maps API loading
   const { status, isLoaded, hasValidKey, loadScript } = useGoogleMapsApi({ libraries: ['places'] });
 
@@ -118,13 +128,22 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
           // Log the place selection
           mapsLogger.logPlaceSelection(placeId, formattedAddress, hasGeometry);
 
-          // Clear user typing state as selection is made
+          // Mark address as selected and clear typing state
           setUserTyping(false);
-          setFocused(false);
           setAddressSelected(true);
 
-          // Always ensure map is expanded on selection
+          // Don't hide focus state immediately to avoid flickering
+          setTimeout(() => setFocused(false), 100);
+
+          // Always ensure map is expanded when an address is selected
           setMapExpanded(true);
+
+          console.log('🏙️ Place selected and address marked as selected:', {
+            placeId,
+            hasAddress,
+            hasGeometry,
+            addressSelected: true,
+          });
 
           // If we have a place but no geometry, try to use fallback coordinates
           if (place && place.place_id && !hasGeometry) {
@@ -185,18 +204,23 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
   // Handle input changes to show user is typing
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUserTyping(true);
-    setAddressSelected(false);
+
+    // Only clear address selection if user is actively changing the text
+    // This prevents clearing the selection when just clicking on the field
+    if (e.target.value !== currentAddress) {
+      setAddressSelected(false);
+
+      // Clear coordinates when user is actually typing new content
+      if (watch('latitude') || watch('longitude')) {
+        setValue('latitude', undefined, { shouldValidate: false });
+        setValue('longitude', undefined, { shouldValidate: false });
+      }
+    }
 
     // Update form value as user types
     setValue('business_address', e.target.value, {
       shouldValidate: e.target.value.length > 5, // Only validate longer addresses
     });
-
-    // Clear coordinates when user is typing (will be set when place is selected)
-    if (watch('latitude') || watch('longitude')) {
-      setValue('latitude', undefined, { shouldValidate: false });
-      setValue('longitude', undefined, { shouldValidate: false });
-    }
   };
 
   // Register the input with react-hook-form
@@ -204,8 +228,9 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
 
   const handleFocus = () => {
     setFocused(true);
-    // If user clicks back into the field after selecting, show typing state
-    if (addressSelected) {
+    // Don't reset typing state when just focusing the field
+    // Only show typing indicator if user hasn't selected an address yet
+    if (!addressSelected) {
       setUserTyping(true);
     }
   };
@@ -260,7 +285,16 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
             aria-required={isRequired}
             aria-invalid={errors.business_address ? 'true' : 'false'}
             onFocus={handleFocus}
-            onBlur={() => setTimeout(() => setFocused(false), 200)} // Delay to allow selection
+            onBlur={() => {
+              // When field loses focus, keep address selected state but hide the dropdown
+              setTimeout(() => {
+                setFocused(false);
+                // Don't reset userTyping if we have coordinates (address was selected)
+                if (latitude && longitude) {
+                  setUserTyping(false);
+                }
+              }, 200); // Delay to allow selection to complete
+            }}
             ref={element => {
               // Call react-hook-form's ref
               ref(element);
@@ -304,8 +338,8 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
           </div>
         )}
 
-        {/* Success Indicator */}
-        {!userTyping && currentAddress && latitude && longitude && (
+        {/* Success Indicator - visible when address is selected with coordinates */}
+        {addressSelected && currentAddress && latitude && longitude && (
           <div className="mt-1 text-xs text-green-600 flex items-center">
             <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -315,7 +349,7 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            Address verified with map location
+            <span className="font-medium">Address verified</span> - map location shown below
           </div>
         )}
       </div>
