@@ -175,20 +175,36 @@ This application is designed to integrate with the Flash API. Merchant data is c
 
 ## Version History
 
+- **1.0.0** - Production-ready release:
+
+  - Improved Google Maps integration with streamlined address selection
+  - Fixed address input UX to require only single selection
+  - Optimized static build process for production deployment
+  - Enhanced error handling and state management
+  - Fixed all TypeScript errors and improved code quality
+  - Added comprehensive logging for API interactions
+  - Fully tested across all supported browsers and devices
+
 - **0.4.0** - Enhanced features:
+
   - Added Google Maps integration for address validation and geolocation
   - Replaced phone verification with captcha authentication for simpler onboarding
   - Implemented international phone input with 50+ countries supported
   - Added interactive map display for business address validation
   - Improved mobile experience with responsive map controls
+
 - **0.3.0** - Authentication improvements:
+
   - Added phone-based authentication
   - Improved security with CSRF protection
   - Enhanced error handling and validation
+
 - **0.2.0** - UI/UX improvements:
+
   - Enhanced UI with Flash design system
   - Improved UX and form flow
   - Better code organization and performance optimization
+
 - **0.1.0** - Initial release:
   - Basic signup functionality
   - Core form validation

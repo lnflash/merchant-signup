@@ -1,6 +1,44 @@
 # Changelog
 
-## v0.4.0 - Static Site Deployment Refactoring
+## v1.0.0 - Production Release (2024-04-24)
+
+### Major Changes
+
+- Production-ready release with comprehensive improvements to Google Maps integration
+- Streamlined address selection process requiring only a single selection to see the map
+- Fixed type errors and enhanced type safety throughout the codebase
+- Improved build process for static site deployment
+- Enhanced error handling and state management
+
+### Added
+
+- **Enhanced Address Input Experience**
+
+  - Fixed issue requiring double-selection of addresses in Google Maps
+  - Improved state synchronization for address selection
+  - Enhanced focus management for better user experience
+  - Added immediate visual feedback after address selection
+
+- **TypeScript Improvements**
+
+  - Fixed duplicate onBlur handler issue in EnhancedAddressInput component
+  - Enhanced type imports to improve build reliability
+  - Fixed all TypeScript errors for production build
+  - Improved component type safety
+
+- **Build Optimizations**
+  - Enhanced .gitignore to exclude test results and temporary build files
+  - Improved build process for static site deployment
+  - Fixed dependencies in temp build directory
+
+### Technical Improvements
+
+- Enhanced state management with better synchronization
+- Improved React rendering cycle for map display
+- Optimized event handlers to prevent conflicts
+- Updated documentation with the latest changes
+
+## v0.4.0 - Static Site Deployment Refactoring (2024-03-15)
 
 ### Major Changes
 
@@ -12,16 +50,19 @@
 ### Added
 
 - **Direct Supabase Client Integration**
+
   - Created `getSupabase()` function for easy client-side Supabase access
   - Added credential detection from multiple sources (window.ENV, process.env)
   - Enhanced mock Supabase client for testing and development
 
 - **Static API Fallbacks**
+
   - Implemented fallback mechanism in API service that bypasses API routes in static builds
   - Added direct Supabase form submission for static builds
   - Enhanced FileUpload component to work in static builds
 
 - **Environment Variable Handling**
+
   - Improved `env-config.js` for static builds
   - Enhanced `useCredentials` hook with better fallback mechanisms
   - Added static JSON fallbacks for API credentials

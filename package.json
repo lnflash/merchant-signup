@@ -1,6 +1,6 @@
 {
   "name": "merchant-signup",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "node scripts/check-env.js && next dev",

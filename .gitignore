@@ -5,6 +5,9 @@
 
 # Testing
 /coverage
+/test-results
+/playwright-report
+/.swc
 
 # Next.js
 /.next/
@@ -12,6 +15,8 @@
 
 # Production
 /build
+/temp_build_app
+/dist
 
 # Misc
 .DS_Store
