@@ -231,6 +231,7 @@ export const apiService = {
         // Include optional fields only if they have values
         ...(data.business_name ? { business_name: data.business_name } : {}),
         ...(data.business_address ? { business_address: data.business_address } : {}),
+        ...(data.wants_terminal !== undefined ? { terminal_requested: data.wants_terminal } : {}),
         ...(data.bank_name ? { bank_name: data.bank_name } : {}),
         ...(data.bank_branch ? { bank_branch: data.bank_branch } : {}),
         ...(data.bank_account_type ? { bank_account_type: data.bank_account_type } : {}),
@@ -268,6 +269,7 @@ export const apiService = {
                   typeof data.longitude === 'string' ? parseFloat(data.longitude) : data.longitude,
               }
             : {}),
+          ...(data.wants_terminal !== undefined ? { terminal_requested: data.wants_terminal } : {}),
           ...(data.bank_name ? { bank_name: data.bank_name } : {}),
           ...(data.bank_branch ? { bank_branch: data.bank_branch } : {}),
           ...(data.bank_account_type ? { bank_account_type: data.bank_account_type } : {}),
@@ -338,6 +340,9 @@ export const apiService = {
                 email: data.email || null,
                 account_type: data.account_type,
                 terms_accepted: data.terms_accepted,
+                ...(data.wants_terminal !== undefined
+                  ? { terminal_requested: data.wants_terminal }
+                  : {}),
 
                 // Add the new columns
                 client_version: 'api-essential-fallback',
@@ -378,6 +383,9 @@ export const apiService = {
                     phone: data.phone,
                     account_type: 'personal', // Hardcode for minimal valid row
                     terms_accepted: true, // Hardcode for minimal valid row
+                    ...(data.wants_terminal !== undefined
+                      ? { terminal_requested: data.wants_terminal }
+                      : {}),
 
                     // Add the new columns with minimal values
                     client_version: 'api-minimal-fallback',
