@@ -156,7 +156,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
                 </svg>
                 <div
                   className="absolute left-0 bottom-6 w-64 p-3 text-xs bg-gray-700 text-white rounded shadow-lg 
-                     opacity-0 pointer-events-none group-hover:opacity-100 transition duration-150 ease-in-out"
+                     opacity-0 pointer-events-none group-hover:opacity-100 transition duration-150 ease-in-out z-50"
                 >
                   A Flash Terminal is a smartdevice that can accept payment via Flash for your
                   business and print receipts. A customer service representative will contact you if
