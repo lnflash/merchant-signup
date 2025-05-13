@@ -1,5 +1,48 @@
 # Changelog
 
+## v1.2.0 - Terminal Checkbox and Documentation Improvements (2024-05-13)
+
+### Major Changes
+
+- Fixed "Do you want a Flash Terminal?" checkbox to correctly save TRUE value to database
+- Revamped project documentation for better organization and comprehensiveness
+- Enhanced all fallback mechanisms to ensure reliable form submissions
+
+### Added
+
+- **Flash Terminal Checkbox Improvements**
+
+  - Fixed column name mismatch (`wants_terminal` vs `terminal_requested`)
+  - Added explicit boolean conversion to ensure correct data type
+  - Enhanced checkbox state management to prevent React Hook Form issues
+  - Added comprehensive logging for debugging checkbox values
+
+- **Documentation Enhancements**
+
+  - Created `ISSUES_RESOLVED.md` with detailed documentation of all fixed issues
+  - Created `TERMINAL_CHECKBOX.md` with comprehensive documentation of the terminal checkbox feature
+  - Enhanced coordinate tracking documentation with debugging information
+  - Updated README with better structure and clearer feature descriptions
+
+- **Type Safety Improvements**
+  - Enhanced null and undefined checking throughout the codebase
+  - Improved type handling for boolean values
+  - Fixed potential type coercion issues
+
+### Fixed
+
+- Issue where terminal checkbox wasn't saving TRUE values to the database
+- Form state management issues with checkbox interactions
+- Improved validation of checkbox values throughout form submission flow
+- Enhanced field handling in all fallback submission paths
+
+### Technical Improvements
+
+- Added debug display for terminal checkbox state in development mode
+- Improved tooltip z-index to ensure it's visible above other elements
+- Enhanced error handling for checkbox state changes
+- Standardized boolean handling across the codebase
+
 ## v1.1.0 - Coordinates Tracking (2024-05-13)
 
 ### Major Changes

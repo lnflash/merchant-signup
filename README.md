@@ -4,34 +4,63 @@ A Next.js application for merchant onboarding to the Flash payment platform.
 
 ## Overview
 
-This application provides a streamlined signup flow for merchants looking to accept Flash as a payment method. It collects necessary information based on the account type selected and integrates with the Flash backend.
+This application provides a streamlined signup flow for merchants looking to accept Flash as a payment method. It collects necessary information based on account type (personal, business, merchant) and integrates with Supabase for data storage.
 
-## Features
+## Key Features
 
-- Multi-step form with progressive disclosure
-- Different flows for Personal, Professional, and Merchant accounts
-- ID document upload for merchant verification
-- Comprehensive form validation
-- Multiple authentication methods (email + password or captcha verification)
-- Integration with Supabase for data storage
-- Enhanced security with CSRF protection
-- Mobile-friendly responsive design
-- Flash-branded UI aligned with the design system
-- **Enhanced phone input** with support for 50+ countries and smart formatting ([details](PHONE_MAP_FEATURES.md))
-- **Google Maps integration** for address validation and interactive map display ([details](PHONE_MAP_FEATURES.md))
-- **Location coordinates tracking** for precise business location data ([details](docs/COORDINATE_TRACKING.md))
+- **Multi-step Progressive Form**
 
-## Tech Stack
+  - Different flows for Personal, Business, and Merchant accounts
+  - Progressive disclosure of relevant fields
+  - Comprehensive validation with React Hook Form and Zod
 
-- **Framework**: Next.js 14
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Form Management**: React Hook Form
-- **Validation**: Zod
-- **Backend Storage**: Supabase
-- **Maps API**: Google Maps JavaScript API with Places Autocomplete
-- **Deployment**: DigitalOcean App Platform
-- **Testing**: Jest, React Testing Library, Playwright
+- **Multiple Authentication Options**
+
+  - Email + password authentication
+  - Captcha verification for faster signup
+
+- **Enhanced Location Services**
+
+  - Google Maps integration with Places Autocomplete
+  - Business address validation and visualization
+  - Precise coordinate tracking (latitude/longitude)
+  - Interactive map display
+
+- **International Phone Support**
+
+  - Support for 50+ countries with proper formatting
+  - Smart validation with libphonenumber-js
+
+- **Flash Terminal Integration**
+
+  - Checkbox to request a Flash point-of-sale terminal
+  - Proper boolean value persistence
+
+- **Robust Form Submission**
+
+  - Primary API route submission
+  - Direct Supabase fallback for static builds
+  - Multiple fallback mechanisms
+  - Comprehensive error handling
+
+- **Security Features**
+  - CSRF protection
+  - Row-level security policies in Supabase
+  - Secure document upload
+
+## Technical Stack
+
+| Category            | Technology                                          |
+| ------------------- | --------------------------------------------------- |
+| **Framework**       | Next.js 14                                          |
+| **Language**        | TypeScript                                          |
+| **Styling**         | Tailwind CSS                                        |
+| **Form Management** | React Hook Form                                     |
+| **Validation**      | Zod                                                 |
+| **Backend Storage** | Supabase                                            |
+| **Maps API**        | Google Maps JavaScript API with Places Autocomplete |
+| **Deployment**      | DigitalOcean App Platform (static export)           |
+| **Testing**         | Jest, React Testing Library, Playwright             |
 
 ## Getting Started
 
@@ -60,7 +89,7 @@ This application provides a streamlined signup flow for merchants looking to acc
 3. Create a `.env.local` file:
 
    ```bash
-   cp .env/.env.example .env.local
+   cp .env.example .env.local
    ```
 
 4. Update the environment variables in `.env.local` with your Supabase credentials and Google Maps API key.
@@ -72,6 +101,15 @@ This application provides a streamlined signup flow for merchants looking to acc
    ```
 
 6. Open [http://localhost:3000](http://localhost:3000) to see the application.
+
+### Setting Up Supabase
+
+1. Create a new Supabase project
+2. Run the SQL from `db/supabase.sql` in the Supabase SQL editor to set up the base tables
+3. Run the SQL from `db/alter-table.sql` to add required additional columns
+4. Configure storage buckets:
+   - `id-uploads`: For ID document storage
+   - `formdata`: For fallback form storage
 
 ### Testing
 
@@ -86,85 +124,70 @@ npm run test:coverage
 npm run test:e2e
 ```
 
-### Database Setup
-
-1. Create a new Supabase project.
-2. Run the SQL from `supabase.sql` in the Supabase SQL editor to set up the database schema.
-
 ## Project Structure
 
 ```
 ├── app/                  # Next.js app directory
 │   ├── api/              # API routes
-│   │   ├── health/       # Health check endpoint
-│   │   └── submit/       # Form submission endpoint
 │   ├── form/             # Form pages and components
 │   │   └── components/   # Form step components
 │   └── layout.tsx        # Root layout
+├── db/                   # Database schema files
 ├── lib/                  # Shared libraries
 │   ├── supabase.ts       # Supabase client
 │   └── validators.ts     # Zod validation schemas
-├── public/               # Public assets
-│   └── images/           # Image assets
-│       └── logos/        # Logo files
 ├── src/                  # Source code
-│   ├── config/           # Application configuration
+│   ├── services/         # Service layer
 │   ├── hooks/            # Custom React hooks
 │   ├── utils/            # Utility functions
 │   ├── api/              # API client
-│   ├── mocks/            # MSW mocks for testing
 │   └── types/            # TypeScript types
-├── e2e/                  # E2E tests
-├── .github/              # GitHub workflows
-├── .husky/               # Git hooks
-├── .env/                 # Environment examples
-└── jest.config.js        # Jest configuration
+├── scripts/              # Build and deployment scripts
+├── public/               # Public assets
+└── e2e/                  # E2E tests
 ```
-
-## Continuous Integration
-
-This project uses GitHub Actions for continuous integration with the following jobs:
-
-- Type checking
-- Linting
-- Unit testing
-- E2E testing
 
 ## Database Schema
 
-The Supabase database contains a `signups` table with the following schema:
+The Supabase database contains a `signups` table with the following key columns:
 
-- **id** (uuid, primary key)
-- **name** (text)
-- **phone** (text)
-- **email** (text, optional)
-- **account_type** (enum: personal, business, merchant)
-- **business_name** (text, optional)
-- **business_address** (text, optional)
-- **latitude** (float8, optional)
-- **longitude** (float8, optional)
-- **bank_name** (text, optional)
-- **bank_account_type** (text, optional)
-- **account_currency** (text, optional)
-- **bank_account_number** (text, optional)
-- **bank_branch** (text, optional)
-- **id_image_url** (text, optional)
-- **terms_accepted** (boolean)
-- **created_at** (timestamp with time zone, default: now())
+| Column                  | Type        | Description                                       |
+| ----------------------- | ----------- | ------------------------------------------------- |
+| **id**                  | uuid        | Primary key                                       |
+| **name**                | text        | User's full name                                  |
+| **phone**               | text        | Phone number with country code                    |
+| **email**               | text        | Email address (optional)                          |
+| **account_type**        | enum        | 'personal', 'business', or 'merchant'             |
+| **business_name**       | text        | Business name (for business/merchant accounts)    |
+| **business_address**    | text        | Business address (for business/merchant accounts) |
+| **latitude**            | float8      | Latitude coordinate from Google Maps              |
+| **longitude**           | float8      | Longitude coordinate from Google Maps             |
+| **wants_terminal**      | boolean     | Whether a Flash Terminal is requested             |
+| **bank_name**           | text        | Bank name (for merchant accounts)                 |
+| **bank_account_number** | text        | Account number (for merchant accounts)            |
+| **id_image_url**        | text        | URL to uploaded ID document                       |
+| **terms_accepted**      | boolean     | Whether terms were accepted                       |
+| **created_at**          | timestamptz | Timestamp of submission                           |
 
 ## Environment Variables
 
-| Variable                        | Description                                   | Required |
-| ------------------------------- | --------------------------------------------- | -------- |
-| NEXT_PUBLIC_SUPABASE_URL        | Your Supabase project URL                     | Yes      |
-| NEXT_PUBLIC_SUPABASE_ANON_KEY   | Your Supabase anonymous key                   | Yes      |
-| NEXT_PUBLIC_API_BASE_URL        | Base URL for API endpoints (defaults to /api) | No       |
-| NEXT_PUBLIC_FLASH_API_URL       | URL for Flash API integration                 | No       |
-| NEXT_PUBLIC_GOOGLE_MAPS_API_KEY | Google Maps API key for address validation    | Yes      |
+See [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) for a complete list of required and optional environment variables.
 
-## Integration with Flash
+## Deployment
 
-This application is designed to integrate with the Flash API. Merchant data is collected through this portal and then sent to the Flash backend for processing.
+The application is built as a static Next.js export and deployed to DigitalOcean App Platform. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+
+## Google Maps Integration
+
+For detailed setup of the Google Maps API integration, see [GOOGLE_MAPS_SETUP.md](GOOGLE_MAPS_SETUP.md).
+
+## Additional Documentation
+
+- [DEVELOPMENT.md](DEVELOPMENT.md) - Developer guide and contribution information
+- [PHONE_MAP_FEATURES.md](PHONE_MAP_FEATURES.md) - Detailed information about enhanced phone and map features
+- [STATIC_BUILD.md](STATIC_BUILD.md) - Information about static export configuration
+- [SUPABASE_RLS_FIXES.md](SUPABASE_RLS_FIXES.md) - Row-level security policy configuration
+- [ISSUES_RESOLVED.md](ISSUES_RESOLVED.md) - Documentation of issues fixed and solutions implemented
 
 ## Contributing
 
@@ -176,46 +199,8 @@ This application is designed to integrate with the Flash API. Merchant data is c
 
 ## Version History
 
-- **1.1.0** - Feature enhancements:
+See [CHANGELOG.md](CHANGELOG.md) for a detailed version history.
 
-  - Added reliable location coordinates (latitude/longitude) tracking
-  - Fixed account type preservation in form submissions
-  - Enhanced Google Maps integration with improved coordinate extraction
-  - Added comprehensive debug logging for coordinate tracking
-  - Created testing tools for coordinate submission verification
-  - Added detailed documentation for coordinate tracking feature
+## License
 
-- **1.0.0** - Production-ready release:
-
-  - Improved Google Maps integration with streamlined address selection
-  - Fixed address input UX to require only single selection
-  - Optimized static build process for production deployment
-  - Enhanced error handling and state management
-  - Fixed all TypeScript errors and improved code quality
-  - Added comprehensive logging for API interactions
-  - Fully tested across all supported browsers and devices
-
-- **0.4.0** - Enhanced features:
-
-  - Added Google Maps integration for address validation and geolocation
-  - Replaced phone verification with captcha authentication for simpler onboarding
-  - Implemented international phone input with 50+ countries supported
-  - Added interactive map display for business address validation
-  - Improved mobile experience with responsive map controls
-
-- **0.3.0** - Authentication improvements:
-
-  - Added phone-based authentication
-  - Improved security with CSRF protection
-  - Enhanced error handling and validation
-
-- **0.2.0** - UI/UX improvements:
-
-  - Enhanced UI with Flash design system
-  - Improved UX and form flow
-  - Better code organization and performance optimization
-
-- **0.1.0** - Initial release:
-  - Basic signup functionality
-  - Core form validation
-  - Integration with Supabase backend
+This project is licensed under the [MIT License](LICENSE).
