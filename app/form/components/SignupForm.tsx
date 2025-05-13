@@ -29,6 +29,7 @@ export default function SignupForm() {
     defaultValues: {
       account_type: 'personal',
       terms_accepted: false as unknown as true, // Cast to satisfy the validator
+      wants_terminal: false, // Initialize the terminal checkbox to unchecked explicitly
     },
   });
 
@@ -38,12 +39,20 @@ export default function SignupForm() {
 
   const onSubmit = async (data: SignupFormData) => {
     console.log('Form onSubmit called with data:', data);
+
     // Add explicit logging to track the coordinates
     console.log('📍 SUBMIT COORDINATES:', {
       latitude: data.latitude,
       longitude: data.longitude,
       latitudeType: typeof data.latitude,
       longitudeType: typeof data.longitude,
+    });
+
+    // Log specifically about the terminal checkbox
+    console.log('💻 TERMINAL CHECKBOX VALUE IN SUBMIT:', {
+      wantsTerminal: data.wants_terminal,
+      type: typeof data.wants_terminal,
+      isTruthy: !!data.wants_terminal,
     });
 
     try {

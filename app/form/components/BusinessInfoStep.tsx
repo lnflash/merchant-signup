@@ -28,6 +28,14 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
 
   const isBusinessInfoRequired = accountType === 'business' || accountType === 'merchant';
   const validateAndContinue = () => {
+    // Log the value of wants_terminal to debug
+    const wantsTerminal = watch('wants_terminal');
+    console.log('💻 Terminal checkbox state:', {
+      wantsTerminal,
+      type: typeof wantsTerminal,
+      checked: !!wantsTerminal,
+    });
+
     if (accountType === 'merchant') {
       // For merchants, business info is now required
       const businessName = watch('business_name');
@@ -46,6 +54,10 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
       }
 
       if (isValid) {
+        // Make sure the terminal value is a proper boolean
+        if (wantsTerminal !== undefined) {
+          setValue('wants_terminal', !!wantsTerminal, { shouldValidate: false });
+        }
         setCurrentStep(4); // Continue to merchant step
       }
     } else if (accountType === 'business') {
@@ -66,10 +78,18 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
       }
 
       if (isValid) {
+        // Make sure the terminal value is a proper boolean
+        if (wantsTerminal !== undefined) {
+          setValue('wants_terminal', !!wantsTerminal, { shouldValidate: false });
+        }
         setCurrentStep(5); // Skip to terms for business/professional
       }
     } else {
       // For personal, go straight to terms
+      // Make sure the terminal value is a proper boolean if set
+      if (wantsTerminal !== undefined) {
+        setValue('wants_terminal', !!wantsTerminal, { shouldValidate: false });
+      }
       setCurrentStep(5);
     }
   };
@@ -136,6 +156,16 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
               type="checkbox"
               {...register('wants_terminal')}
               className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              onChange={e => {
+                // Explicitly set the boolean value based on checkbox state
+                const isChecked = e.target.checked;
+                setValue('wants_terminal', isChecked, { shouldValidate: false });
+                // Log the change to help debug
+                console.log('💻 Terminal checkbox changed:', {
+                  isChecked,
+                  type: typeof isChecked,
+                });
+              }}
             />
           </div>
           <div className="ml-3 text-sm">
@@ -155,7 +185,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
                   />
                 </svg>
                 <div
-                  className="absolute left-0 bottom-6 w-64 p-3 text-xs bg-gray-700 text-white rounded shadow-lg 
+                  className="absolute left-0 bottom-6 w-64 p-3 text-xs bg-gray-700 text-white rounded shadow-lg
                      opacity-0 pointer-events-none group-hover:opacity-100 transition duration-150 ease-in-out z-50"
                 >
                   A Flash Terminal is a smartdevice that can accept payment via Flash for your
@@ -166,6 +196,14 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
             </label>
           </div>
         </div>
+
+        {/* Debug display for terminal value - only visible in development */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-1 text-xs text-gray-400">
+            Terminal state: {watch('wants_terminal') ? 'true' : 'false'}(
+            {typeof watch('wants_terminal')})
+          </div>
+        )}
       </div>
 
       {/* Navigation Buttons */}

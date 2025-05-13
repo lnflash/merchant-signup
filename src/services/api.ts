@@ -301,7 +301,29 @@ export const apiService = {
                   typeof data.longitude === 'string' ? parseFloat(data.longitude) : data.longitude,
               }
             : {}),
-          ...(data.wants_terminal !== undefined ? { terminal_requested: data.wants_terminal } : {}),
+          // Explicitly handle terminal checkbox with conversion to boolean if needed
+          ...(data.wants_terminal !== undefined
+            ? {
+                terminal_requested:
+                  typeof data.wants_terminal === 'string'
+                    ? data.wants_terminal === 'true'
+                    : !!data.wants_terminal,
+              }
+            : {}),
+
+          // Log terminal field conversion
+          ...(() => {
+            console.log('💻 TERMINAL FIELD CONVERSION:', {
+              original: data.wants_terminal,
+              originalType: typeof data.wants_terminal,
+              converted:
+                typeof data.wants_terminal === 'string'
+                  ? data.wants_terminal === 'true'
+                  : !!data.wants_terminal,
+              inSchema: data.wants_terminal !== undefined,
+            });
+            return {};
+          })(),
           ...(data.bank_name ? { bank_name: data.bank_name } : {}),
           ...(data.bank_branch ? { bank_branch: data.bank_branch } : {}),
           ...(data.bank_account_type ? { bank_account_type: data.bank_account_type } : {}),
