@@ -285,13 +285,17 @@ export const apiService = {
           ...(data.business_address ? { business_address: data.business_address } : {}),
 
           // Always include latitude and longitude if they are valid numbers or can be parsed
-          ...(data.latitude !== undefined && data.latitude !== null && data.latitude !== ''
+          ...(data.latitude !== undefined &&
+          data.latitude !== null &&
+          (typeof data.latitude !== 'string' || data.latitude !== '')
             ? {
                 latitude:
                   typeof data.latitude === 'string' ? parseFloat(data.latitude) : data.latitude,
               }
             : {}),
-          ...(data.longitude !== undefined && data.longitude !== null && data.longitude !== ''
+          ...(data.longitude !== undefined &&
+          data.longitude !== null &&
+          (typeof data.longitude !== 'string' || data.longitude !== '')
             ? {
                 longitude:
                   typeof data.longitude === 'string' ? parseFloat(data.longitude) : data.longitude,
@@ -383,7 +387,9 @@ export const apiService = {
                   : {}),
 
                 // Include coordinates in fallback attempt if they exist
-                ...(data.latitude !== undefined && data.latitude !== null && data.latitude !== ''
+                ...(data.latitude !== undefined &&
+                data.latitude !== null &&
+                (typeof data.latitude !== 'string' || data.latitude !== '')
                   ? {
                       latitude:
                         typeof data.latitude === 'string'
@@ -391,7 +397,9 @@ export const apiService = {
                           : data.latitude,
                     }
                   : {}),
-                ...(data.longitude !== undefined && data.longitude !== null && data.longitude !== ''
+                ...(data.longitude !== undefined &&
+                data.longitude !== null &&
+                (typeof data.longitude !== 'string' || data.longitude !== '')
                   ? {
                       longitude:
                         typeof data.longitude === 'string'
@@ -446,7 +454,7 @@ export const apiService = {
                     // Still include coordinates even in minimal fallback if they exist
                     ...(data.latitude !== undefined &&
                     data.latitude !== null &&
-                    data.latitude !== ''
+                    (typeof data.latitude !== 'string' || data.latitude !== '')
                       ? {
                           latitude:
                             typeof data.latitude === 'string'
@@ -456,7 +464,7 @@ export const apiService = {
                       : {}),
                     ...(data.longitude !== undefined &&
                     data.longitude !== null &&
-                    data.longitude !== ''
+                    (typeof data.longitude !== 'string' || data.longitude !== '')
                       ? {
                           longitude:
                             typeof data.longitude === 'string'
@@ -528,13 +536,17 @@ export const apiService = {
       const fullData = {
         ...data,
         // Ensure coordinates are preserved and properly formatted
-        ...(data.latitude !== undefined && data.latitude !== null && data.latitude !== ''
+        ...(data.latitude !== undefined &&
+        data.latitude !== null &&
+        (typeof data.latitude !== 'string' || data.latitude !== '')
           ? {
               latitude:
                 typeof data.latitude === 'string' ? parseFloat(data.latitude) : data.latitude,
             }
           : {}),
-        ...(data.longitude !== undefined && data.longitude !== null && data.longitude !== ''
+        ...(data.longitude !== undefined &&
+        data.longitude !== null &&
+        (typeof data.longitude !== 'string' || data.longitude !== '')
           ? {
               longitude:
                 typeof data.longitude === 'string' ? parseFloat(data.longitude) : data.longitude,
