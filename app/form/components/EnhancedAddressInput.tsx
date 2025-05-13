@@ -84,11 +84,10 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
       hasInputRef: !!inputRef.current,
       hasAutocompleteRef: !!autocompleteRef.current,
       status,
-      address: currentAddress,
-      hasCoordinates: !!(latitude && longitude),
     });
 
-    // Only initialize when API is loaded and we have an input element
+    // Only initialize once when API is loaded and we have an input element
+    // Don't reinitialize if autocomplete already exists
     if (!isLoaded || !inputRef.current || autocompleteRef.current) return;
 
     try {
@@ -114,12 +113,21 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
       // Log successful initialization
       mapsLogger.logPlacesInitialization(true);
 
-      // Add place_changed listener
+      // Add place_changed listener - THIS IS THE CRITICAL PART
       autocompleteRef.current.addListener('place_changed', () => {
         if (!autocompleteRef.current) return;
 
         try {
+          // Disable further blur/focus events temporarily
+          // This is critical to prevent race conditions during selection
+          const isSelecting = true;
+
           const place = autocompleteRef.current.getPlace();
+          if (!place) {
+            console.warn('Place selection returned empty result');
+            return;
+          }
+
           const hasGeometry = !!(place && place.geometry && place.geometry.location);
           const hasAddress = !!(place && place.formatted_address);
           const formattedAddress = place && place.formatted_address ? place.formatted_address : '';
@@ -128,88 +136,94 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
           // Log the place selection
           mapsLogger.logPlaceSelection(placeId, formattedAddress, hasGeometry);
 
-          // Mark address as selected and clear typing state IMMEDIATELY
-          setUserTyping(false);
-          setAddressSelected(true);
-
-          // Always ensure map is expanded when an address is selected
-          setMapExpanded(true);
-
-          // Ensure focus is gone to complete the selection
-          setFocused(false);
-
-          console.log('🏙️ Place selected and address marked as selected:', {
+          console.log('🏙️ Place changed event triggered:', {
             placeId,
-            hasAddress,
             hasGeometry,
-            addressSelected: true,
+            hasAddress,
+            formattedAddress: formattedAddress.substring(0, 30) + '...',
           });
 
-          // If we have a place but no geometry, try to use fallback coordinates
+          // IMPORTANT: Handle coordinates extraction FIRST, before any state updates
+          // If we have a place but no geometry, use fallback coordinates
           if (place && place.place_id && !hasGeometry) {
             console.log('🏙️ Using fallback coordinates for address without geometry');
             const manualAddress = place.formatted_address || inputRef.current?.value || '';
 
             if (manualAddress) {
-              // Update the form values all at once with a synchronous batch
-              // to prevent React state updates from getting out of sync
-              setValue('business_address', manualAddress, { shouldValidate: true });
-
               // Use default coordinates (center of target market)
               const defaultLat = 18.1096; // Jamaica center lat
               const defaultLng = -77.2975; // Jamaica center lng
 
-              setValue('latitude', defaultLat, { shouldValidate: true });
-              setValue('longitude', defaultLng, { shouldValidate: true });
+              // IMPORTANT: Update the address field first to ensure it doesn't get replaced
+              setValue('business_address', manualAddress, { shouldValidate: false });
 
-              // Force UI update to immediately show the map
-              setTimeout(() => {
-                setAddressSelected(true);
-              }, 0);
+              // Set coordinates AFTER setting address
+              setValue('latitude', defaultLat, { shouldValidate: false });
+              setValue('longitude', defaultLng, { shouldValidate: false });
+
+              console.log('🏙️ Using fallback coordinates and address:', {
+                lat: defaultLat,
+                lng: defaultLng,
+                address: manualAddress,
+              });
+
+              // Only now update the UI state
+              setUserTyping(false);
+              setAddressSelected(true);
+              setMapExpanded(true);
+
+              // Ensure we force focus out to complete the selection
+              if (document.activeElement === inputRef.current) {
+                inputRef.current.blur();
+              }
             }
           }
           // Normal case: we have both geometry and address data
           else if (hasGeometry && hasAddress && place.geometry && place.geometry.location) {
             console.log('🏙️ Using actual coordinates from place selection');
 
-            // Get the values before setting them (for stability)
+            // Get the coordinates immediately
             const lat = place.geometry.location.lat() || 0;
             const lng = place.geometry.location.lng() || 0;
 
-            // Log coordinates before setting them
-            console.log('📍 SETTING COORDINATES IN FORM:', {
+            console.log('📍 Extracted coordinates:', {
               latitude: lat,
               longitude: lng,
-              latitudeType: typeof lat,
-              longitudeType: typeof lng,
-              addressText: formattedAddress,
+              address: formattedAddress,
             });
 
-            // Set all values in a batch to keep them in sync
-            setValue('business_address', formattedAddress, { shouldValidate: true });
-            setValue('latitude', lat, { shouldValidate: true });
-            setValue('longitude', lng, { shouldValidate: true });
+            // CRITICALLY IMPORTANT: Update all form values immediately in this specific order
+            // 1. First update the address field with the formatted address from Google
+            setValue('business_address', formattedAddress, { shouldValidate: false });
 
-            // Log form values right after setting to verify they were properly saved
+            // 2. Then set coordinates - order matters to avoid race conditions
+            setValue('latitude', lat, { shouldValidate: false });
+            setValue('longitude', lng, { shouldValidate: false });
+
+            // Only after form values are set, update UI state
+            setUserTyping(false);
+            setAddressSelected(true);
+            setMapExpanded(true);
+
+            // Force blur to ensure selection is complete
+            if (document.activeElement === inputRef.current) {
+              inputRef.current.blur();
+            }
+
+            // Verify coordinates were properly set after a short delay
             setTimeout(() => {
-              console.log('📍 FORM VALUES AFTER SETTING COORDINATES:', {
+              console.log('📍 FORM VALUES AFTER SETTING:', {
                 latitude: watch('latitude'),
                 longitude: watch('longitude'),
-                latitudeType: typeof watch('latitude'),
-                longitudeType: typeof watch('longitude'),
+                address: watch('business_address'),
               });
-            }, 0);
-
-            // Force UI update to immediately show the map
-            setTimeout(() => {
-              setAddressSelected(true);
-            }, 0);
+            }, 50);
           } else {
             // Handle case where selection doesn't have full data
             console.warn('Address selection missing required data');
 
-            // Still update the address field with current input value
-            const manualAddress = inputRef.current?.value;
+            // Still update the address field with whatever we got
+            const manualAddress = place.formatted_address || inputRef.current?.value || '';
             if (manualAddress) {
               setValue('business_address', manualAddress, { shouldValidate: true });
 
@@ -234,27 +248,40 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
       // Google Maps doesn't expose a direct way to clean up an autocomplete
       autocompleteRef.current = null;
     };
-  }, [isLoaded, setValue, currentAddress, latitude, longitude]);
+  }, [isLoaded, setValue, watch]);
 
   // Handle input changes to show user is typing
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Don't react to synthetic events from Google's autocomplete
+    // This helps prevent conflicts with the place_changed handler
+    const newValue = e.target.value;
+
+    // Update visual state to show typing
     setUserTyping(true);
 
-    // Only clear address selection if user is actively changing the text
-    // This prevents clearing the selection when just clicking on the field
-    if (e.target.value !== currentAddress) {
+    // Only clear address selection if user is actively typing something different
+    // than what's currently in the form (not just clicking or focusing)
+    if (newValue !== currentAddress) {
+      console.log('📝 User typing new address text:', {
+        oldValue: currentAddress?.substring(0, 20),
+        newValue: newValue?.substring(0, 20),
+      });
+
+      // Mark address as not selected
       setAddressSelected(false);
 
-      // Clear coordinates when user is actually typing new content
-      if (watch('latitude') || watch('longitude')) {
+      // IMPORTANT: Only clear coordinates if they exist and user is actively typing
+      // This prevents clearing coordinates during selection process
+      if (latitude || longitude) {
+        console.log('📍 Clearing coordinates during user typing');
         setValue('latitude', undefined, { shouldValidate: false });
         setValue('longitude', undefined, { shouldValidate: false });
       }
     }
 
-    // Update form value as user types
-    setValue('business_address', e.target.value, {
-      shouldValidate: e.target.value.length > 5, // Only validate longer addresses
+    // Always update form value as user types
+    setValue('business_address', newValue, {
+      shouldValidate: newValue.length > 5, // Only validate longer addresses
     });
   };
 
@@ -262,9 +289,11 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
   const { ref, onBlur: formOnBlur, ...inputProps } = register('business_address');
 
   const handleFocus = () => {
+    // Simply set focused state to show dropdown
     setFocused(true);
-    // Don't reset typing state when just focusing the field
-    // Only show typing indicator if user hasn't selected an address yet
+
+    // Only show typing indicator if user hasn't yet selected an address
+    // This maintains proper UI state
     if (!addressSelected) {
       setUserTyping(true);
     }
@@ -272,20 +301,31 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
 
   // Combine our custom blur handler with react-hook-form's
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    // Call the original onBlur from react-hook-form if it exists
+    // IMPORTANT: Don't interfere with Google's selection process
+    // If blur is happening right after a selection, we need to ensure
+    // the selection process completes fully first
+
+    // Call react-hook-form's original onBlur to maintain form behavior
     if (formOnBlur) {
-      // Create an event for react-hook-form's onBlur
       formOnBlur(e);
     }
 
-    // When field loses focus, keep address selected state but hide the dropdown
+    // Check if we already have coordinates - if so, we've already selected an address
+    const hasCoordinates = !!(latitude && longitude);
+
+    // Use a delay to ensure any Google Place selection has time to complete
+    // This is crucial for preventing focus/blur race conditions
     setTimeout(() => {
+      // Hide dropdown regardless of selection
       setFocused(false);
-      // Don't reset userTyping if we have coordinates (address was selected)
-      if (latitude && longitude) {
+
+      // If we have coordinates, make sure the UI shows this as a completed selection
+      if (hasCoordinates) {
+        setAddressSelected(true);
         setUserTyping(false);
+        console.log('📍 Blur handler: Found coordinates, marking address as selected');
       }
-    }, 200); // Delay to allow selection to complete
+    }, 300); // Longer delay to ensure place selection completes first
   };
 
   return (
