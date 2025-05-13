@@ -30,10 +30,21 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
   const validateAndContinue = () => {
     // Log the value of wants_terminal to debug
     const wantsTerminal = watch('wants_terminal');
-    console.log('💻 Terminal checkbox state:', {
+    console.log('💻 Terminal checkbox state before validation:', {
       wantsTerminal,
       type: typeof wantsTerminal,
       checked: !!wantsTerminal,
+      forcedBoolean: wantsTerminal ? true : false,
+    });
+
+    // CRITICAL: Force a proper boolean value for the terminal checkbox
+    // Do this here to ensure it's set correctly before moving to the next step
+    setValue('wants_terminal', wantsTerminal ? true : false, { shouldValidate: false });
+
+    // Log again after forcing boolean
+    console.log('💻 Terminal checkbox state AFTER forcing boolean:', {
+      wantsTerminal: watch('wants_terminal'),
+      type: typeof watch('wants_terminal'),
     });
 
     if (accountType === 'merchant') {
@@ -154,16 +165,20 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
             <input
               id="wants_terminal"
               type="checkbox"
-              {...register('wants_terminal')}
+              // IMPORTANT: Don't use register here - it can cause issues with the checkbox state
+              // Instead, manage the state manually
+              checked={!!watch('wants_terminal')}
               className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               onChange={e => {
                 // Explicitly set the boolean value based on checkbox state
                 const isChecked = e.target.checked;
-                setValue('wants_terminal', isChecked, { shouldValidate: false });
+                // CRITICAL: Force true or false boolean value
+                setValue('wants_terminal', isChecked ? true : false, { shouldValidate: false });
                 // Log the change to help debug
                 console.log('💻 Terminal checkbox changed:', {
                   isChecked,
-                  type: typeof isChecked,
+                  forcedBoolean: isChecked ? true : false,
+                  type: typeof (isChecked ? true : false),
                 });
               }}
             />

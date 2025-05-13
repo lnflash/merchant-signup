@@ -55,6 +55,15 @@ export default function SignupForm() {
       isTruthy: !!data.wants_terminal,
     });
 
+    // CRITICAL: Force the terminal value to be a proper boolean before submission
+    if (data.wants_terminal !== undefined) {
+      data.wants_terminal = data.wants_terminal ? true : false;
+      console.log('💻 TERMINAL VALUE FORCED TO BOOLEAN:', {
+        wantsTerminal: data.wants_terminal,
+        type: typeof data.wants_terminal,
+      });
+    }
+
     try {
       setSubmitting(true);
       console.log('Setting submitting state to true');

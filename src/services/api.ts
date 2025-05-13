@@ -241,7 +241,8 @@ export const apiService = {
         // Include optional fields only if they have values
         ...(data.business_name ? { business_name: data.business_name } : {}),
         ...(data.business_address ? { business_address: data.business_address } : {}),
-        ...(data.wants_terminal !== undefined ? { terminal_requested: data.wants_terminal } : {}),
+        // CRITICAL: Must use wants_terminal (not terminal_requested) to match DB schema
+        ...(data.wants_terminal !== undefined ? { wants_terminal: !!data.wants_terminal } : {}),
         ...(data.bank_name ? { bank_name: data.bank_name } : {}),
         ...(data.bank_branch ? { bank_branch: data.bank_branch } : {}),
         ...(data.bank_account_type ? { bank_account_type: data.bank_account_type } : {}),
@@ -302,9 +303,10 @@ export const apiService = {
               }
             : {}),
           // Explicitly handle terminal checkbox with conversion to boolean if needed
+          // CRITICAL: Must use wants_terminal column (not terminal_requested) to match DB schema
           ...(data.wants_terminal !== undefined
             ? {
-                terminal_requested:
+                wants_terminal:
                   typeof data.wants_terminal === 'string'
                     ? data.wants_terminal === 'true'
                     : !!data.wants_terminal,
@@ -321,6 +323,7 @@ export const apiService = {
                   ? data.wants_terminal === 'true'
                   : !!data.wants_terminal,
               inSchema: data.wants_terminal !== undefined,
+              columnName: 'wants_terminal', // Confirm using correct column name
             });
             return {};
           })(),
@@ -404,8 +407,9 @@ export const apiService = {
                 email: data.email || null,
                 account_type: data.account_type,
                 terms_accepted: data.terms_accepted,
+                // Use wants_terminal to match DB schema
                 ...(data.wants_terminal !== undefined
-                  ? { terminal_requested: data.wants_terminal }
+                  ? { wants_terminal: !!data.wants_terminal }
                   : {}),
 
                 // Include coordinates in fallback attempt if they exist
@@ -469,8 +473,9 @@ export const apiService = {
                     phone: data.phone,
                     account_type: data.account_type || 'personal', // Use original account type if available
                     terms_accepted: true, // Hardcode for minimal valid row
+                    // Use wants_terminal to match DB schema (not terminal_requested)
                     ...(data.wants_terminal !== undefined
-                      ? { terminal_requested: data.wants_terminal }
+                      ? { wants_terminal: !!data.wants_terminal }
                       : {}),
 
                     // Still include coordinates even in minimal fallback if they exist
