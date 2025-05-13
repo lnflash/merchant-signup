@@ -1,5 +1,46 @@
 # Changelog
 
+## v1.1.0 - Coordinates Tracking (2024-05-13)
+
+### Major Changes
+
+- Added reliable location coordinates (latitude/longitude) tracking for business addresses
+- Fixed account type preservation in form submissions
+- Enhanced Google Maps integration with improved coordinate extraction
+
+### Added
+
+- **Coordinate Tracking System**
+
+  - Added proper latitude and longitude extraction from Google Maps Places API
+  - Enhanced form validation to handle coordinate data types
+  - Improved database submission to reliably store coordinates
+  - Added fallback handling for coordinates in all submission paths
+
+- **Debugging and Testing**
+
+  - Added comprehensive debug logging for coordinate tracking
+  - Created test script for verifying coordinate submission
+  - Added unit tests for coordinate handling in the API service
+
+- **Documentation**
+  - Added detailed documentation for the coordinate tracking feature (COORDINATE_TRACKING.md)
+  - Updated README with coordinate tracking feature
+  - Updated database schema documentation
+
+### Fixed
+
+- Issue where account type wasn't properly preserved in fallback submission modes
+- Coordinate extraction and storage in all form submission paths
+- Improved coordinate type handling (string vs number)
+- Enhanced handling of empty or undefined coordinate values
+
+### Technical Improvements
+
+- Added more robust error handling for coordinate data
+- Enhanced validation schema to better handle coordinate data types
+- Improved form submission process to reliably include coordinate data
+
 ## v1.0.0 - Production Release (2024-04-24)
 
 ### Major Changes

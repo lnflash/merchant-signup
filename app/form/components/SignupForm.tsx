@@ -38,6 +38,14 @@ export default function SignupForm() {
 
   const onSubmit = async (data: SignupFormData) => {
     console.log('Form onSubmit called with data:', data);
+    // Add explicit logging to track the coordinates
+    console.log('📍 SUBMIT COORDINATES:', {
+      latitude: data.latitude,
+      longitude: data.longitude,
+      latitudeType: typeof data.latitude,
+      longitudeType: typeof data.longitude,
+    });
+
     try {
       setSubmitting(true);
       console.log('Setting submitting state to true');
@@ -46,6 +54,15 @@ export default function SignupForm() {
       const { getValues } = methods;
       const values = getValues();
       console.log('Form values from getValues:', values);
+
+      // Also log coordinates from getValues
+      console.log('📍 GETVALUES COORDINATES:', {
+        latitude: values.latitude,
+        longitude: values.longitude,
+        latitudeType: typeof values.latitude,
+        longitudeType: typeof values.longitude,
+      });
+
       let isValid = true;
 
       // Basic fields validation

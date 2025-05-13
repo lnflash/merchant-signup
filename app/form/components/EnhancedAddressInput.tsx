@@ -176,10 +176,29 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
             const lat = place.geometry.location.lat() || 0;
             const lng = place.geometry.location.lng() || 0;
 
+            // Log coordinates before setting them
+            console.log('📍 SETTING COORDINATES IN FORM:', {
+              latitude: lat,
+              longitude: lng,
+              latitudeType: typeof lat,
+              longitudeType: typeof lng,
+              addressText: formattedAddress,
+            });
+
             // Set all values in a batch to keep them in sync
             setValue('business_address', formattedAddress, { shouldValidate: true });
             setValue('latitude', lat, { shouldValidate: true });
             setValue('longitude', lng, { shouldValidate: true });
+
+            // Log form values right after setting to verify they were properly saved
+            setTimeout(() => {
+              console.log('📍 FORM VALUES AFTER SETTING COORDINATES:', {
+                latitude: watch('latitude'),
+                longitude: watch('longitude'),
+                latitudeType: typeof watch('latitude'),
+                longitudeType: typeof watch('longitude'),
+              });
+            }, 0);
 
             // Force UI update to immediately show the map
             setTimeout(() => {

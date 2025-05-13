@@ -19,6 +19,7 @@ This application provides a streamlined signup flow for merchants looking to acc
 - Flash-branded UI aligned with the design system
 - **Enhanced phone input** with support for 50+ countries and smart formatting ([details](PHONE_MAP_FEATURES.md))
 - **Google Maps integration** for address validation and interactive map display ([details](PHONE_MAP_FEATURES.md))
+- **Location coordinates tracking** for precise business location data ([details](docs/COORDINATE_TRACKING.md))
 
 ## Tech Stack
 
@@ -174,6 +175,15 @@ This application is designed to integrate with the Flash API. Merchant data is c
 5. Submit a pull request
 
 ## Version History
+
+- **1.1.0** - Feature enhancements:
+
+  - Added reliable location coordinates (latitude/longitude) tracking
+  - Fixed account type preservation in form submissions
+  - Enhanced Google Maps integration with improved coordinate extraction
+  - Added comprehensive debug logging for coordinate tracking
+  - Created testing tools for coordinate submission verification
+  - Added detailed documentation for coordinate tracking feature
 
 - **1.0.0** - Production-ready release:
 

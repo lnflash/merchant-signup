@@ -166,6 +166,16 @@ export const apiService = {
     logger.info('Submitting form directly to Supabase');
     console.log('Direct Supabase connection attempt...');
 
+    // Add detailed logging for coordinates
+    console.log('📍 SUPABASE DIRECT SUBMISSION COORDINATES:', {
+      latitude: data.latitude,
+      longitude: data.longitude,
+      latitudeType: typeof data.latitude,
+      longitudeType: typeof data.longitude,
+      latIsString: typeof data.latitude === 'string',
+      lngIsString: typeof data.longitude === 'string',
+    });
+
     try {
       // Get Supabase credentials from window.ENV (static build) or environment variables
       const env = typeof window !== 'undefined' ? window.ENV : null;
@@ -245,6 +255,22 @@ export const apiService = {
       console.log('Attempting to insert data into the signups table...', submissionData);
 
       try {
+        // Log detailed coordinate info before preparing schema data
+        console.log('📍 PREPARING SCHEMA DATA - COORDINATES:', {
+          latitude: data.latitude,
+          longitude: data.longitude,
+          latitudeType: typeof data.latitude,
+          longitudeType: typeof data.longitude,
+          latIsString: typeof data.latitude === 'string',
+          lngIsString: typeof data.longitude === 'string',
+          latIsUndefined: data.latitude === undefined,
+          lngIsUndefined: data.longitude === undefined,
+          latIsNull: data.latitude === null,
+          lngIsNull: data.longitude === null,
+          latIsFalsy: !data.latitude,
+          lngIsFalsy: !data.longitude,
+        });
+
         // Include all schema fields including the newly added columns
         const schemaValidData = {
           // Core required fields
@@ -257,13 +283,15 @@ export const apiService = {
           // Optional business/merchant fields
           ...(data.business_name ? { business_name: data.business_name } : {}),
           ...(data.business_address ? { business_address: data.business_address } : {}),
-          ...(data.latitude !== undefined
+
+          // Always include latitude and longitude if they are valid numbers or can be parsed
+          ...(data.latitude !== undefined && data.latitude !== null && data.latitude !== ''
             ? {
                 latitude:
                   typeof data.latitude === 'string' ? parseFloat(data.latitude) : data.latitude,
               }
             : {}),
-          ...(data.longitude !== undefined
+          ...(data.longitude !== undefined && data.longitude !== null && data.longitude !== ''
             ? {
                 longitude:
                   typeof data.longitude === 'string' ? parseFloat(data.longitude) : data.longitude,
@@ -312,6 +340,16 @@ export const apiService = {
 
         console.log('Inserting schema-validated data:', schemaValidData);
 
+        // Log specific coordinates that will be sent to Supabase
+        console.log('📍 FINAL COORDINATES BEING SENT TO SUPABASE:', {
+          hasLatitude: 'latitude' in schemaValidData,
+          latitude: schemaValidData.latitude,
+          latitudeType: typeof schemaValidData.latitude,
+          hasLongitude: 'longitude' in schemaValidData,
+          longitude: schemaValidData.longitude,
+          longitudeType: typeof schemaValidData.longitude,
+        });
+
         // First attempt with all fields
         const { data: result, error } = await supabase
           .from('signups')
@@ -342,6 +380,24 @@ export const apiService = {
                 terms_accepted: data.terms_accepted,
                 ...(data.wants_terminal !== undefined
                   ? { terminal_requested: data.wants_terminal }
+                  : {}),
+
+                // Include coordinates in fallback attempt if they exist
+                ...(data.latitude !== undefined && data.latitude !== null && data.latitude !== ''
+                  ? {
+                      latitude:
+                        typeof data.latitude === 'string'
+                          ? parseFloat(data.latitude)
+                          : data.latitude,
+                    }
+                  : {}),
+                ...(data.longitude !== undefined && data.longitude !== null && data.longitude !== ''
+                  ? {
+                      longitude:
+                        typeof data.longitude === 'string'
+                          ? parseFloat(data.longitude)
+                          : data.longitude,
+                    }
                   : {}),
 
                 // Add the new columns
@@ -381,10 +437,32 @@ export const apiService = {
                   const minimalData = {
                     name: data.name,
                     phone: data.phone,
-                    account_type: 'personal', // Hardcode for minimal valid row
+                    account_type: data.account_type || 'personal', // Use original account type if available
                     terms_accepted: true, // Hardcode for minimal valid row
                     ...(data.wants_terminal !== undefined
                       ? { terminal_requested: data.wants_terminal }
+                      : {}),
+
+                    // Still include coordinates even in minimal fallback if they exist
+                    ...(data.latitude !== undefined &&
+                    data.latitude !== null &&
+                    data.latitude !== ''
+                      ? {
+                          latitude:
+                            typeof data.latitude === 'string'
+                              ? parseFloat(data.latitude)
+                              : data.latitude,
+                        }
+                      : {}),
+                    ...(data.longitude !== undefined &&
+                    data.longitude !== null &&
+                    data.longitude !== ''
+                      ? {
+                          longitude:
+                            typeof data.longitude === 'string'
+                              ? parseFloat(data.longitude)
+                              : data.longitude,
+                        }
                       : {}),
 
                     // Add the new columns with minimal values
@@ -449,9 +527,32 @@ export const apiService = {
       // For storage, we can include the full data
       const fullData = {
         ...data,
+        // Ensure coordinates are preserved and properly formatted
+        ...(data.latitude !== undefined && data.latitude !== null && data.latitude !== ''
+          ? {
+              latitude:
+                typeof data.latitude === 'string' ? parseFloat(data.latitude) : data.latitude,
+            }
+          : {}),
+        ...(data.longitude !== undefined && data.longitude !== null && data.longitude !== ''
+          ? {
+              longitude:
+                typeof data.longitude === 'string' ? parseFloat(data.longitude) : data.longitude,
+            }
+          : {}),
         timestamp: new Date().toISOString(),
         attempt: 'storage_fallback',
       };
+
+      // Log the storage fallback data to verify coordinates
+      console.log('📍 STORAGE FALLBACK DATA - COORDINATES:', {
+        hasLatitude: 'latitude' in fullData,
+        latitude: fullData.latitude,
+        latitudeType: typeof fullData.latitude,
+        hasLongitude: 'longitude' in fullData,
+        longitude: fullData.longitude,
+        longitudeType: typeof fullData.longitude,
+      });
 
       try {
         // Convert data to JSON
