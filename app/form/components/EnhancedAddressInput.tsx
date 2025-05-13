@@ -173,7 +173,7 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
               setMapExpanded(true);
 
               // Ensure we force focus out to complete the selection
-              if (document.activeElement === inputRef.current) {
+              if (document.activeElement === inputRef.current && inputRef.current) {
                 inputRef.current.blur();
               }
             }
@@ -206,7 +206,7 @@ export const EnhancedAddressInput: React.FC<EnhancedAddressInputProps> = ({ isRe
             setMapExpanded(true);
 
             // Force blur to ensure selection is complete
-            if (document.activeElement === inputRef.current) {
+            if (document.activeElement === inputRef.current && inputRef.current) {
               inputRef.current.blur();
             }
 
