@@ -20,9 +20,20 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     getValues,
   } = useFormContext<SignupFormData>();
 
+  const accountType = watch('account_type');
+  const isPro = accountType === 'business';
+  const isMerchant = accountType === 'merchant';
+
   if (currentStep !== 4) return null;
 
   const validateAndContinue = async () => {
+    // For Pro accounts, all fields are optional, so skip validation
+    if (isPro) {
+      setCurrentStep(5);
+      return;
+    }
+
+    // For Merchant accounts, validate all fields
     const bankName = watch('bank_name');
     const bankBranch = watch('bank_branch');
     const bankAccountType = watch('bank_account_type');
@@ -91,16 +102,31 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     }
   };
 
+  const handleSkip = () => {
+    // Clear any validation errors for banking fields when skipping
+    setValue('bank_name', '');
+    setValue('bank_branch', '');
+    setValue('bank_account_type', '');
+    setValue('account_currency', '');
+    setValue('bank_account_number', '');
+    setValue('id_image_url', '');
+
+    setCurrentStep(5);
+  };
+
   return (
     <div className="bg-white rounded-lg">
       <h3 className="text-xl font-semibold text-gray-800 mb-6">Banking Information</h3>
       <p className="text-sm text-gray-600 mb-6">
-        Please provide your banking details to receive payments as a Merchant Flashpoint.
+        {isPro
+          ? 'Optionally provide your banking details. You can skip this step if you prefer.'
+          : 'Please provide your banking details to receive payments as a Merchant Flashpoint.'}
       </p>
 
       <div className="form-group">
         <label htmlFor="bank_name" className="form-label">
-          Bank Name<span className="text-red-500 ml-1">*</span>
+          Bank Name{isMerchant && <span className="text-red-500 ml-1">*</span>}
+          {isPro && <span className="text-gray-500 ml-1">(Optional)</span>}
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -136,7 +162,8 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
 
       <div className="form-group">
         <label htmlFor="bank_branch" className="form-label">
-          Bank Branch<span className="text-red-500 ml-1">*</span>
+          Bank Branch{isMerchant && <span className="text-red-500 ml-1">*</span>}
+          {isPro && <span className="text-gray-500 ml-1">(Optional)</span>}
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -178,7 +205,8 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
 
       <div className="form-group">
         <label htmlFor="bank_account_type" className="form-label">
-          Account Type<span className="text-red-500 ml-1">*</span>
+          Account Type{isMerchant && <span className="text-red-500 ml-1">*</span>}
+          {isPro && <span className="text-gray-500 ml-1">(Optional)</span>}
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -232,7 +260,8 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
 
       <div className="form-group">
         <label htmlFor="account_currency" className="form-label">
-          Currency<span className="text-red-500 ml-1">*</span>
+          Currency{isMerchant && <span className="text-red-500 ml-1">*</span>}
+          {isPro && <span className="text-gray-500 ml-1">(Optional)</span>}
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -290,7 +319,8 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
 
       <div className="form-group">
         <label htmlFor="bank_account_number" className="form-label">
-          Account Number<span className="text-red-500 ml-1">*</span>
+          Account Number{isMerchant && <span className="text-red-500 ml-1">*</span>}
+          {isPro && <span className="text-gray-500 ml-1">(Optional)</span>}
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -349,17 +379,37 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
           <span>Back</span>
         </button>
 
-        <button
-          type="button"
-          onClick={validateAndContinue}
-          className="form-btn flex items-center"
-          aria-label="Continue to next step"
-        >
-          <span>Continue</span>
-          <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+        <div className="flex space-x-3">
+          {isPro && (
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="form-btn-secondary flex items-center"
+              aria-label="Skip banking information"
+            >
+              <span>Skip</span>
+              <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={validateAndContinue}
+            className="form-btn flex items-center"
+            aria-label="Continue to next step"
+          >
+            <span>Continue</span>
+            <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
