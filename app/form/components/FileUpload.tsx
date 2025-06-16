@@ -3,6 +3,7 @@ import { useFormContext } from 'react-hook-form';
 import { getSupabaseClient, createMockSupabaseClient } from '../../../lib/supabase-singleton';
 import { useCredentials } from '../../../src/hooks/useCredentials';
 import { config } from '../../../src/config';
+import { SignupFormData } from '../../../src/types';
 
 export default function FileUpload() {
   const [uploading, setUploading] = useState(false);
@@ -14,9 +15,14 @@ export default function FileUpload() {
     register,
     formState: { errors },
     clearErrors,
-  } = useFormContext();
+    watch,
+  } = useFormContext<SignupFormData>();
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const accountType = watch('account_type');
+  const isPro = accountType === 'business';
+  const isMerchant = accountType === 'merchant';
 
   // Get Supabase credentials from our hook
   const {
@@ -554,11 +560,13 @@ export default function FileUpload() {
 
   return (
     <div id="file-upload-section" className="mb-6">
-      <h4 className="text-md font-medium mb-2">Upload ID Document*</h4>
+      <h4 className="text-md font-medium mb-2">
+        Upload ID Document{isMerchant && <span className="text-red-500 ml-1">*</span>}
+        {isPro && <span className="text-gray-500 ml-1">(Optional)</span>}
+      </h4>
       <div className="flex items-center mb-4 text-sm">
         <p className="text-gray-700">Please upload a clear photo of your government-issued ID</p>
         <div className="flex items-center">
-          <span className="text-red-500 ml-1">*</span>
           <div className="relative ml-2 group">
             <span className="cursor-help text-blue-500">
               ⓘ
@@ -569,7 +577,9 @@ export default function FileUpload() {
                 <br />
                 Make sure all text is clearly readable
                 <br />
-                <strong>Required for merchant accounts</strong>
+                <strong>
+                  {isMerchant ? 'Required for merchant accounts' : 'Optional for Pro accounts'}
+                </strong>
               </div>
             </span>
           </div>

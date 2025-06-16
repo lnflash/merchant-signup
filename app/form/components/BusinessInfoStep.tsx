@@ -93,7 +93,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
         if (wantsTerminal !== undefined) {
           setValue('wants_terminal', !!wantsTerminal, { shouldValidate: false });
         }
-        setCurrentStep(5); // Skip to terms for business/professional
+        setCurrentStep(4); // Continue to banking info for business/professional
       }
     } else {
       // For personal, go straight to terms
