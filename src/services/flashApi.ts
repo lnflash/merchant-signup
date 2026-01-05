@@ -1,17 +1,8 @@
 /**
  * Flash API Service
  * Handles communication with the Flash GraphQL API for username validation
+ * Uses a server-side API route to avoid CORS issues
  */
-
-const FLASH_API_URL = 'https://api.flashapp.me/graphql';
-
-const ACCOUNT_DEFAULT_WALLET_QUERY = `
-  query accountDefaultWallets($username: Username!) {
-    accountDefaultWallet(username: $username) {
-      id
-    }
-  }
-`;
 
 export interface UsernameValidationResult {
   valid: boolean;
@@ -20,7 +11,7 @@ export interface UsernameValidationResult {
 
 /**
  * Validates that a Flash username exists in the system
- * Uses the accountDefaultWallet query which returns wallet info if the user exists
+ * Uses our API route which proxies to the Flash GraphQL API
  */
 export async function validateFlashUsername(username: string): Promise<UsernameValidationResult> {
   // Don't validate empty usernames
@@ -31,45 +22,21 @@ export async function validateFlashUsername(username: string): Promise<UsernameV
   const cleanUsername = username.trim().toLowerCase();
 
   try {
-    const response = await fetch(FLASH_API_URL, {
+    const response = await fetch('/api/validate-username', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        query: ACCOUNT_DEFAULT_WALLET_QUERY,
-        variables: { username: cleanUsername },
-      }),
+      body: JSON.stringify({ username: cleanUsername }),
     });
-
-    if (!response.ok) {
-      console.error('Flash API request failed:', response.status, response.statusText);
-      return { valid: false, error: 'Unable to verify username. Please try again.' };
-    }
 
     const result = await response.json();
 
-    // Check for GraphQL errors
-    if (result.errors && result.errors.length > 0) {
-      const errorMessage = result.errors[0]?.message || 'Username not found';
-      // Common error messages from the Flash API
-      if (
-        errorMessage.includes('not found') ||
-        errorMessage.includes('does not exist') ||
-        errorMessage.includes('No user')
-      ) {
-        return { valid: false, error: 'This Flash username does not exist' };
-      }
-      return { valid: false, error: errorMessage };
-    }
-
-    // If we get a valid wallet response, the username exists
-    if (result.data?.accountDefaultWallet?.id) {
+    if (result.valid) {
       return { valid: true };
     }
 
-    // No wallet found means the username doesn't exist
-    return { valid: false, error: 'This Flash username does not exist' };
+    return { valid: false, error: result.error || 'This Flash username does not exist' };
   } catch (error) {
     console.error('Error validating Flash username:', error);
     return { valid: false, error: 'Unable to verify username. Please check your connection.' };
