@@ -9,7 +9,6 @@ The Flash Merchant Signup app is a Next.js application that can be deployed as a
 ## Key Challenges in Static Builds
 
 1. **API Routes**: Next.js static exports do not support API routes. We handle this by:
-
    - Temporarily removing API routes during the build process
    - Creating static JSON fallbacks for API endpoints
    - Adding client-side fallbacks to directly connect to Supabase

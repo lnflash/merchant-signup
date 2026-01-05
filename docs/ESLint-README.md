@@ -19,7 +19,6 @@ To properly fix the ESLint configuration:
    ```
 
 2. If the above doesn't work, you may need to:
-
    - Update the ESLint configuration to be compatible with Next.js ESLint plugin
    - Remove conflicting rules or plugins
    - Consider using a more minimal ESLint configuration that focuses on core linting needs

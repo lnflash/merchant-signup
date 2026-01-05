@@ -72,12 +72,10 @@ For detailed setup instructions, see [GOOGLE_MAPS_SETUP.md](GOOGLE_MAPS_SETUP.md
 If you experience environment variable issues:
 
 1. **Variables not available in components**:
-
    - Ensure `NEXT_PUBLIC_` prefix is used for client-side variables
    - Restart the development server after changing .env files
 
 2. **Static build environment issues**:
-
    - For static builds, check that variables are properly injected during build
    - Verify the `window.ENV` object in browser console
 

@@ -1,26 +1,47 @@
-# Documentation for Flash Merchant Signup
+# Documentation
 
-This directory contains additional documentation for specific features and solutions.
+## Setup & Configuration
 
-## Database Solutions
+- [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) - Required and optional environment variables
+- [GOOGLE_MAPS_SETUP.md](GOOGLE_MAPS_SETUP.md) - Google Maps API configuration
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Deployment to DigitalOcean App Platform
+- [GITHUB_ACTIONS_DEPLOYMENT.md](GITHUB_ACTIONS_DEPLOYMENT.md) - CI/CD with GitHub Actions
 
-- [TRIGGER_HTTP_FIX.md](TRIGGER_HTTP_FIX.md) - How to fix the HTTP extension dependency in database triggers
-- [ENHANCED_SOLUTION.md](ENHANCED_SOLUTION.md) - Complete solution using the existing Edge Function
-- [NOTIFICATION_SOLUTION.md](NOTIFICATION_SOLUTION.md) - Implementation details for the notification system
+## Development
 
-## Database Scripts
+- [DEVELOPMENT.md](DEVELOPMENT.md) - Developer guide and coding standards
+- [STATIC_BUILD.md](STATIC_BUILD.md) - Static export configuration
+- [API_ROUTES_STATIC_EXPORT.md](API_ROUTES_STATIC_EXPORT.md) - API routes in static builds
+- [ESLint-README.md](ESLint-README.md) - ESLint configuration
+- [refactoring.md](refactoring.md) - Refactoring notes
 
-The `database` subdirectory contains SQL scripts and Edge Function code:
+## Database & Supabase
 
-- [update_existing_approach.sql](database/update_existing_approach.sql) - SQL script to update database triggers without using HTTP
-- [modified_check_notifications.ts](database/modified_check_notifications.ts) - Enhanced Edge Function for notifications
+- [SUPABASE_STATIC_INTEGRATION.md](SUPABASE_STATIC_INTEGRATION.md) - Supabase client-side integration
+- [SUPABASE_RLS_FIXES.md](SUPABASE_RLS_FIXES.md) - Row-level security policies
+- [database/](database/) - SQL scripts and Edge Functions
 
-## Implementation
+## Features
 
-To implement the solution:
+- [PHONE_MAP_FEATURES.md](PHONE_MAP_FEATURES.md) - Phone validation and map features
+- [COORDINATE_TRACKING.md](COORDINATE_TRACKING.md) - GPS coordinate handling
+- [TERMINAL_CHECKBOX.md](TERMINAL_CHECKBOX.md) - Flash Terminal checkbox implementation
 
-1. Run the `database/update_existing_approach.sql` script in your Supabase SQL Editor
-2. Update your Edge Function with `database/modified_check_notifications.ts`
-3. Set up a scheduled GitHub Action to poll for notifications (see ENHANCED_SOLUTION.md)
+## Security
 
-This solution allows form submissions to work correctly with all account types while maintaining notifications through Edge Functions rather than database HTTP calls.
+- [SECURITY.md](SECURITY.md) - Security overview
+- [SECURITY_FIXES.md](SECURITY_FIXES.md) - Security fixes applied
+- [SECURITY_UPDATE_2.md](SECURITY_UPDATE_2.md) - Additional security updates
+
+## Notifications
+
+- [NOTIFICATION_SOLUTION.md](NOTIFICATION_SOLUTION.md) - Notification system implementation
+- [ENHANCED_SOLUTION.md](ENHANCED_SOLUTION.md) - Enhanced Edge Function solution
+- [TRIGGER_HTTP_FIX.md](TRIGGER_HTTP_FIX.md) - Database trigger HTTP fix
+
+## History
+
+- [CHANGELOG.md](CHANGELOG.md) - Version history
+- [ISSUES_RESOLVED.md](ISSUES_RESOLVED.md) - Resolved issues
+- [UPDATES.md](UPDATES.md) - Feature updates
+- [TESTING_RESULTS.md](TESTING_RESULTS.md) - Test results

@@ -11,14 +11,12 @@
 ### Added
 
 - **Flash Terminal Checkbox Improvements**
-
   - Fixed column name mismatch (`wants_terminal` vs `terminal_requested`)
   - Added explicit boolean conversion to ensure correct data type
   - Enhanced checkbox state management to prevent React Hook Form issues
   - Added comprehensive logging for debugging checkbox values
 
 - **Documentation Enhancements**
-
   - Created `ISSUES_RESOLVED.md` with detailed documentation of all fixed issues
   - Created `TERMINAL_CHECKBOX.md` with comprehensive documentation of the terminal checkbox feature
   - Enhanced coordinate tracking documentation with debugging information
@@ -54,14 +52,12 @@
 ### Added
 
 - **Coordinate Tracking System**
-
   - Added proper latitude and longitude extraction from Google Maps Places API
   - Enhanced form validation to handle coordinate data types
   - Improved database submission to reliably store coordinates
   - Added fallback handling for coordinates in all submission paths
 
 - **Debugging and Testing**
-
   - Added comprehensive debug logging for coordinate tracking
   - Created test script for verifying coordinate submission
   - Added unit tests for coordinate handling in the API service
@@ -97,14 +93,12 @@
 ### Added
 
 - **Enhanced Address Input Experience**
-
   - Fixed issue requiring double-selection of addresses in Google Maps
   - Improved state synchronization for address selection
   - Enhanced focus management for better user experience
   - Added immediate visual feedback after address selection
 
 - **TypeScript Improvements**
-
   - Fixed duplicate onBlur handler issue in EnhancedAddressInput component
   - Enhanced type imports to improve build reliability
   - Fixed all TypeScript errors for production build
@@ -134,19 +128,16 @@
 ### Added
 
 - **Direct Supabase Client Integration**
-
   - Created `getSupabase()` function for easy client-side Supabase access
   - Added credential detection from multiple sources (window.ENV, process.env)
   - Enhanced mock Supabase client for testing and development
 
 - **Static API Fallbacks**
-
   - Implemented fallback mechanism in API service that bypasses API routes in static builds
   - Added direct Supabase form submission for static builds
   - Enhanced FileUpload component to work in static builds
 
 - **Environment Variable Handling**
-
   - Improved `env-config.js` for static builds
   - Enhanced `useCredentials` hook with better fallback mechanisms
   - Added static JSON fallbacks for API credentials

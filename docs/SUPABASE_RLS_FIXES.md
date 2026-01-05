@@ -57,7 +57,6 @@ To fully fix the issues, you need to update your Supabase database and storage s
 
 1. Go to the "Policies" tab of the `id-uploads` bucket (or `id_uploads` depending on how it was created)
 2. Ensure the existing INSERT policy includes the owner check:
-
    - Set to: `bucket_id = 'id-uploads' AND auth.uid() = owner`
 
 3. Ensure the existing SELECT policy includes the owner check:

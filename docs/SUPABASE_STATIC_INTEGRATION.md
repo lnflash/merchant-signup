@@ -40,9 +40,7 @@ Components and services can import this singleton client for direct Supabase ope
 import { supabase } from '../lib/supabase-singleton';
 
 // Use supabase directly
-const { data, error } = await supabase
-  .from('merchant_signups')
-  .insert([formData]);
+const { data, error } = await supabase.from('merchant_signups').insert([formData]);
 ```
 
 ### API Service with Fallback
@@ -94,11 +92,13 @@ During the static build process:
 To test the static Supabase integration:
 
 1. Run a static build with test credentials:
+
    ```bash
    npm run build:static:test
    ```
 
 2. Serve the static site:
+
    ```bash
    npx serve out
    ```

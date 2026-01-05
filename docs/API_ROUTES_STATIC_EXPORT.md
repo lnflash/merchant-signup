@@ -132,11 +132,13 @@ try {
 To test this approach locally:
 
 1. Run the test build script:
+
    ```bash
    npm run build:static:test
    ```
 
 2. Serve the static output:
+
    ```bash
    npx serve out
    ```

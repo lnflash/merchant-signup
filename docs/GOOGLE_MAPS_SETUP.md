@@ -70,16 +70,13 @@ Google Maps Platform uses a pay-as-you-go pricing model:
 ### Common Issues
 
 1. **"Google Maps JavaScript API error: MissingKeyMapError"**
-
    - Check that your API key is correctly set in `.env.local`
    - Verify the API key is properly passed to components
 
 2. **"This API project is not authorized to use this API"**
-
    - Ensure you've enabled all required APIs in Step 2
 
 3. **"This page can't load Google Maps correctly"**
-
    - Check if your API key has the correct restrictions
    - Verify your domain is in the allowed referrers
 

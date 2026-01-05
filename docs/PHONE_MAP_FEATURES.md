@@ -9,20 +9,17 @@ The phone input component has been significantly upgraded to support a wide rang
 ### Features
 
 - **Regional Organization**: Countries are organized by region for easier selection:
-
   - Most Common (US/Canada, UK, Australia, Italy, Uzbekistan)
   - Caribbean countries (Bahamas, Jamaica, Trinidad, etc.)
   - Central & South American countries
   - African countries
 
 - **Visual Indicators**:
-
   - Country flags for easier identification
   - Country codes displayed with country names
   - Example formats shown when input is focused
 
 - **Smart Formatting**:
-
   - Automatic formatting based on country selection
   - Validation based on libphonenumber-js
   - Visual checkmark when valid phone number is entered
@@ -48,25 +45,21 @@ The business address integration provides an enhanced user experience with addre
 ### Features
 
 - **Address Autocomplete**:
-
   - Google Places API integration for address suggestions
   - Real-time validation as user types
   - Structured address formatting
 
 - **Interactive Map**:
-
   - Visual map display of the selected location
   - Marker showing the exact position
   - Zoom and pan controls
 
 - **Geolocation Data**:
-
   - Automatic capture of latitude and longitude coordinates
   - Saved to Supabase database for future use
   - Proper handling of coordinate precision
 
 - **Mobile Optimization**:
-
   - Collapsible map on mobile devices
   - Responsive layout for all screen sizes
   - Touch-friendly controls

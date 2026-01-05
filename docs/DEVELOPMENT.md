@@ -282,7 +282,6 @@ The application integrates Google Maps for enhanced address input with validatio
 #### Components
 
 1. **AddressAutocomplete**:
-
    - **File**: `app/form/components/AddressAutocomplete.tsx`
    - **Purpose**: Provides address suggestions and validation using Google Places API
 
@@ -606,12 +605,10 @@ If needed, you can manually deploy:
    ```
 
 2. **Check Browser Network Tab**:
-
    - Look for failed requests to Supabase endpoints
    - Examine response codes and bodies
 
 3. **Test with TestSubmit Component**:
-
    - Use the TestSubmit component for isolated submission testing
    - Check console for detailed error messages
 
