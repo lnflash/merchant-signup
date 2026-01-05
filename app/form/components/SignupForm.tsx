@@ -330,8 +330,8 @@ export default function SignupForm() {
         <h2 className="text-3xl font-bold mb-4 text-gray-800">Application Successful!</h2>
         <div className="bg-blue-50 p-6 rounded-xl mb-8">
           <p className="text-gray-700">
-            Congratulations! Your Flash merchant account application has been received. Download the
-            Flash app to set up your account and explore our point-of-sale system.
+            Congratulations! Your Flash upgrade request has been received. Our team is reviewing,
+            and you will be notified via email or SMS within 1-3 business days.
           </p>
         </div>
 
