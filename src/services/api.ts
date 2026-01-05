@@ -233,6 +233,7 @@ export const apiService = {
 
       // Extract only the fields that exist in the signups table schema based on db/supabase.sql
       const submissionData = {
+        username: data.username,
         name: data.name,
         phone: data.phone,
         email: data.email,
@@ -275,6 +276,7 @@ export const apiService = {
         // Include all schema fields including the newly added columns
         const schemaValidData = {
           // Core required fields
+          username: data.username,
           name: data.name,
           phone: data.phone,
           email: data.email || null,
@@ -402,6 +404,7 @@ export const apiService = {
               // Try again with only the most basic essential fields plus new columns
               const essentialData = {
                 // Core fields
+                username: data.username,
                 name: data.name,
                 phone: data.phone,
                 email: data.email || null,
@@ -469,9 +472,10 @@ export const apiService = {
 
                   // Try one more attempt with a completely minimal payload plus the new columns
                   const minimalData = {
+                    username: data.username,
                     name: data.name,
                     phone: data.phone,
-                    account_type: data.account_type || 'personal', // Use original account type if available
+                    account_type: data.account_type || 'business', // Use original account type if available
                     terms_accepted: true, // Hardcode for minimal valid row
                     // Use wants_terminal to match DB schema (not terminal_requested)
                     ...(data.wants_terminal !== undefined
