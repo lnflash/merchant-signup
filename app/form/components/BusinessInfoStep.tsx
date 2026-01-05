@@ -22,7 +22,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
   // For debugging
   console.log('💼 BusinessInfoStep rendering, accountType:', accountType);
 
-  if (currentStep !== 3) return null;
+  if (currentStep !== 4) return null;
 
   // We used to clear errors here when they were optional, but now we need validation
 
@@ -69,7 +69,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
         if (wantsTerminal !== undefined) {
           setValue('wants_terminal', !!wantsTerminal, { shouldValidate: false });
         }
-        setCurrentStep(4); // Continue to merchant step
+        setCurrentStep(5); // Continue to merchant step
       }
     } else if (accountType === 'business') {
       // For professionals, business info is required
@@ -93,7 +93,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
         if (wantsTerminal !== undefined) {
           setValue('wants_terminal', !!wantsTerminal, { shouldValidate: false });
         }
-        setCurrentStep(4); // Continue to banking info for business/professional
+        setCurrentStep(5); // Continue to banking info for business/professional
       }
     } else {
       // For personal, go straight to terms
@@ -101,7 +101,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
       if (wantsTerminal !== undefined) {
         setValue('wants_terminal', !!wantsTerminal, { shouldValidate: false });
       }
-      setCurrentStep(5);
+      setCurrentStep(6);
     }
   };
 
@@ -225,7 +225,7 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
       <div className="mt-8 flex justify-between">
         <button
           type="button"
-          onClick={() => setCurrentStep(2)}
+          onClick={() => setCurrentStep(3)}
           className="form-btn-secondary flex items-center"
           aria-label="Go back to previous step"
         >

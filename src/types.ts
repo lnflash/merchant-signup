@@ -13,6 +13,7 @@ export interface ApiResponse<T = any> {
  */
 export interface SignupFormData {
   // Common fields
+  username: string;
   name: string;
   email: string;
   phone: string;

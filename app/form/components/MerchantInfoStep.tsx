@@ -24,12 +24,12 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
   const isPro = accountType === 'business';
   const isMerchant = accountType === 'merchant';
 
-  if (currentStep !== 4) return null;
+  if (currentStep !== 5) return null;
 
   const validateAndContinue = async () => {
     // For Pro accounts, all fields are optional, so skip validation
     if (isPro) {
-      setCurrentStep(5);
+      setCurrentStep(6);
       return;
     }
 
@@ -98,7 +98,7 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
 
     // Only proceed if all validations pass
     if (isValid) {
-      setCurrentStep(5);
+      setCurrentStep(6);
     }
   };
 
@@ -111,7 +111,7 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     setValue('bank_account_number', '');
     setValue('id_image_url', '');
 
-    setCurrentStep(5);
+    setCurrentStep(6);
   };
 
   return (
@@ -364,7 +364,7 @@ export const MerchantInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
       <div className="mt-8 flex justify-between">
         <button
           type="button"
-          onClick={() => setCurrentStep(3)}
+          onClick={() => setCurrentStep(4)}
           className="form-btn-secondary flex items-center"
           aria-label="Go back to previous step"
         >

@@ -19,6 +19,7 @@ const phoneRegex = /^\+?[0-9]{10,15}$/;
 
 // Common fields that all account types share
 const commonFields = {
+  username: z.string().min(1, 'Flash username is required'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   phone: z.union([
     phoneNumberSchema,
@@ -103,6 +104,10 @@ export const signupFormSchema = z.discriminatedUnion('account_type', [
 ]);
 
 // For backward compatibility - these are used elsewhere in the codebase
+export const usernameSchema = z.object({
+  username: z.string().min(1, 'Flash username is required'),
+});
+
 export const personInfoSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   phone: z.union([

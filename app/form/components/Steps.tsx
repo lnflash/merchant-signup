@@ -18,7 +18,7 @@ export const PersonalInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     setValue,
   } = useFormContext<SignupFormData>();
 
-  if (currentStep !== 1) return null;
+  if (currentStep !== 2) return null;
 
   const validateAndContinue = async () => {
     // Get current values
@@ -50,7 +50,7 @@ export const PersonalInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
 
     // Only proceed if all validations pass
     if (isValid) {
-      setCurrentStep(2);
+      setCurrentStep(3);
     }
   };
 
@@ -142,7 +142,23 @@ export const PersonalInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
         )}
       </div>
 
-      <div className="flex justify-end mt-8">
+      <div className="flex justify-between mt-8">
+        <button
+          type="button"
+          onClick={() => setCurrentStep(1)}
+          className="form-btn-secondary flex items-center"
+          aria-label="Go back to previous step"
+        >
+          <svg className="mr-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          <span>Back</span>
+        </button>
         <button
           type="button"
           onClick={validateAndContinue}
@@ -166,7 +182,7 @@ export const AccountTypeStep: React.FC<StepProps> = ({ currentStep, setCurrentSt
     clearErrors,
   } = useFormContext<SignupFormData>();
 
-  if (currentStep !== 2) return null;
+  if (currentStep !== 3) return null;
 
   const selectAccountType = (type: 'personal' | 'business' | 'merchant') => {
     setValue('account_type', type, { shouldValidate: true });
@@ -175,9 +191,9 @@ export const AccountTypeStep: React.FC<StepProps> = ({ currentStep, setCurrentSt
     clearErrors(['business_name', 'business_address']);
 
     if (type === 'personal') {
-      setCurrentStep(5); // Skip to terms if personal
+      setCurrentStep(6); // Skip to terms if personal
     } else {
-      setCurrentStep(3); // Go to business info for both business and merchant
+      setCurrentStep(4); // Go to business info for both business and merchant
     }
   };
 
@@ -277,7 +293,7 @@ export const AccountTypeStep: React.FC<StepProps> = ({ currentStep, setCurrentSt
       )}
 
       <div className="flex justify-between mt-6">
-        <button type="button" onClick={() => setCurrentStep(1)} className="form-btn-secondary">
+        <button type="button" onClick={() => setCurrentStep(2)} className="form-btn-secondary">
           Back
         </button>
       </div>
@@ -294,7 +310,7 @@ export const TermsStep: React.FC<StepProps> = ({ currentStep, setCurrentStep }) 
   } = useFormContext<SignupFormData>();
   const accountType = watch('account_type');
 
-  if (currentStep !== 5) return null;
+  if (currentStep !== 6) return null;
 
   return (
     <div className="bg-white rounded-lg">
@@ -379,13 +395,13 @@ export const TermsStep: React.FC<StepProps> = ({ currentStep, setCurrentStep }) 
           type="button"
           onClick={() => {
             if (accountType === 'personal') {
-              setCurrentStep(2); // Back to account type
+              setCurrentStep(3); // Back to account type
             } else if (accountType === 'business') {
-              setCurrentStep(3); // Back to business info
+              setCurrentStep(4); // Back to business info
             } else if (accountType === 'merchant') {
-              setCurrentStep(4); // Back to merchant banking
+              setCurrentStep(5); // Back to merchant banking
             } else {
-              setCurrentStep(2); // Fallback
+              setCurrentStep(3); // Fallback
             }
           }}
           className="form-btn-secondary flex items-center"

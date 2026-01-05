@@ -9,6 +9,7 @@ import { apiService } from '../../../src/services/api';
 import { PersonalInfoStep, AccountTypeStep, TermsStep } from './Steps';
 import { BusinessInfoStep } from './BusinessInfoStep';
 import { MerchantInfoStep } from './MerchantInfoStep';
+import { UsernameStep } from './UsernameStep';
 import Image from 'next/image';
 import FlashIcon from '../../assets/flash_icon_transp.png';
 import { logger } from '../../../src/utils/logger';
@@ -27,6 +28,7 @@ export default function SignupForm() {
   const methods = useForm<SignupFormData>({
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
+      username: '',
       account_type: 'personal',
       terms_accepted: false as unknown as true, // Cast to satisfy the validator
       wants_terminal: false, // Initialize the terminal checkbox to unchecked explicitly
@@ -83,10 +85,18 @@ export default function SignupForm() {
 
       let isValid = true;
 
+      // Username validation
+      if (!values.username || values.username.length < 1) {
+        methods.setError('username', { message: 'Flash username is required' });
+        setCurrentStep(1);
+        isValid = false;
+        return;
+      }
+
       // Basic fields validation
       if (!values.name || values.name.length < 2) {
         methods.setError('name', { message: 'Name is required' });
-        setCurrentStep(1);
+        setCurrentStep(2);
         isValid = false;
         return;
       }
@@ -94,7 +104,7 @@ export default function SignupForm() {
       // Validate phone number using libphonenumber-js
       if (!values.phone) {
         methods.setError('phone', { message: 'Phone number is required' });
-        setCurrentStep(1);
+        setCurrentStep(2);
         isValid = false;
         return;
       }
@@ -109,7 +119,7 @@ export default function SignupForm() {
               methods.setError('phone', {
                 message: 'Valid phone number with country code is required',
               });
-              setCurrentStep(1);
+              setCurrentStep(2);
               isValid = false;
             }
           })
@@ -119,7 +129,7 @@ export default function SignupForm() {
               methods.setError('phone', {
                 message: 'Valid phone number with country code is required',
               });
-              setCurrentStep(1);
+              setCurrentStep(2);
               isValid = false;
             }
           });
@@ -129,7 +139,7 @@ export default function SignupForm() {
           methods.setError('phone', {
             message: 'Valid phone number with country code is required',
           });
-          setCurrentStep(1);
+          setCurrentStep(2);
           isValid = false;
           return;
         }
@@ -139,14 +149,14 @@ export default function SignupForm() {
       if (values.account_type === 'business') {
         if (!values.business_name || values.business_name.length < 2) {
           methods.setError('business_name', { message: 'Professional practice name is required' });
-          setCurrentStep(3);
+          setCurrentStep(4);
           isValid = false;
           return;
         }
 
         if (!values.business_address || values.business_address.length < 5) {
           methods.setError('business_address', { message: 'Professional address is required' });
-          setCurrentStep(3);
+          setCurrentStep(4);
           isValid = false;
           return;
         }
@@ -159,35 +169,35 @@ export default function SignupForm() {
         // Bank info is required
         if (!values.bank_name) {
           methods.setError('bank_name', { message: 'Bank name is required' });
-          setCurrentStep(4);
+          setCurrentStep(5);
           isValid = false;
           return;
         }
 
         if (!values.bank_branch) {
           methods.setError('bank_branch', { message: 'Bank branch is required' });
-          setCurrentStep(4);
+          setCurrentStep(5);
           isValid = false;
           return;
         }
 
         if (!values.bank_account_type) {
           methods.setError('bank_account_type', { message: 'Account type is required' });
-          setCurrentStep(4);
+          setCurrentStep(5);
           isValid = false;
           return;
         }
 
         if (!values.account_currency) {
           methods.setError('account_currency', { message: 'Currency is required' });
-          setCurrentStep(4);
+          setCurrentStep(5);
           isValid = false;
           return;
         }
 
         if (!values.bank_account_number) {
           methods.setError('bank_account_number', { message: 'Account number is required' });
-          setCurrentStep(4);
+          setCurrentStep(5);
           isValid = false;
           return;
         }
@@ -200,7 +210,7 @@ export default function SignupForm() {
           methods.setError('id_image_url', {
             message: 'ID image is required for merchant accounts',
           });
-          setCurrentStep(4);
+          setCurrentStep(5);
           isValid = false;
           return;
         }
@@ -208,7 +218,7 @@ export default function SignupForm() {
 
       if (!values.terms_accepted) {
         methods.setError('terms_accepted', { message: 'You must accept the terms and conditions' });
-        setCurrentStep(5);
+        setCurrentStep(6);
         isValid = false;
         return;
       }
@@ -414,11 +424,11 @@ export default function SignupForm() {
             {/* Color the progress line up to the current step */}
             <div
               className="absolute h-1 bg-blue-600 top-1/2 -translate-y-1/2 left-0 z-0 transition-all duration-500 ease-in-out"
-              style={{ width: `${Math.min(100, ((currentStep - 1) / 4) * 100)}%` }}
+              style={{ width: `${Math.min(100, ((currentStep - 1) / 5) * 100)}%` }}
             ></div>
 
             {/* Step indicators */}
-            {[1, 2, 3, 4, 5].map(step => {
+            {[1, 2, 3, 4, 5, 6].map(step => {
               // Determine the status of each step
               const isActive = currentStep === step;
               const isCompleted = currentStep > step;
@@ -464,20 +474,21 @@ export default function SignupForm() {
 
           {/* Step label */}
           <div className="text-sm font-medium text-center text-gray-700 mb-4">
-            {currentStep === 1 && 'Personal Information'}
-            {currentStep === 2 && 'Account Type'}
-            {currentStep === 3 && 'Business Information'}
-            {currentStep === 4 && 'Merchant Information'}
-            {currentStep === 5 && 'Terms & Conditions'}
+            {currentStep === 1 && 'Flash Username'}
+            {currentStep === 2 && 'Personal Information'}
+            {currentStep === 3 && 'Account Type'}
+            {currentStep === 4 && 'Business Information'}
+            {currentStep === 5 && 'Merchant Information'}
+            {currentStep === 6 && 'Terms & Conditions'}
           </div>
 
           {/* Progress percentage */}
           <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
             <div
               className="bg-blue-600 h-full rounded-full transition-all duration-300 ease-in-out"
-              style={{ width: `${((currentStep - 1) / 4) * 100}%` }}
+              style={{ width: `${((currentStep - 1) / 5) * 100}%` }}
               role="progressbar"
-              aria-valuenow={((currentStep - 1) / 4) * 100}
+              aria-valuenow={((currentStep - 1) / 5) * 100}
               aria-valuemin={0}
               aria-valuemax={100}
             ></div>
@@ -515,13 +526,15 @@ export default function SignupForm() {
           </div>
         </div>
 
+        <UsernameStep currentStep={currentStep} setCurrentStep={setCurrentStep} />
+
         <PersonalInfoStep currentStep={currentStep} setCurrentStep={setCurrentStep} />
 
         <AccountTypeStep currentStep={currentStep} setCurrentStep={setCurrentStep} />
 
         <BusinessInfoStep currentStep={currentStep} setCurrentStep={setCurrentStep} />
 
-        {currentStep === 4 && (
+        {currentStep === 5 && (
           <MerchantInfoStep currentStep={currentStep} setCurrentStep={setCurrentStep} />
         )}
 
