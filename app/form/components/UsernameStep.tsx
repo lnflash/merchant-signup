@@ -64,7 +64,7 @@ export const UsernameStep: React.FC<StepProps> = ({ currentStep, setCurrentStep 
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-gray-400 font-medium">@</span>
+            {/* <span className="text-gray-400 font-medium">@</span> */}
           </div>
           <input
             id="username"
