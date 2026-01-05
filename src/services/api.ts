@@ -394,6 +394,24 @@ export const apiService = {
           if (error.code) {
             console.error(`Error code: ${error.code}, message: ${error.message}`);
 
+            // Check for duplicate key constraint violation (phone number already exists)
+            if (error.code === '23505') {
+              console.error('Duplicate key error - phone number already registered');
+              // Determine which field caused the duplicate
+              let fieldName = 'phone number';
+              if (error.message?.includes('signups_phone_key')) {
+                fieldName = 'phone number';
+              } else if (error.message?.includes('signups_email_key')) {
+                fieldName = 'email address';
+              } else if (error.message?.includes('signups_username_key')) {
+                fieldName = 'username';
+              }
+              return {
+                success: false,
+                error: `This ${fieldName} has already been registered. Please use a different ${fieldName} or contact support if you need to update your existing registration.`,
+              };
+            }
+
             // Check specifically for column-related errors
             if (
               (error.code === 'PGRST204' && error.message && error.message.includes('column')) ||
