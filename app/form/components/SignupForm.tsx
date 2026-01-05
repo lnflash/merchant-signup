@@ -29,7 +29,7 @@ export default function SignupForm() {
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
       username: '',
-      account_type: 'personal',
+      account_type: 'business',
       terms_accepted: false as unknown as true, // Cast to satisfy the validator
       wants_terminal: false, // Initialize the terminal checkbox to unchecked explicitly
     },

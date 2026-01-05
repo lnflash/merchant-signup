@@ -184,17 +184,13 @@ export const AccountTypeStep: React.FC<StepProps> = ({ currentStep, setCurrentSt
 
   if (currentStep !== 3) return null;
 
-  const selectAccountType = (type: 'personal' | 'business' | 'merchant') => {
+  const selectAccountType = (type: 'business' | 'merchant') => {
     setValue('account_type', type, { shouldValidate: true });
 
     // Clear validation errors for fields that might be optional based on account type
     clearErrors(['business_name', 'business_address']);
 
-    if (type === 'personal') {
-      setCurrentStep(6); // Skip to terms if personal
-    } else {
-      setCurrentStep(4); // Go to business info for both business and merchant
-    }
+    setCurrentStep(4); // Go to business info for both business and merchant
   };
 
   return (
@@ -202,34 +198,7 @@ export const AccountTypeStep: React.FC<StepProps> = ({ currentStep, setCurrentSt
       <h3 className="text-lg font-medium mb-4">Account Type</h3>
       <p className="mb-4">What type of account would you like to create?</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-        <button
-          type="button"
-          onClick={() => selectAccountType('personal')}
-          className="p-6 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 focus:border-blue-500 transition-colors flex flex-col items-center justify-center shadow-sm hover:shadow group"
-          aria-label="Select Personal account type"
-        >
-          <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
-            <svg
-              className="w-6 h-6 text-blue-600"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </div>
-          <span className="font-medium mb-2 text-gray-800">Personal</span>
-          <span className="text-sm text-gray-500 text-center">
-            For individual use, no additional info needed
-          </span>
-        </button>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
         <button
           type="button"
           onClick={() => selectAccountType('business')}
@@ -394,14 +363,12 @@ export const TermsStep: React.FC<StepProps> = ({ currentStep, setCurrentStep }) 
         <button
           type="button"
           onClick={() => {
-            if (accountType === 'personal') {
-              setCurrentStep(3); // Back to account type
-            } else if (accountType === 'business') {
+            if (accountType === 'business') {
               setCurrentStep(4); // Back to business info
             } else if (accountType === 'merchant') {
               setCurrentStep(5); // Back to merchant banking
             } else {
-              setCurrentStep(3); // Fallback
+              setCurrentStep(4); // Fallback to business info
             }
           }}
           className="form-btn-secondary flex items-center"

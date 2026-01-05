@@ -26,12 +26,12 @@ export default function TestSubmit() {
     setError(null);
     setResponse(null);
     
-    // Simple test data for personal account - only required fields
+    // Simple test data for business account - only required fields
     const testData = {
       name: "Test User",
       phone: "+12345678900",
       email: "test@example.com",
-      account_type: "personal",
+      account_type: "business",
       terms_accepted: true,
       // Empty fields for business/merchant
       business_name: "",
@@ -127,7 +127,7 @@ export default function TestSubmit() {
               const minimalData = {
                 name: testData.name,
                 phone: testData.phone,
-                account_type: "personal", // Use hardcoded values for minimal valid row
+                account_type: "business", // Use hardcoded values for minimal valid row
                 terms_accepted: true,     // Use hardcoded values for minimal valid row
                 
                 // Add the previously missing columns

@@ -18,9 +18,9 @@ export interface ApiResponse<T = any> {
 
 /**
  * Account type enum
+ * Note: Personal account type has been removed from the flow
  */
 export enum AccountType {
-  Personal = 'personal',
   Business = 'business',
   Merchant = 'merchant',
 }

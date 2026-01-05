@@ -17,7 +17,7 @@ export interface SignupFormData {
   name: string;
   email: string;
   phone: string;
-  account_type: 'personal' | 'business' | 'merchant';
+  account_type: 'business' | 'merchant';
   terms_accepted: boolean;
 
   // Business information

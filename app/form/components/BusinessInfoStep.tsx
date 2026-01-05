@@ -24,9 +24,8 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
 
   if (currentStep !== 4) return null;
 
-  // We used to clear errors here when they were optional, but now we need validation
-
-  const isBusinessInfoRequired = accountType === 'business' || accountType === 'merchant';
+  // Business info is always required (personal account type was removed)
+  const isBusinessInfoRequired = true;
   const validateAndContinue = () => {
     // Log the value of wants_terminal to debug
     const wantsTerminal = watch('wants_terminal');
@@ -95,13 +94,6 @@ export const BusinessInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
         }
         setCurrentStep(5); // Continue to banking info for business/professional
       }
-    } else {
-      // For personal, go straight to terms
-      // Make sure the terminal value is a proper boolean if set
-      if (wantsTerminal !== undefined) {
-        setValue('wants_terminal', !!wantsTerminal, { shouldValidate: false });
-      }
-      setCurrentStep(6);
     }
   };
 

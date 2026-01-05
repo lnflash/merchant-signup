@@ -32,29 +32,8 @@ const commonFields = {
 };
 
 // Create schema with different requirements for each account type
+// Note: Personal account type has been removed from the flow
 export const signupFormSchema = z.discriminatedUnion('account_type', [
-  // Schema for personal accounts
-  z.object({
-    account_type: z.literal('personal'),
-    ...commonFields,
-    // Make all other fields optional
-    business_name: z.string().optional().or(z.literal('')),
-    business_address: z.string().optional().or(z.literal('')),
-    bank_name: z.string().optional().or(z.literal('')),
-    bank_branch: z.string().optional().or(z.literal('')),
-    bank_account_type: z.string().optional().or(z.literal('')),
-    account_currency: z.string().optional().or(z.literal('')),
-    bank_account_number: z.string().optional().or(z.literal('')),
-    id_image_url: z.union([
-      z.string().optional(),
-      z.literal(''),
-      z.custom(val => typeof window !== 'undefined' && val instanceof File).optional(),
-    ]),
-    latitude: z.number().optional().or(z.literal('')),
-    longitude: z.number().optional().or(z.literal('')),
-    wants_terminal: z.boolean().optional(),
-  }),
-
   // Schema for business accounts
   z.object({
     account_type: z.literal('business'),
