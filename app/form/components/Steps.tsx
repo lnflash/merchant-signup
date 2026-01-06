@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { SignupFormData } from '../../../src/types';
+import { checkPhoneExists, checkEmailExists } from '../../../src/services/duplicateCheck';
 import PhoneInput from './PhoneInput';
 
 type StepProps = {
@@ -16,7 +18,11 @@ export const PersonalInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     trigger,
     watch,
     setValue,
+    setError,
+    clearErrors,
   } = useFormContext<SignupFormData>();
+
+  const [isChecking, setIsChecking] = useState(false);
 
   if (currentStep !== 2) return null;
 
@@ -25,6 +31,9 @@ export const PersonalInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     const name = watch('name');
     const phone = watch('phone');
     const email = watch('email');
+
+    // Clear previous duplicate errors
+    clearErrors(['phone', 'email']);
 
     // Manual validation
     let isValid = true;
@@ -48,9 +57,48 @@ export const PersonalInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
     // Show validation errors
     await trigger(['name', 'phone', 'email']);
 
-    // Only proceed if all validations pass
-    if (isValid) {
+    // Only proceed with duplicate checks if basic validation passes
+    if (!isValid) {
+      return;
+    }
+
+    // Check for duplicates
+    setIsChecking(true);
+
+    try {
+      // Check phone number
+      const phoneResult = await checkPhoneExists(phone);
+      if (phoneResult.exists) {
+        setError('phone', {
+          type: 'manual',
+          message:
+            'This phone number has already requested an upgrade. Please use a different number.',
+        });
+        setIsChecking(false);
+        return;
+      }
+
+      // Check email if provided
+      if (email && email.trim().length > 0) {
+        const emailResult = await checkEmailExists(email);
+        if (emailResult.exists) {
+          setError('email', {
+            type: 'manual',
+            message: 'This email has already requested an upgrade. Please use a different email.',
+          });
+          setIsChecking(false);
+          return;
+        }
+      }
+
+      // All checks passed, proceed to next step
       setCurrentStep(3);
+    } catch (err) {
+      console.error('Error checking duplicates:', err);
+      // On error, allow proceeding (will be caught at final submission)
+      setCurrentStep(3);
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -162,13 +210,40 @@ export const PersonalInfoStep: React.FC<StepProps> = ({ currentStep, setCurrentS
         <button
           type="button"
           onClick={validateAndContinue}
-          className="form-btn flex items-center"
+          disabled={isChecking}
+          className={`form-btn flex items-center ${
+            isChecking ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
           aria-label="Continue to next step"
         >
-          <span>Continue</span>
-          <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <span>{isChecking ? 'Checking...' : 'Continue'}</span>
+          {!isChecking && (
+            <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          )}
+          {isChecking && (
+            <svg
+              className="ml-2 animate-spin h-5 w-5"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+          )}
         </button>
       </div>
     </div>

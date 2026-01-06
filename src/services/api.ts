@@ -406,9 +406,12 @@ export const apiService = {
               } else if (error.message?.includes('signups_username_key')) {
                 fieldName = 'username';
               }
+              const whatsappMessage = encodeURIComponent(
+                'Hi Support, I want to update my upgrade request information'
+              );
               return {
                 success: false,
-                error: `This ${fieldName} has already been registered. Please use a different ${fieldName} or contact support if you need to update your existing registration.`,
+                error: `This ${fieldName} has already requested an upgrade. Please use a different ${fieldName} or <a href="https://wa.me/18762909250?text=${whatsappMessage}" target="_blank" rel="noopener noreferrer" style="color: #25D366; text-decoration: underline;">contact support via WhatsApp</a> if you need to update your existing registration.`,
               };
             }
 
@@ -638,8 +641,12 @@ export const apiService = {
           if (bucket !== 'formdata' && bucket !== 'public') {
             try {
               // Create a unique email and strong random password
-              const tempEmail = `temp_${Date.now()}_${Math.random().toString(36).substring(2)}@example.com`;
-              const tempPassword = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+              const tempEmail = `temp_${Date.now()}_${Math.random()
+                .toString(36)
+                .substring(2)}@example.com`;
+              const tempPassword = `temp_${Date.now()}_${Math.random()
+                .toString(36)
+                .substring(2, 10)}`;
 
               console.log(
                 `Creating temporary auth with email: ${tempEmail} for ${bucket} bucket access`

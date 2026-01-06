@@ -1,27 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { SignupFormData } from '../../../src/types';
+import { checkUsernameExists } from '../../../src/services/duplicateCheck';
 import Image from 'next/image';
 import FlashIcon from '../../assets/flash_icon_transp.png';
 
-// TODO: Re-enable username validation once CORS issue is resolved
-// import { validateFlashUsername } from '../../../src/services/flashApi';
-//
-// Currently disabled due to CORS restrictions when calling api.flashapp.me directly
-// Options to fix:
-// 1. Deploy as Node.js server (not static export) to enable /api/validate-username route
-// 2. Ask Flash team to add CORS headers for signup.getflash.io
-// 3. Set up an external proxy (DigitalOcean Functions, Cloudflare Workers)
-//
-// When re-enabling validation:
-// - Uncomment the validateFlashUsername import
-// - Add useState for isValidating, isValidUsername, validationMessage
-// - Add useCallback for validateUsername function
-// - Add useEffect with debounce for real-time validation
-// - Update handleContinue to check isValidUsername
-// - Add loading spinner and success/error icons to the input
-// - Add validation message display below input
+// TODO: Re-enable Flash API username validation once CORS issue is resolved
+// See comments in src/services/flashApi.ts for options to fix
 
 type StepProps = {
   currentStep: number;
@@ -33,17 +20,46 @@ export const UsernameStep: React.FC<StepProps> = ({ currentStep, setCurrentStep 
     register,
     formState: { errors },
     watch,
+    setError,
+    clearErrors,
   } = useFormContext<SignupFormData>();
 
+  const [isChecking, setIsChecking] = useState(false);
   const username = watch('username');
 
   if (currentStep !== 1) return null;
 
-  const handleContinue = () => {
-    // TODO: Replace this simple check with proper Flash API validation
-    // Currently just checking if username is not empty
-    if (username && username.trim().length > 0) {
+  const handleContinue = async () => {
+    // Check if username is not empty
+    if (!username || username.trim().length === 0) {
+      return;
+    }
+
+    setIsChecking(true);
+    clearErrors('username');
+
+    try {
+      // Check if username already exists in database
+      const { exists } = await checkUsernameExists(username.trim());
+
+      if (exists) {
+        setError('username', {
+          type: 'manual',
+          message:
+            'This username has already requested an upgrade. Please use a different username.',
+        });
+        setIsChecking(false);
+        return;
+      }
+
+      // Username is available, proceed to next step
       setCurrentStep(2);
+    } catch (err) {
+      console.error('Error checking username:', err);
+      // On error, allow proceeding (will be caught at final submission)
+      setCurrentStep(2);
+    } finally {
+      setIsChecking(false);
     }
   };
 
@@ -71,13 +87,37 @@ export const UsernameStep: React.FC<StepProps> = ({ currentStep, setCurrentStep 
             type="text"
             placeholder="yourflashusername"
             {...register('username')}
-            className="form-input pl-8"
+            className={`form-input pl-8 ${errors.username ? 'border-red-500' : ''}`}
             aria-required="true"
             aria-invalid={errors.username ? 'true' : 'false'}
             autoComplete="off"
             autoCapitalize="none"
             autoCorrect="off"
           />
+          {isChecking && (
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+              <svg
+                className="animate-spin h-5 w-5 text-blue-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            </div>
+          )}
         </div>
         {errors.username && (
           <p className="form-error" role="alert" id="username-error">
@@ -127,16 +167,18 @@ export const UsernameStep: React.FC<StepProps> = ({ currentStep, setCurrentStep 
         <button
           type="button"
           onClick={handleContinue}
-          disabled={isUsernameEmpty}
+          disabled={isUsernameEmpty || isChecking}
           className={`form-btn flex items-center ${
-            isUsernameEmpty ? 'opacity-50 cursor-not-allowed' : ''
+            isUsernameEmpty || isChecking ? 'opacity-50 cursor-not-allowed' : ''
           }`}
           aria-label="Continue to next step"
         >
-          <span>Continue</span>
-          <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
+          <span>{isChecking ? 'Checking...' : 'Continue'}</span>
+          {!isChecking && (
+            <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          )}
         </button>
       </div>
     </div>
