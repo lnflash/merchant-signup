@@ -406,12 +406,9 @@ export const apiService = {
               } else if (error.message?.includes('signups_username_key')) {
                 fieldName = 'username';
               }
-              const whatsappMessage = encodeURIComponent(
-                'Hi Support, I want to update my upgrade request information'
-              );
               return {
                 success: false,
-                error: `This ${fieldName} has already requested an upgrade. Please use a different ${fieldName} or <a href="https://wa.me/18762909250?text=${whatsappMessage}" target="_blank" rel="noopener noreferrer" style="color: #25D366; text-decoration: underline;">contact support via WhatsApp</a> if you need to update your existing registration.`,
+                error: `This ${fieldName} has already requested an upgrade. Please use a different ${fieldName} or contact support via WhatsApp at +1 (876) 290-9250 if you need to update your existing registration.`,
               };
             }
 

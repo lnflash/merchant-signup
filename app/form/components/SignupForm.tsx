@@ -256,7 +256,9 @@ export default function SignupForm() {
       setSubmitSuccess(true);
     } catch (error) {
       logger.error('Error submitting form', error);
-      alert('There was an error submitting your information. Please try again.');
+      // Show the specific error message to the user
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      alert(errorMessage);
     } finally {
       setSubmitting(false);
     }
