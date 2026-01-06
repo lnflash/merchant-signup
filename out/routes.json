@@ -1,0 +1,37 @@
+{
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/form",
+      "dest": "/form/index.html",
+      "status": 200
+    },
+    {
+      "src": "/form/",
+      "dest": "/form/index.html",
+      "status": 200
+    },
+    {
+      "src": "/form/(.*)",
+      "dest": "/form/index.html",
+      "status": 200
+    },
+    {
+      "src": "/api/credentials",
+      "dest": "/api/credentials/index.json",
+      "status": 200
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1/index.json",
+      "status": 200
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html",
+      "status": 200
+    }
+  ]
+}
