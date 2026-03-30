@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Accept Bitcoin, Lightning, and digital payments at your business. Become a Flash Merchant today.">
+  <title>Flash Merchant Signup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #41ad49;
+      --green-dim: rgba(65,173,73,0.12);
+      --bg-base: #0d0d12;
+      --bg-surface: #14141c;
+      --bg-raised: #1c1c27;
+      --bg-overlay: #242433;
+      --text-1: #f0f0f5;
+      --text-2: #8888aa;
+      --text-3: #555570;
+      --font-display: 'Sora', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-base);
+      color: var(--text-1);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ──────────────────────────────────────── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+    .section { padding: 80px 0; }
+    .section-sm { padding: 48px 0; }
+
+    /* ── Nav ─────────────────────────────────────────── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(13,13,18,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--bg-raised);
+      padding: 16px 0;
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 700;
+      color: var(--text-1); text-decoration: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nav-logo span { color: var(--green); }
+    .nav-cta {
+      background: var(--green); color: #fff;
+      font-family: var(--font-body); font-size: 14px; font-weight: 600;
+      border: none; border-radius: 100px; cursor: pointer;
+      padding: 10px 20px; text-decoration: none; white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+    .nav-cta:hover { opacity: 0.88; }
+
+    /* ── Hero ────────────────────────────────────────── */
+    .hero { padding: 100px 0 80px; text-align: center; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green-dim); color: var(--green);
+      border: 1px solid rgba(65,173,73,0.3);
+      border-radius: 100px; padding: 6px 16px;
+      font-size: 13px; font-weight: 600; margin-bottom: 28px;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 6vw, 68px);
+      font-weight: 800; letter-spacing: -0.03em; line-height: 1.1;
+      max-width: 800px; margin: 0 auto 20px;
+    }
+    .hero h1 em { font-style: normal; color: var(--green); }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-2); max-width: 560px;
+      margin: 0 auto 40px; line-height: 1.6;
+    }
+    .hero-actions {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--green); color: #fff;
+      font-family: var(--font-body); font-size: 16px; font-weight: 600;
+      border: none; border-radius: 100px; cursor: pointer;
+      padding: 14px 28px; text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg-raised); color: var(--text-1);
+      border: 1px solid var(--bg-overlay);
+      font-family: var(--font-body); font-size: 16px; font-weight: 500;
+      border-radius: 100px; cursor: pointer;
+      padding: 14px 28px; text-decoration: none;
+      transition: border-color 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--text-3); }
+
+    /* ── Stats bar ───────────────────────────────────── */
+    .stats {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-raised);
+      border-radius: var(--radius-xl);
+      padding: 32px 40px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 32px; text-align: center; margin-top: 64px;
+    }
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 36px; font-weight: 800;
+      color: var(--green); letter-spacing: -0.03em;
+    }
+    .stat-label { font-size: 13px; color: var(--text-2); margin-top: 4px; }
+
+    /* ── Section headers ─────────────────────────────── */
+    .section-label {
+      font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--green);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700; letter-spacing: -0.02em; line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .section-sub { font-size: 18px; color: var(--text-2); max-width: 500px; }
+
+    /* ── Tier cards ──────────────────────────────────── */
+    .tiers-header { margin-bottom: 48px; }
+    .tiers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+    .tier-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-raised);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .tier-card:hover { border-color: rgba(65,173,73,0.3); }
+    .tier-card.featured {
+      border-color: rgba(65,173,73,0.4);
+      background: linear-gradient(135deg, var(--bg-surface), rgba(65,173,73,0.04));
+    }
+    .tier-badge {
+      display: inline-block;
+      background: var(--green); color: #fff;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; border-radius: 100px;
+      padding: 4px 10px; margin-bottom: 16px;
+    }
+    .tier-name {
+      font-family: var(--font-display);
+      font-size: 24px; font-weight: 700; margin-bottom: 8px;
+    }
+    .tier-desc { font-size: 14px; color: var(--text-2); margin-bottom: 24px; line-height: 1.5; }
+    .tier-features { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .tier-features li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 14px; color: var(--text-1);
+    }
+    .tier-features li::before {
+      content: '✓'; color: var(--green);
+      font-weight: 700; flex-shrink: 0; line-height: 1.4;
+    }
+    .tier-limits {
+      margin-top: 24px; padding-top: 24px;
+      border-top: 1px solid var(--bg-overlay);
+      font-size: 13px; color: var(--text-3);
+    }
+
+    /* ── Steps ───────────────────────────────────────── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px; position: relative;
+    }
+    .step {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-raised);
+      border-radius: var(--radius-xl);
+      padding: 32px 28px; text-align: center;
+    }
+    .step-num {
+      width: 48px; height: 48px;
+      background: var(--green-dim);
+      border: 1.5px solid rgba(65,173,73,0.35);
+      border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-size: 20px; font-weight: 800; color: var(--green);
+      margin-bottom: 16px;
+    }
+    .step h3 {
+      font-family: var(--font-display);
+      font-size: 17px; font-weight: 700; margin-bottom: 8px;
+    }
+    .step p { font-size: 14px; color: var(--text-2); line-height: 1.5; }
+    .step-note { font-size: 12px; color: var(--green); margin-top: 8px; }
+
+    /* ── App store badges ────────────────────────────── */
+    .badges-section { text-align: center; }
+    .badges-section .section-title { margin-bottom: 12px; }
+    .badges-section .section-sub { margin: 0 auto 32px; }
+    .badge-links { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .badge-link {
+      display: inline-flex; align-items: center; gap: 12px;
+      background: var(--bg-raised);
+      border: 1px solid var(--bg-overlay);
+      border-radius: var(--radius-md);
+      padding: 14px 20px; text-decoration: none;
+      transition: border-color 0.15s;
+    }
+    .badge-link:hover { border-color: rgba(65,173,73,0.4); }
+    .badge-icon { font-size: 28px; }
+    .badge-text-top { font-size: 11px; color: var(--text-2); }
+    .badge-text-bottom {
+      font-family: var(--font-display);
+      font-size: 16px; font-weight: 700; color: var(--text-1);
+    }
+
+    /* ── FAQ ─────────────────────────────────────────── */
+    .faq-grid { display: flex; flex-direction: column; gap: 12px; max-width: 720px; margin: 0 auto; }
+    details {
+      background: var(--bg-surface);
+      border: 1px solid var(--bg-raised);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    summary {
+      font-size: 16px; font-weight: 500;
+      padding: 20px 24px; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      list-style: none; user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: '+'; color: var(--green); font-size: 20px; line-height: 1; }
+    details[open] summary::after { content: '−'; }
+    details[open] { border-color: rgba(65,173,73,0.3); }
+    .faq-answer {
+      padding: 0 24px 20px;
+      font-size: 14px; color: var(--text-2); line-height: 1.65;
+    }
+    .faq-answer a { color: var(--green); text-decoration: none; }
+    .faq-answer a:hover { text-decoration: underline; }
+
+    /* ── Support section ─────────────────────────────── */
+    .support-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-top: 40px;
+    }
+    .support-card {
+      display: flex; flex-direction: column; align-items: center;
+      background: var(--bg-surface); border: 1px solid var(--bg-raised);
+      border-radius: var(--radius-lg); padding: 28px 20px; text-align: center;
+      text-decoration: none; transition: border-color 0.15s;
+    }
+    .support-card:hover { border-color: rgba(65,173,73,0.3); }
+    .support-icon { font-size: 32px; margin-bottom: 12px; }
+    .support-label {
+      font-size: 15px; font-weight: 600; color: var(--text-1); margin-bottom: 4px;
+    }
+    .support-sub { font-size: 13px; color: var(--text-2); }
+
+    /* ── Footer ──────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--bg-raised);
+      padding: 40px 0;
+      display: flex; flex-wrap: wrap; gap: 16px;
+      align-items: center; justify-content: space-between;
+    }
+    .footer-brand {
+      font-family: var(--font-display);
+      font-size: 18px; font-weight: 700; color: var(--text-1);
+    }
+    .footer-brand span { color: var(--green); }
+    .footer-links { display: flex; gap: 20px; flex-wrap: wrap; }
+    .footer-links a { font-size: 13px; color: var(--text-2); text-decoration: none; }
+    .footer-links a:hover { color: var(--text-1); }
+    .footer-copy { font-size: 12px; color: var(--text-3); width: 100%; }
+
+    /* ── Responsive ──────────────────────────────────── */
+    @media (max-width: 640px) {
+      .hero { padding: 64px 0 48px; }
+      .section { padding: 56px 0; }
+      .stats { padding: 24px; gap: 24px; }
+      .stat-value { font-size: 28px; }
+      footer { flex-direction: column; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ───────────────────────────────────────────── -->
+<nav>
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">Flash<span>⚡</span></a>
+    <a href="#get-started" class="nav-cta">Get Started</a>
+  </div>
+</nav>
+
+<!-- ── Hero ──────────────────────────────────────────── -->
+<section class="hero section">
+  <div class="container">
+    <div class="hero-badge">⚡ Accept Bitcoin & Lightning</div>
+    <h1>Grow Your Business<br>with <em>Flash Payments</em></h1>
+    <p class="hero-sub">
+      Join hundreds of merchants across the Caribbean accepting digital payments instantly — zero chargebacks, zero intermediaries.
+    </p>
+    <div class="hero-actions">
+      <a href="#get-started" class="btn-primary">Become a Merchant →</a>
+      <a href="https://getflash.io/map" class="btn-secondary">See Merchant Map</a>
+    </div>
+
+    <div class="stats">
+      <div>
+        <div class="stat-value">0%</div>
+        <div class="stat-label">Transaction fees</div>
+      </div>
+      <div>
+        <div class="stat-value">⚡</div>
+        <div class="stat-label">Instant settlement</div>
+      </div>
+      <div>
+        <div class="stat-value">12k+</div>
+        <div class="stat-label">Merchants on BTCMap</div>
+      </div>
+      <div>
+        <div class="stat-value">JMD</div>
+        <div class="stat-label">Local currency display</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Tiers ─────────────────────────────────────────── -->
+<section class="section" id="tiers">
+  <div class="container">
+    <div class="tiers-header">
+      <div class="section-label">Account Tiers</div>
+      <h2 class="section-title">Start free. Upgrade as you grow.</h2>
+      <p class="section-sub">All upgrades happen directly inside the Flash app — no web forms needed.</p>
+    </div>
+    <div class="tiers-grid">
+      <div class="tier-card">
+        <div class="tier-name">Personal</div>
+        <p class="tier-desc">Get started with a verified Flash account — perfect for individuals and small peer-to-peer payments.</p>
+        <ul class="tier-features">
+          <li>Send &amp; receive Lightning payments</li>
+          <li>Bitcoin &amp; USD wallets</li>
+          <li>Contact list &amp; Nostr identity</li>
+          <li>BTCMap directory listing</li>
+        </ul>
+        <div class="tier-limits">Requires: phone number verification</div>
+      </div>
+
+      <div class="tier-card featured">
+        <div class="tier-badge">Most Popular</div>
+        <div class="tier-name">Pro</div>
+        <p class="tier-desc">For active merchants who need higher limits and business-grade features.</p>
+        <ul class="tier-features">
+          <li>Everything in Personal</li>
+          <li>Higher transaction limits</li>
+          <li>Business profile on merchant map</li>
+          <li>Priority support</li>
+        </ul>
+        <div class="tier-limits">Requires: ID verification (in-app)</div>
+      </div>
+
+      <div class="tier-card">
+        <div class="tier-name">Merchant</div>
+        <p class="tier-desc">Full commercial access with banking integration and the highest limits.</p>
+        <ul class="tier-features">
+          <li>Everything in Pro</li>
+          <li>Banking &amp; cashout integration</li>
+          <li>Merchant dashboard</li>
+          <li>Multi-location support</li>
+        </ul>
+        <div class="tier-limits">Requires: business info &amp; banking details (in-app)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Get Started Steps ──────────────────────────────── -->
+<section class="section" id="get-started" style="background: var(--bg-surface);">
+  <div class="container">
+    <div style="margin-bottom: 48px;">
+      <div class="section-label">How It Works</div>
+      <h2 class="section-title">Three steps to accepting payments</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Download Flash</h3>
+        <p>Get the app on iOS or Android. It's free to download and set up takes less than 2 minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Create your account</h3>
+        <p>Register with your phone number. Verify your identity inside the app to unlock higher tiers.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Tap Upgrade</h3>
+        <p>Go to <strong>Settings → Account</strong> and tap Upgrade to move from Personal → Pro → Merchant at your own pace.</p>
+        <div class="step-note">No web form. No waiting. Done in the app.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Download ───────────────────────────────────────── -->
+<section class="section badges-section">
+  <div class="container">
+    <div class="section-label">Get the App</div>
+    <h2 class="section-title">Available on iOS &amp; Android</h2>
+    <p class="section-sub">Download Flash free — your merchant account setup starts here.</p>
+    <div class="badge-links">
+      <a href="https://apps.apple.com/jm/app/flash-send-spend-and-save/id6451129095" class="badge-link" target="_blank" rel="noopener">
+        <div class="badge-icon">🍎</div>
+        <div>
+          <div class="badge-text-top">Download on the</div>
+          <div class="badge-text-bottom">App Store</div>
+        </div>
+      </a>
+      <a href="https://getflash.io/app" class="badge-link" target="_blank" rel="noopener">
+        <div class="badge-icon">🤖</div>
+        <div>
+          <div class="badge-text-top">Get it on</div>
+          <div class="badge-text-bottom">Google Play</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ────────────────────────────────────────────── -->
+<section class="section" style="background: var(--bg-surface);">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 40px;">
+      <div class="section-label">FAQ</div>
+      <h2 class="section-title">Common questions</h2>
+    </div>
+    <div class="faq-grid">
+      <details>
+        <summary>Do I need a bank account to become a merchant?</summary>
+        <div class="faq-answer">
+          No — you can accept Bitcoin and Lightning payments without a bank account. For cashout to a local bank account (JMD), you'll need to complete Merchant tier verification inside the app.
+        </div>
+      </details>
+      <details>
+        <summary>How do I upgrade my account tier?</summary>
+        <div class="faq-answer">
+          Open the Flash app and go to <strong>Settings → Account</strong>. From there you can complete phone verification (Personal), identity verification (Pro), or business &amp; banking details (Merchant). All done in-app — no web form needed.
+        </div>
+      </details>
+      <details>
+        <summary>Are there transaction fees?</summary>
+        <div class="faq-answer">
+          Flash charges 0% on Lightning payments between Flash users. Small network fees may apply for on-chain Bitcoin transactions. Full fee schedule at <a href="https://getflash.io" target="_blank" rel="noopener">getflash.io</a>.
+        </div>
+      </details>
+      <details>
+        <summary>How does my business appear on the merchant map?</summary>
+        <div class="faq-answer">
+          Once you've completed verification, your business is listed on <a href="https://getflash.io/map" target="_blank" rel="noopener">getflash.io/map</a> and on the global BTCMap network (12,000+ merchants worldwide). Customers can find you and know you accept Flash.
+        </div>
+      </details>
+      <details>
+        <summary>What countries is Flash available in?</summary>
+        <div class="faq-answer">
+          Flash is focused on the Caribbean, with primary support in Jamaica, El Salvador, and surrounding regions. Check <a href="https://getflash.io" target="_blank" rel="noopener">getflash.io</a> for the latest availability.
+        </div>
+      </details>
+      <details>
+        <summary>I need help with my existing application. Who do I contact?</summary>
+        <div class="faq-answer">
+          Reach our support team via WhatsApp at <a href="https://wa.flashapp.me" target="_blank" rel="noopener">wa.flashapp.me</a>, by email at <a href="mailto:support@getflash.io">support@getflash.io</a>, or join our <a href="https://discord.gg/AkPpxJzC2R" target="_blank" rel="noopener">Discord community</a>.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ── Support ─────────────────────────────────────────── -->
+<section class="section">
+  <div class="container" style="text-align: center;">
+    <div class="section-label">Support</div>
+    <h2 class="section-title">We're here to help</h2>
+    <div class="support-grid">
+      <a href="https://wa.flashapp.me" class="support-card" target="_blank" rel="noopener">
+        <div class="support-icon">💬</div>
+        <div class="support-label">WhatsApp</div>
+        <div class="support-sub">wa.flashapp.me</div>
+      </a>
+      <a href="mailto:support@getflash.io" class="support-card">
+        <div class="support-icon">✉️</div>
+        <div class="support-label">Email</div>
+        <div class="support-sub">support@getflash.io</div>
+      </a>
+      <a href="https://discord.gg/AkPpxJzC2R" class="support-card" target="_blank" rel="noopener">
+        <div class="support-icon">🎮</div>
+        <div class="support-label">Discord</div>
+        <div class="support-sub">Community &amp; support</div>
+      </a>
+      <a href="https://documentation.getflash.io" class="support-card" target="_blank" rel="noopener">
+        <div class="support-icon">📖</div>
+        <div class="support-label">Docs</div>
+        <div class="support-sub">documentation.getflash.io</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ─────────────────────────────────────────── -->
+<footer>
+  <div class="container" style="width:100%">
+    <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <div class="footer-brand">Flash<span>⚡</span></div>
+      <div class="footer-links">
+        <a href="https://getflash.io">getflash.io</a>
+        <a href="https://getflash.io/map">Merchant Map</a>
+        <a href="https://documentation.getflash.io">Docs</a>
+        <a href="mailto:support@getflash.io">Support</a>
+        <a href="https://getflash.io/legal/terms">Terms</a>
+        <a href="https://getflash.io/legal/privacy">Privacy</a>
+      </div>
+    </div>
+    <div class="footer-copy">© 2025 Island Bitcoin Ltd. All rights reserved.</div>
+  </div>
+</footer>
+
+</body>
+</html>
