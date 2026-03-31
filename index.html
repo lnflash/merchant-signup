@@ -213,22 +213,61 @@
     /* ── Steps ───────────────────────────────────────────────────── */
     .steps {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 32px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0 40px;
+      margin-top: 48px;
     }
-    .step { display: flex; flex-direction: column; gap: 12px; }
+    .step { display: flex; flex-direction: column; gap: 0; }
+    .step-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
     .step-num {
-      width: 40px; height: 40px;
+      width: 44px; height: 44px;
       border-radius: 50%;
       background: var(--flash-green);
-      color: var(--flash-white);
+      color: #fff;
       font-weight: 700;
-      font-size: 16px;
+      font-size: 18px;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
+      position: relative;
+      z-index: 1;
     }
-    .step-title { font-size: 16px; font-weight: 700; }
-    .step-desc { font-size: 14px; color: var(--muted); line-height: 1.5; }
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(to right, var(--flash-green), var(--card-border));
+      margin-left: 12px;
+    }
+    .step-body { display: flex; flex-direction: column; gap: 8px; }
+    .step-title { font-size: 17px; font-weight: 700; }
+    .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .step-badges {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .badge-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--card-border);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-colour);
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .badge-btn:hover { border-color: var(--flash-green); color: var(--flash-green); }
+    @media (max-width: 640px) {
+      .steps { grid-template-columns: 1fr; gap: 32px 0; }
+      .step-line { display: none; }
+    }
 
     /* ── Support row ─────────────────────────────────────────────── */
     .support {
@@ -369,22 +408,46 @@
   <section class="section">
     <div class="container">
       <div class="section-label">How it works</div>
-      <div class="section-title">Three steps</div>
+      <h2 class="section-title">Start accepting in minutes</h2>
       <div class="steps">
         <div class="step">
-          <div class="step-num">1</div>
-          <div class="step-title">Download Flash</div>
-          <div class="step-desc">Free on iOS and Android. Setup takes under 2 minutes.</div>
+          <div class="step-header">
+            <div class="step-num">1</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Download Flash</div>
+            <div class="step-desc">Free on iOS and Android.</div>
+            <div class="step-badges">
+              <a href="https://apps.apple.com/jm/app/flash-send-spend-and-save/id6451129095" target="_blank" rel="noopener" class="badge-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                App Store
+              </a>
+              <a href="https://play.google.com/store/apps/details?id=com.lnflash" target="_blank" rel="noopener" class="badge-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.18 23.76c.3.17.64.22.97.15l12.5-7.21-2.61-2.61-10.86 9.67zm-1.9-20.7C1.1 3.4 1 3.74 1 4.1v15.8c0 .36.1.7.28 1.04l.07.07 8.85-8.85v-.21L1.35 3.0l-.07.06zM20.54 9.8l-2.56-1.48-2.91 2.91 2.91 2.91 2.58-1.49c.74-.43.74-1.42-.02-1.85zM4.15.22L16.65 7.43l-2.61 2.61L3.18.37C3.5.3 3.86.05 4.15.22z"/></svg>
+                Google Play
+              </a>
+            </div>
+          </div>
         </div>
         <div class="step">
-          <div class="step-num">2</div>
-          <div class="step-title">Create your account</div>
-          <div class="step-desc">Register with your phone number. Verify your identity in the app to unlock higher tiers.</div>
+          <div class="step-header">
+            <div class="step-num">2</div>
+            <div class="step-line"></div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Create your account</div>
+            <div class="step-desc">Sign up with your phone number. Verification takes under 2 minutes.</div>
+          </div>
         </div>
         <div class="step">
-          <div class="step-num">3</div>
-          <div class="step-title">Tap Upgrade</div>
-          <div class="step-desc">Settings → Account → Upgrade. Move from Personal → Pro → Merchant at your own pace. No web form needed.</div>
+          <div class="step-header">
+            <div class="step-num">3</div>
+          </div>
+          <div class="step-body">
+            <div class="step-title">Tap <span style="color:var(--flash-green)">Upgrade Account</span></div>
+            <div class="step-desc">On the home screen. Choose Personal, Pro, or Merchant and follow the in-app steps.</div>
+          </div>
         </div>
       </div>
     </div>
