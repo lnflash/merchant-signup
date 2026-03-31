@@ -102,7 +102,11 @@
       text-decoration: none;
     }
     .nav-logo img { height: 28px; }
-    .nav-logo span { color: var(--flash-green); }
+    .logo-dark { display: none; }
+    @media (prefers-color-scheme: dark) {
+      .logo-light { display: none; }
+      .logo-dark { display: inline; }
+    }
 
     /* ── Hero ────────────────────────────────────────────────────── */
     .hero {
@@ -295,11 +299,9 @@
   <!-- Nav -->
   <nav>
     <div class="container">
-      <a class="nav-logo" href="https://getflash.io">
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M13 2L4 13h7l-2 7 9-11h-7l2-7z" fill="#41ad49"/>
-        </svg>
-        Flash<span>⚡</span>
+      <a class="nav-logo" href="https://getflash.io" aria-label="Flash">
+        <img src="https://getflash.io/assets/img/logo-black.png" alt="Flash" class="logo-light" />
+        <img src="https://getflash.io/assets/img/logo-white.png" alt="Flash" class="logo-dark" />
       </a>
       <a class="btn btn-primary" href="https://getflash.io/#download">Download Flash</a>
     </div>
