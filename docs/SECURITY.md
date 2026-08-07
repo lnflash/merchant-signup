@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in this project, please report it by emailing security@example.com or by creating a confidential issue. We take all security reports seriously and will respond promptly.
+If you discover a security vulnerability in this project, please report it by emailing security@getflash.io. We take all security reports seriously and will respond promptly.
 
 ## Security Measures
 
